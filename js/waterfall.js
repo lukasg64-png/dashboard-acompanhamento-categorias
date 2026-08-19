@@ -48,6 +48,7 @@ function initWaterfall() {
       if (target) target.classList.add('active');
       if (tabId === 'tabWaterfall') triggerWaterfall();
       if (tabId === 'tabShareMatrix' && typeof updateCharts === 'function') updateCharts();
+      if (tabId === 'tabClientes' && typeof renderClientesTab === 'function') renderClientesTab();
     });
   });
 

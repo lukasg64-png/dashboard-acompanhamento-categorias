@@ -213,6 +213,70 @@ async def fetch_all_qlik_cubes():
                         const l4 = await send("GetLayout", h4, []);
                         const totalRows4 = l4.result.qLayout.qHyperCube.qSize.qcy;
                         results.canais_hier = await fetchAllHyperCubeRows(h4, totalRows4, 7, 1400);
+
+                        // 5. Clientes Únicos e Cupons por Canal
+                        const c5 = await send("CreateSessionObject", docHandle, [{
+                            "qInfo": { "qType": "q_clientes_canal" },
+                            "qHyperCubeDef": {
+                                "qDimensions": [
+                                    { "qDef": { "qFieldDefs": ["Canal"] } }
+                                ],
+                                "qMeasures": [
+                                    { "qDef": { "qDef": `Count({1<[Ano-Mes]={'2026-08'}, ${dayFilter}>} distinct [Cliente_ID])`, "qLabel": "cli_26" } },
+                                    { "qDef": { "qDef": `Count({1<[Ano-Mes]={'2026-07'}, ${dayFilter}>} distinct [Cliente_ID])`, "qLabel": "cli_26_06" } },
+                                    { "qDef": { "qDef": `Count({1<[Ano-Mes]={'2025-08'}, ${dayFilter}>} distinct [Cliente_ID])`, "qLabel": "cli_25" } },
+                                    { "qDef": { "qDef": `Count({1<[Ano-Mes]={'2026-08'}, ${dayFilter}>} distinct [Nr_Cupons])`, "qLabel": "cup_26" } },
+                                    { "qDef": { "qDef": `Count({1<[Ano-Mes]={'2026-07'}, ${dayFilter}>} distinct [Nr_Cupons])`, "qLabel": "cup_26_06" } },
+                                    { "qDef": { "qDef": `Count({1<[Ano-Mes]={'2025-08'}, ${dayFilter}>} distinct [Nr_Cupons])`, "qLabel": "cup_25" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-08'}, ${dayFilter}>} [Receita Líquida])`, "qLabel": "venda_26" } }
+                                ],
+                                "qInitialDataFetch": [{ "qTop": 0, "qLeft": 0, "qHeight": 100, "qWidth": 8 }],
+                                "qSuppressZero": true, "qSuppressMissing": true
+                            }
+                        }]);
+                        const h5 = c5.result.qReturn.qHandle;
+                        const l5 = await send("GetLayout", h5, []);
+                        results.clientes_canais = (l5.result.qLayout.qHyperCube.qDataPages[0]?.qMatrix || []).map(r => r.map(c => c.qNum !== 'NaN' && typeof c.qNum === 'number' ? c.qNum : c.qText));
+
+                        // 6. Clientes Únicos por Grupo de Categoria
+                        const c6 = await send("CreateSessionObject", docHandle, [{
+                            "qInfo": { "qType": "q_clientes_grupo" },
+                            "qHyperCubeDef": {
+                                "qDimensions": [
+                                    { "qDef": { "qFieldDefs": ["Desc_Grupo"] } }
+                                ],
+                                "qMeasures": [
+                                    { "qDef": { "qDef": `Count({1<[Ano-Mes]={'2026-08'}, ${dayFilter}>} distinct [Cliente_ID])`, "qLabel": "cli_26" } },
+                                    { "qDef": { "qDef": `Count({1<[Ano-Mes]={'2026-07'}, ${dayFilter}>} distinct [Cliente_ID])`, "qLabel": "cli_26_06" } },
+                                    { "qDef": { "qDef": `Count({1<[Ano-Mes]={'2025-08'}, ${dayFilter}>} distinct [Cliente_ID])`, "qLabel": "cli_25" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-08'}, ${dayFilter}>} [Receita Líquida])`, "qLabel": "venda_26" } }
+                                ],
+                                "qInitialDataFetch": [{ "qTop": 0, "qLeft": 0, "qHeight": 100, "qWidth": 5 }],
+                                "qSuppressZero": true, "qSuppressMissing": true
+                            }
+                        }]);
+                        const h6 = c6.result.qReturn.qHandle;
+                        const l6 = await send("GetLayout", h6, []);
+                        results.clientes_grupos = (l6.result.qLayout.qHyperCube.qDataPages[0]?.qMatrix || []).map(r => r.map(c => c.qNum !== 'NaN' && typeof c.qNum === 'number' ? c.qNum : c.qText));
+
+                        // 7. Totais Gerais de Clientes e Cupons
+                        const c7 = await send("CreateSessionObject", docHandle, [{
+                            "qInfo": { "qType": "q_clientes_totais" },
+                            "qHyperCubeDef": {
+                                "qMeasures": [
+                                    { "qDef": { "qDef": `Count({1<[Ano-Mes]={'2026-08'}, ${dayFilter}>} distinct [Cliente_ID])`, "qLabel": "tot_cli_26" } },
+                                    { "qDef": { "qDef": `Count({1<[Ano-Mes]={'2026-07'}, ${dayFilter}>} distinct [Cliente_ID])`, "qLabel": "tot_cli_26_06" } },
+                                    { "qDef": { "qDef": `Count({1<[Ano-Mes]={'2025-08'}, ${dayFilter}>} distinct [Cliente_ID])`, "qLabel": "tot_cli_25" } },
+                                    { "qDef": { "qDef": `Count({1<[Ano-Mes]={'2026-08'}, ${dayFilter}>} distinct [Nr_Cupons])`, "qLabel": "tot_cup_26" } },
+                                    { "qDef": { "qDef": `Count({1<[Ano-Mes]={'2026-07'}, ${dayFilter}>} distinct [Nr_Cupons])`, "qLabel": "tot_cup_26_06" } },
+                                    { "qDef": { "qDef": `Count({1<[Ano-Mes]={'2025-08'}, ${dayFilter}>} distinct [Nr_Cupons])`, "qLabel": "tot_cup_25" } }
+                                ],
+                                "qInitialDataFetch": [{ "qTop": 0, "qLeft": 0, "qHeight": 1, "qWidth": 6 }]
+                            }
+                        }]);
+                        const h7 = c7.result.qReturn.qHandle;
+                        const l7 = await send("GetLayout", h7, []);
+                        results.clientes_totais = (l7.result.qLayout.qHyperCube.qDataPages[0]?.qMatrix || []).map(r => r.map(c => c.qNum !== 'NaN' && typeof c.qNum === 'number' ? c.qNum : c.qText));
                         
                         ws.close();
                         resolve(results);
@@ -481,6 +545,94 @@ async def fetch_all_qlik_cubes():
         }
     }
 
+    # 7. Processar Clientes Summary
+    raw_cli_canais = cube_results.get('clientes_canais', [])
+    raw_cli_grupos = cube_results.get('clientes_grupos', [])
+    raw_cli_tot = cube_results.get('clientes_totais', [[]])
+    
+    tot_cli_row = raw_cli_tot[0] if raw_cli_tot else [0, 0, 0, 0, 0, 0]
+    tot_cli_26 = int(tot_cli_row[0]) if len(tot_cli_row) > 0 and isinstance(tot_cli_row[0], (int, float)) else 0
+    tot_cli_26_06 = int(tot_cli_row[1]) if len(tot_cli_row) > 1 and isinstance(tot_cli_row[1], (int, float)) else 0
+    tot_cli_25 = int(tot_cli_row[2]) if len(tot_cli_row) > 2 and isinstance(tot_cli_row[2], (int, float)) else 0
+    tot_cup_26 = int(tot_cli_row[3]) if len(tot_cli_row) > 3 and isinstance(tot_cli_row[3], (int, float)) else 0
+    tot_cup_26_06 = int(tot_cli_row[4]) if len(tot_cli_row) > 4 and isinstance(tot_cli_row[4], (int, float)) else 0
+    tot_cup_25 = int(tot_cli_row[5]) if len(tot_cli_row) > 5 and isinstance(tot_cli_row[5], (int, float)) else 0
+
+    clientes_canais_list = []
+    for r in raw_cli_canais:
+        canal_name = clean_str(r[0])
+        if not canal_name: continue
+        c26 = int(r[1]) if isinstance(r[1], (int, float)) else 0
+        c26_06 = int(r[2]) if isinstance(r[2], (int, float)) else 0
+        c25 = int(r[3]) if isinstance(r[3], (int, float)) else 0
+        cup26 = int(r[4]) if isinstance(r[4], (int, float)) else 0
+        cup26_06 = int(r[5]) if isinstance(r[5], (int, float)) else 0
+        cup25 = int(r[6]) if isinstance(r[6], (int, float)) else 0
+        venda26 = float(r[7]) if isinstance(r[7], (int, float)) else 0.0
+
+        c_mom_pct, c_mom_diff = calc_growth(c26, c26_06)
+        c_yoy_pct, c_yoy_diff = calc_growth(c26, c25)
+        ticket_medio = round(venda26 / cup26, 2) if cup26 > 0 else 0.0
+        gasto_medio = round(venda26 / c26, 2) if c26 > 0 else 0.0
+        penetr_base = round(c26 / tot_cli_26 * 100.0, 2) if tot_cli_26 > 0 else 0.0
+
+        clientes_canais_list.append({
+            'canal': canal_name,
+            'cli_26': c26, 'cli_26_06': c26_06, 'cli_25': c25,
+            'cli_mom_pct': c_mom_pct, 'cli_mom_diff': c_mom_diff,
+            'cli_yoy_pct': c_yoy_pct, 'cli_yoy_diff': c_yoy_diff,
+            'cup_26': cup26, 'cup_26_06': cup26_06, 'cup_25': cup25,
+            'venda_26': round(venda26, 2),
+            'ticket_medio': ticket_medio,
+            'gasto_medio': gasto_medio,
+            'penetr_base': penetr_base
+        })
+
+    clientes_grupos_list = []
+    for r in raw_cli_grupos:
+        grp_name = clean_str(r[0])
+        if not grp_name or grp_name == '-': continue
+        c26 = int(r[1]) if isinstance(r[1], (int, float)) else 0
+        c26_06 = int(r[2]) if isinstance(r[2], (int, float)) else 0
+        c25 = int(r[3]) if isinstance(r[3], (int, float)) else 0
+        venda26 = float(r[4]) if isinstance(r[4], (int, float)) else 0.0
+
+        c_mom_pct, c_mom_diff = calc_growth(c26, c26_06)
+        c_yoy_pct, c_yoy_diff = calc_growth(c26, c25)
+        gasto_medio = round(venda26 / c26, 2) if c26 > 0 else 0.0
+        penetr_base = round(c26 / tot_cli_26 * 100.0, 2) if tot_cli_26 > 0 else 0.0
+
+        clientes_grupos_list.append({
+            'grupo': grp_name,
+            'cli_26': c26, 'cli_26_06': c26_06, 'cli_25': c25,
+            'cli_mom_pct': c_mom_pct, 'cli_mom_diff': c_mom_diff,
+            'cli_yoy_pct': c_yoy_pct, 'cli_yoy_diff': c_yoy_diff,
+            'venda_26': round(venda26, 2),
+            'gasto_medio': gasto_medio,
+            'penetr_base': penetr_base
+        })
+
+    cli_mom_pct, cli_mom_diff = calc_growth(tot_cli_26, tot_cli_26_06)
+    cli_yoy_pct, cli_yoy_diff = calc_growth(tot_cli_26, tot_cli_25)
+    cup_mom_pct, cup_mom_diff = calc_growth(tot_cup_26, tot_cup_26_06)
+    cup_yoy_pct, cup_yoy_diff = calc_growth(tot_cup_26, tot_cup_25)
+
+    clientes_summary = {
+        'totais': {
+            'cli_26': tot_cli_26, 'cli_26_06': tot_cli_26_06, 'cli_25': tot_cli_25,
+            'cli_mom_pct': cli_mom_pct, 'cli_mom_diff': cli_mom_diff,
+            'cli_yoy_pct': cli_yoy_pct, 'cli_yoy_diff': cli_yoy_diff,
+            'cup_26': tot_cup_26, 'cup_26_06': tot_cup_26_06, 'cup_25': tot_cup_25,
+            'cup_mom_pct': cup_mom_pct, 'cup_mom_diff': cup_mom_diff,
+            'cup_yoy_pct': cup_yoy_pct, 'cup_yoy_diff': cup_yoy_diff,
+            'ticket_medio': round(tot_mtd_26 / tot_cup_26, 2) if tot_cup_26 > 0 else 0.0,
+            'gasto_medio': round(tot_mtd_26 / tot_cli_26, 2) if tot_cli_26 > 0 else 0.0,
+            'freq_media': round(tot_cup_26 / tot_cli_26, 2) if tot_cli_26 > 0 else 0.0
+        },
+        'canais': clientes_canais_list,
+        'grupos': clientes_grupos_list
+    }
+
     # Salvar todos os arquivos JSON
     def save_json(data, name):
         p = os.path.join(AGOSTO_DIR, name)
@@ -493,9 +645,11 @@ async def fetch_all_qlik_cubes():
     save_json(canais_by_hierarquia, 'canais_by_hierarquia.json')
     save_json(filtro_hierarquia, 'filtro_hierarquia.json')
     save_json(executive_kpis, 'executive_kpis.json')
+    save_json(clientes_summary, 'clientes_summary.json')
 
     print(f"  4/4 Todos os JSONs de Agosto salvos com sucesso em {time.time() - t_proc:.2f}s!")
     print(f"  📊 Total Agosto D-1 (01 a {max_dia:02d}): R$ {total_v26:,.2f} | YoY: {yoy_pct:+.1f}% | MoM: {mom_pct:+.1f}%")
+    print(f"  👥 Clientes Únicos: {tot_cli_26:,} | Cupons: {tot_cup_26:,}")
     print("=" * 70 + "\n")
 
 if __name__ == '__main__':

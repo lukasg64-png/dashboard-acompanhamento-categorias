@@ -1,17 +1,17 @@
 {
   "total_empresa": {
     "venda_jul_26": 513265819.78,
-    "venda_jun_26": 546166187.18,
-    "venda_jul_25": 463915262.63,
+    "venda_jun_26": 546166187.19,
+    "venda_jul_25": 463915262.62,
     "mom_pct": -6.02,
-    "mom_rs": -32900367.4,
+    "mom_rs": -32900367.41,
     "yoy_pct": 10.64,
-    "yoy_rs": 49350557.15
+    "yoy_rs": 49350557.16
   },
   "digital": {
     "venda_jul_26": 33632945.97,
     "venda_jun_26": 33086547.0,
-    "venda_jul_25": 20408586.8,
+    "venda_jul_25": 20408586.81,
     "share_jul_26": 6.55,
     "mom_pct": 1.65,
     "yoy_pct": 64.8

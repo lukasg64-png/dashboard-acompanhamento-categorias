@@ -43,7 +43,8 @@ async function loadAllData(mes = 'agosto') {
       prefix + 'categorias_summary.json',
       prefix + 'hierarquia_detalhada.json',
       prefix + 'filtro_hierarquia.json',
-      prefix + 'filtros_produto.json'
+      prefix + 'filtros_produto.json',
+      prefix + 'clientes_summary.json'
     ];
     const results = await Promise.all(urls.map(u => fetch(u).then(r => r.json()).catch(() => null)));
     DATA.kpis = results[0];
@@ -53,6 +54,7 @@ async function loadAllData(mes = 'agosto') {
     DATA.hierarquia = results[4] || [];
     DATA.filtroHierarquia = results[5] || {};
     DATA.filtrosProduto = results[6] || null;
+    DATA.clientes = results[7] || null;
   } catch (e) { console.error('Erro ao carregar dados:', e); }
 }
 
@@ -941,6 +943,7 @@ function render() {
   renderExecutiveKpis();
   renderCategorias();
   renderCanais();
+  renderClientesTab();
   if (typeof updateCharts === 'function') updateCharts();
   // Update waterfall if its tab is currently active
   const wfTab = document.getElementById('tabWaterfall');
@@ -1549,14 +1552,170 @@ function toggleCat(grupo) {
   renderCategorias();
 }
 
-function exportCsv() {
-  const grupos = getFilteredGrupos();
-  let csv = 'Grupo;Venda_Jul_26;Venda_Jun_26;MoM_Pct;MoM_RS;Venda_Jul_25;YoY_Pct;YoY_RS\n';
-  grupos.forEach(g => {
-    csv += `"${g.grupo}";${g.venda_jul_26};${g.venda_jun_26};${g.mom_pct};${g.mom_rs};${g.venda_jul_25};${g.yoy_pct};${g.yoy_rs}\n`;
+function fmtInt(val) {
+  if (val == null || isNaN(val)) return '-';
+  return Math.round(val).toLocaleString('pt-BR');
+}
+
+/* ── Renderização da Aba Clientes Únicos & Cupons (360°) ─── */
+function renderClientesTab() {
+  const strip = sel('kpiStripClientes');
+  const tbodyCanais = sel('tbodyClientesCanais');
+  const tbodyGrupos = sel('tbodyClientesGrupos');
+  if (!strip || !tbodyCanais || !tbodyGrupos) return;
+
+  const cliData = DATA.clientes;
+  if (!cliData || !cliData.totais) {
+    strip.innerHTML = '<div class="apple-kpi-card accent-blue"><div class="kpi-value-main" style="font-size:16px;">Dados de clientes disponíveis apenas na base de Agosto</div></div>';
+    tbodyCanais.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:20px; color:var(--text-tertiary);">Dados de clientes disponíveis na base de Agosto (D-1 Qlik Sense).</td></tr>';
+    tbodyGrupos.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--text-tertiary);">Dados de clientes disponíveis na base de Agosto (D-1 Qlik Sense).</td></tr>';
+    return;
+  }
+
+  const tot = cliData.totais;
+  const canais = cliData.canais || [];
+  const grupos = cliData.grupos || [];
+
+  // Calcular clientes digitais somando canais digitais
+  const digChs = canais.filter(c => ['APP', 'SITE', 'iFood', 'e_Commerce', 'APP Tele Entrega', 'SITE Tele Entrega', 'Super Fácil', 'Mercado Livre', 'Rappi'].some(n => c.canal.toLowerCase().includes(n.toLowerCase())));
+  const totCliDig = digChs.reduce((s, c) => s + (c.cli_26 || 0), 0);
+  const pctCliDig = tot.cli_26 > 0 ? (totCliDig / tot.cli_26 * 100) : 0;
+
+  // 1. Renderizar 6 KPI Cards Apple de Clientes
+  strip.innerHTML = `
+    <!-- Card 1: Total Clientes -->
+    <div class="apple-kpi-card accent-blue">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">CLIENTES ÚNICOS ATIVOS</span>
+        <span class="apple-tag tag-neu">Total D-1</span>
+      </div>
+      <div class="kpi-value-main">${fmtInt(tot.cli_26)}</div>
+      <div class="kpi-sub-value">${fmtCompact(tot.cli_26).replace('R$ ', '')} compradores no período</div>
+      <div class="kpi-footer-deltas">
+        ${tagPct(tot.cli_mom_pct)} <span class="sublabel">MoM</span>
+        ${tagPct(tot.cli_yoy_pct)} <span class="sublabel">YoY</span>
+      </div>
+    </div>
+
+    <!-- Card 2: Total Cupons -->
+    <div class="apple-kpi-card accent-indigo">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">CUPONS / TRANSAÇÕES</span>
+        <span class="apple-tag tag-neu">Volume</span>
+      </div>
+      <div class="kpi-value-main" style="color: var(--apple-indigo);">${fmtInt(tot.cup_26)}</div>
+      <div class="kpi-sub-value">${fmtCompact(tot.cup_26).replace('R$ ', '')} transações emitidas</div>
+      <div class="kpi-footer-deltas">
+        ${tagPct(tot.cup_mom_pct)} <span class="sublabel">MoM</span>
+        ${tagPct(tot.cup_yoy_pct)} <span class="sublabel">YoY</span>
+      </div>
+    </div>
+
+    <!-- Card 3: Ticket Médio -->
+    <div class="apple-kpi-card accent-green">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">TICKET MÉDIO</span>
+        <span class="apple-tag tag-pos">R$ / Cupom</span>
+      </div>
+      <div class="kpi-value-main" style="color: var(--apple-green-text);">${fmtRS(tot.ticket_medio)}</div>
+      <div class="kpi-sub-value">Faturamento / Cupons</div>
+      <div class="kpi-footer-deltas">
+        <span class="sublabel">Frequência: ${tot.freq_media.toFixed(2).replace('.', ',')} compras/cli</span>
+      </div>
+    </div>
+
+    <!-- Card 4: Gasto Médio por Cliente -->
+    <div class="apple-kpi-card accent-orange">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">GASTO MÉDIO / CLIENTE</span>
+        <span class="apple-tag tag-neu">R$ / Cliente</span>
+      </div>
+      <div class="kpi-value-main" style="color: var(--apple-orange);">${fmtRS(tot.gasto_medio)}</div>
+      <div class="kpi-sub-value">Faturamento / Clientes Ativos</div>
+      <div class="kpi-footer-deltas">
+        <span class="sublabel">No período de 01 a 18/08</span>
+      </div>
+    </div>
+
+    <!-- Card 5: Frequência de Compra -->
+    <div class="apple-kpi-card accent-purple">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">FREQUÊNCIA DE COMPRA</span>
+        <span class="apple-tag tag-neu">Cupons/Cli</span>
+      </div>
+      <div class="kpi-value-main" style="color: var(--apple-purple);">${tot.freq_media.toFixed(2).replace('.', ',')}x</div>
+      <div class="kpi-sub-value">Média de idas à farmácia</div>
+      <div class="kpi-footer-deltas">
+        <span class="sublabel">Taxa de recorrência ativa</span>
+      </div>
+    </div>
+
+    <!-- Card 6: Clientes Digitais -->
+    <div class="apple-kpi-card accent-teal">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">CLIENTES DIGITAIS</span>
+        <span class="apple-tag tag-neu">App + Site + Parcerias</span>
+      </div>
+      <div class="kpi-value-main" style="color: var(--apple-teal);">${fmtInt(totCliDig)}</div>
+      <div class="kpi-sub-value">${fmtPct(pctCliDig)} de penetração nos clientes</div>
+      <div class="kpi-footer-deltas">
+        <span class="sublabel">Compradores digitais únicos</span>
+      </div>
+    </div>
+  `;
+
+  // 2. Renderizar Tabela de Canais por Clientes
+  const sortedCanais = [...canais].sort((a, b) => (b.cli_26 || 0) - (a.cli_26 || 0));
+  let canaisHtml = '';
+  sortedCanais.forEach(c => {
+    canaisHtml += `
+      <tr class="row-linha">
+        <td style="font-weight: 600; color: var(--text-primary);">${esc(c.canal)}</td>
+        <td class="num font-weight-600">${fmtInt(c.cli_26)}</td>
+        <td class="num">${fmtInt(c.cli_26_06)}</td>
+        <td class="num">${fmtInt(c.cli_25)}</td>
+        <td class="num">${badgePct(c.cli_mom_pct)}</td>
+        <td class="num">${badgePct(c.cli_yoy_pct)}</td>
+        <td class="num">${fmtInt(c.cup_26)}</td>
+        <td class="num">${fmtRS(c.ticket_medio)}</td>
+        <td class="num">${fmtRS(c.gasto_medio)}</td>
+        <td class="num">${renderShareCell(c.penetr_base)}</td>
+      </tr>
+    `;
   });
-  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'acompanhamento_categorias.csv'; a.click();
+
+  canaisHtml += `
+    <tr style="font-weight: 700; background: rgba(0, 113, 227, 0.06); border-top: 2px solid var(--border);">
+      <td>TOTAL GERAL DA REDE</td>
+      <td class="num font-weight-600">${fmtInt(tot.cli_26)}</td>
+      <td class="num">${fmtInt(tot.cli_26_06)}</td>
+      <td class="num">${fmtInt(tot.cli_25)}</td>
+      <td class="num">${badgePct(tot.cli_mom_pct)}</td>
+      <td class="num">${badgePct(tot.cli_yoy_pct)}</td>
+      <td class="num">${fmtInt(tot.cup_26)}</td>
+      <td class="num">${fmtRS(tot.ticket_medio)}</td>
+      <td class="num">${fmtRS(tot.gasto_medio)}</td>
+      <td class="num">${renderShareCell(100)}</td>
+    </tr>
+  `;
+  tbodyCanais.innerHTML = canaisHtml;
+
+  // 3. Renderizar Tabela de Categorias por Clientes
+  const sortedGrupos = [...grupos].sort((a, b) => (b.cli_26 || 0) - (a.cli_26 || 0));
+  let gruposHtml = '';
+  sortedGrupos.forEach(g => {
+    gruposHtml += `
+      <tr class="row-linha">
+        <td style="font-weight: 600; color: var(--text-primary);">${esc(g.grupo)}</td>
+        <td class="num font-weight-600">${fmtInt(g.cli_26)}</td>
+        <td class="num">${fmtInt(g.cli_26_06)}</td>
+        <td class="num">${fmtInt(g.cli_25)}</td>
+        <td class="num">${badgePct(g.cli_yoy_pct)}</td>
+        <td class="num">${fmtRS(g.venda_26)}</td>
+        <td class="num">${fmtRS(g.gasto_medio)}</td>
+        <td class="num">${renderShareCell(g.penetr_base)}</td>
+      </tr>
+    `;
+  });
+  tbodyGrupos.innerHTML = gruposHtml;
 }

@@ -57,6 +57,9 @@ def pack_month_dataset(folder):
     filtro_hier = read_json_dir(folder, 'filtro_hierarquia.json')
     filtros_prod = read_json_dir(folder, 'filtros_produto.json')
 
+    clientes_path = os.path.join(folder, 'clientes_summary.json')
+    clientes = read_json_dir(folder, 'clientes_summary.json') if os.path.exists(clientes_path) else None
+
     ch_keys = ['grupo','subgrupo','linha','canal','canal_grupo','v26','v26_06','v25','d25','d26_06','d26_07']
 
     hier_keys = ['grupo','subgrupo','linha',
@@ -84,7 +87,8 @@ def pack_month_dataset(folder):
         "categorias_packed": compress_array(categorias, cat_keys),
         "hierarquia_packed": compress_array(hierarquia, hier_keys),
         "filtroHierarquia": filtro_hier,
-        "filtrosProduto": filtros_prod
+        "filtrosProduto": filtros_prod,
+        "clientes": clientes
     }
 
 def build():
@@ -121,7 +125,7 @@ const _PACKED = {{
 
     patched_app = js_app.replace(
         "async function loadAllData(mes = 'agosto') {",
-        "async function loadAllData(mes = 'agosto') {\n  if (typeof _PACKED !== 'undefined') {\n    const pkg = _PACKED[mes] || _PACKED['agosto'] || _PACKED['julho'];\n    DATA.kpis = pkg.kpis;\n    DATA.canais = pkg.canais;\n    DATA.canaisHier = _decompress(pkg.canais_hier_packed);\n    DATA.categorias = _decompress(pkg.categorias_packed);\n    DATA.hierarquia = _decompress(pkg.hierarquia_packed);\n    DATA.filtroHierarquia = pkg.filtroHierarquia;\n    DATA.filtrosProduto = pkg.filtrosProduto;\n    return;\n  }"
+        "async function loadAllData(mes = 'agosto') {\n  if (typeof _PACKED !== 'undefined') {\n    const pkg = _PACKED[mes] || _PACKED['agosto'] || _PACKED['julho'];\n    DATA.kpis = pkg.kpis;\n    DATA.canais = pkg.canais;\n    DATA.canaisHier = _decompress(pkg.canais_hier_packed);\n    DATA.categorias = _decompress(pkg.categorias_packed);\n    DATA.hierarquia = _decompress(pkg.hierarquia_packed);\n    DATA.filtroHierarquia = pkg.filtroHierarquia;\n    DATA.filtrosProduto = pkg.filtrosProduto;\n    DATA.clientes = pkg.clientes || null;\n    return;\n  }"
     )
 
     html_template = read(HTML_TEMPLATE)
