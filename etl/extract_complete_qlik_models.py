@@ -2,7 +2,7 @@
 extract_complete_qlik_models.py — Extrai os modelos completos com fórmula oficial de Resultado Líquido
 e paginação total diretamente da API WebSocket do Qlik Sense Engine.
 """
-import os, sys, time, json, asyncio
+import os, sys, time, json, asyncio, datetime
 if hasattr(sys.stdout, 'reconfigure'): sys.stdout.reconfigure(encoding='utf-8')
 if hasattr(sys.stderr, 'reconfigure'): sys.stderr.reconfigure(encoding='utf-8')
 
@@ -127,7 +127,10 @@ async def fetch_all_qlik_cubes():
                         results.canais_dia.forEach(r => {
                             if (typeof r[2] === 'number' && r[2] > 0) diasComVenda.add(Number(r[1]));
                         });
-                        const maxDia = diasComVenda.size > 0 ? Math.max(...Array.from(diasComVenda)) : 19;
+                        const rawMaxDia = diasComVenda.size > 0 ? Math.max(...Array.from(diasComVenda)) : 19;
+                        // D-1: excluir dia atual (dados parciais/incompletos)
+                        const today = new Date().getDate();
+                        const maxDia = Math.min(rawMaxDia, today - 1);
                         // Dia é campo numérico no Qlik — usar sintaxe de busca sem aspas simples
                         const dayFilter = `[Dia]={"<=${maxDia}"}`;
                         
@@ -140,13 +143,13 @@ async def fetch_all_qlik_cubes():
                                     { "qDef": { "qFieldDefs": ["Desc_Subgrupo"] } }
                                 ],
                                 "qMeasures": [
-                                    { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-08'}>} [Receita Líquida])", "qLabel": "v26" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-08'}, ${dayFilter}>} [Receita Líquida])`, "qLabel": "v26" } },
                                     { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-07'}, ${dayFilter}>} [Receita Líquida])`, "qLabel": "v26_06" } },
                                     { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2025-08'}, ${dayFilter}>} [Receita Líquida])`, "qLabel": "v25" } },
-                                    { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-08'}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL'}>} [Receita Líquida])", "qLabel": "vDig26" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-08'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL'}>} [Receita Líquida])`, "qLabel": "vDig26" } },
                                     { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-07'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL'}>} [Receita Líquida])`, "qLabel": "vDig26_06" } },
                                     { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2025-08'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL'}>} [Receita Líquida])`, "qLabel": "vDig25" } },
-                                    { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-08'}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL','TELE ENTREGA','TELE VENDA'}>} [Receita Líquida])", "qLabel": "vDt26" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-08'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL','TELE ENTREGA','TELE VENDA'}>} [Receita Líquida])`, "qLabel": "vDt26" } },
                                     { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-07'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL','TELE ENTREGA','TELE VENDA'}>} [Receita Líquida])`, "qLabel": "vDt26_06" } },
                                     { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2025-08'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL','TELE ENTREGA','TELE VENDA'}>} [Receita Líquida])`, "qLabel": "vDt25" } }
                                 ],
@@ -168,13 +171,13 @@ async def fetch_all_qlik_cubes():
                                     { "qDef": { "qFieldDefs": ["Desc_Linha"] } }
                                 ],
                                 "qMeasures": [
-                                    { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-08'}>} [Receita Líquida])", "qLabel": "v26" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-08'}, ${dayFilter}>} [Receita Líquida])`, "qLabel": "v26" } },
                                     { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-07'}, ${dayFilter}>} [Receita Líquida])`, "qLabel": "v26_06" } },
                                     { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2025-08'}, ${dayFilter}>} [Receita Líquida])`, "qLabel": "v25" } },
-                                    { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-08'}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL'}>} [Receita Líquida])", "qLabel": "vDig26" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-08'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL'}>} [Receita Líquida])`, "qLabel": "vDig26" } },
                                     { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-07'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL'}>} [Receita Líquida])`, "qLabel": "vDig26_06" } },
                                     { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2025-08'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL'}>} [Receita Líquida])`, "qLabel": "vDig25" } },
-                                    { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-08'}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL','TELE ENTREGA','TELE VENDA'}>} [Receita Líquida])", "qLabel": "vDt26" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-08'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL','TELE ENTREGA','TELE VENDA'}>} [Receita Líquida])`, "qLabel": "vDt26" } },
                                     { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-07'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL','TELE ENTREGA','TELE VENDA'}>} [Receita Líquida])`, "qLabel": "vDt26_06" } },
                                     { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2025-08'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL','TELE ENTREGA','TELE VENDA'}>} [Receita Líquida])`, "qLabel": "vDt25" } }
                                 ],
@@ -198,7 +201,7 @@ async def fetch_all_qlik_cubes():
                                     { "qDef": { "qFieldDefs": ["Canal"] } }
                                 ],
                                 "qMeasures": [
-                                    { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-08'}>} [Receita Líquida])", "qLabel": "v26" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-08'}, ${dayFilter}>} [Receita Líquida])`, "qLabel": "v26" } },
                                     { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-07'}, ${dayFilter}>} [Receita Líquida])`, "qLabel": "v26_06" } },
                                     { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2025-08'}, ${dayFilter}>} [Receita Líquida])`, "qLabel": "v25" } }
                                 ],
@@ -261,9 +264,11 @@ async def fetch_all_qlik_cubes():
         canais_dict[canal]['d26_06'][dia - 1] = round(v26_06_d, 2)
         canais_dict[canal]['d25'][dia - 1] = round(v25_d, 2)
 
-    # Identificar último dia com dados de Agosto
+    # Identificar último dia com dados de Agosto — D-1 (excluir dia atual, dados parciais)
     dias_com_venda = [i+1 for i in range(31) if any(c['d26_07'][i] > 0 for c in canais_dict.values())]
-    max_dia = max(dias_com_venda) if dias_com_venda else 19
+    raw_max_dia = max(dias_com_venda) if dias_com_venda else 19
+    today = datetime.date.today().day
+    max_dia = min(raw_max_dia, today - 1) if today > 1 else raw_max_dia
 
     # Consolidar totais MTD dos canais (01 a max_dia)
     for c in canais_dict.values():
@@ -419,9 +424,10 @@ async def fetch_all_qlik_cubes():
         'laboratorios': []
     }
 
-    # Identificar último dia com dados
+    # Identificar último dia com dados — D-1 (excluir dia atual)
     dias_com_venda = [i+1 for i in range(31) if any(c['d26_07'][i] > 0 for c in canais_summary)]
-    max_dia = max(dias_com_venda) if dias_com_venda else 19
+    raw_max_dia = max(dias_com_venda) if dias_com_venda else 19
+    max_dia = min(raw_max_dia, today - 1) if today > 1 else raw_max_dia
 
     # 6. Gerar Executive KPIs (MTD Comparativo: 01 a max_dia)
     tot_mtd_26 = sum(sum(c['d26_07'][:max_dia]) for c in canais_summary)
