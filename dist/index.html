@@ -2095,7 +2095,7 @@ function getFilteredGrupos() {
   // useDays: ativo para qualquer mês quando há filtro de período != intervalo padrão
   const maxDiaAgo = (DATA.kpis?.periodo_info?.dias_fechados) || 19;
   const defaultEnd = STATE.mesReferencia === 'agosto' ? maxDiaAgo : 31;
-  const useDays = (STATE.startDay !== 1 || STATE.endDay !== defaultEnd);
+  const useDays = (STATE.startDay !== 1 || STATE.endDay < defaultEnd);
 
   hier.forEach(c => {
     let v26 = c.venda_jul_26 || 0;
@@ -2344,7 +2344,7 @@ function renderCanais() {
   const filteredCanaisList = getFilteredCanaisList();
   const maxDiaAgo = (DATA.kpis?.periodo_info?.dias_fechados) || 19;
   const defaultEnd = STATE.mesReferencia === 'agosto' ? maxDiaAgo : 31;
-  const useDays = (STATE.startDay !== 1 || STATE.endDay !== defaultEnd);
+  const useDays = (STATE.startDay !== 1 || STATE.endDay < defaultEnd);
 
   const digitalChs = [];
   const teleChs = [];
@@ -2544,7 +2544,7 @@ function renderCategorias() {
   const hier = getFilteredHier();
   const maxDiaAgo2 = (DATA.kpis?.periodo_info?.dias_fechados) || 19;
   const defaultEnd2 = STATE.mesReferencia === 'agosto' ? maxDiaAgo2 : 31;
-  const useDays = (STATE.startDay !== 1 || STATE.endDay !== defaultEnd2);
+  const useDays = (STATE.startDay !== 1 || STATE.endDay < defaultEnd2);
 
   let totEmp26 = 0, totEmp26_06 = 0, totEmp25 = 0;
   totEmp26 = grupos.reduce((s, g) => s + (g.venda_jul_26 || 0), 0);
