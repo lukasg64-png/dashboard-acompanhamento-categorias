@@ -1,4 +1,4 @@
-/* charts.js — Gráficos de Evolução da Penetração Digital & Mix de Canais */
+/* charts.js — Gráficos Apple HIG para Mix de Canais & Penetração Digital */
 
 let chartTrend = null;
 let chartMix = null;
@@ -9,7 +9,9 @@ function updateCharts() {
   if (!trendCtx || !mixCtx) return;
 
   const canaisList = (typeof getFilteredCanaisList === 'function') ? getFilteredCanaisList() : (DATA.canais || []);
-  const useDays = (typeof STATE !== 'undefined' && STATE.mesReferencia === 'julho') && (STATE.startDay !== 1 || STATE.endDay !== 31);
+  const maxDiaAgo = (DATA.kpis?.periodo_info?.dias_fechados) || 18;
+  const defaultEnd = (typeof STATE !== 'undefined' && STATE.mesReferencia === 'agosto') ? maxDiaAgo : 31;
+  const useDays = (typeof STATE !== 'undefined') && (STATE.startDay !== 1 || STATE.endDay < defaultEnd);
 
   let dig25 = 0, dig26_06 = 0, dig26_07 = 0;
   let dt25 = 0, dt26_06 = 0, dt26_07 = 0;
@@ -56,34 +58,39 @@ function updateCharts() {
   const pctDt26_06 = tot26_06 > 0 ? (dt26_06 / tot26_06 * 100) : 0;
   const pctDt26_07 = tot26_07 > 0 ? (dt26_07 / tot26_07 * 100) : 0;
 
-  // Chart 1: Penetração Digital sobre Empresa (%)
+  const isAgosto = (typeof STATE !== 'undefined' && STATE.mesReferencia === 'agosto');
+  const labelsHist = isAgosto ? ['Ago/25 (YoY)', 'Jul/26 (MoM)', 'Ago/26 (D-1)'] : ['Jul/25 (YoY)', 'Jun/26 (MoM)', 'Jul/26 (Fechado)'];
+
+  // Chart 1: Penetração Digital sobre Empresa (%) — Apple Line Style
   if (chartTrend) chartTrend.destroy();
   chartTrend = new Chart(trendCtx, {
     type: 'line',
     data: {
-      labels: (typeof STATE !== 'undefined' && STATE.mesReferencia === 'agosto') ? ['Ago/25', 'Jul/26', 'Ago/26'] : ['Jul/25', 'Jun/26', 'Jul/26'],
+      labels: labelsHist,
       datasets: [
         {
           label: '% Digital / Empresa',
           data: [pctDig25, pctDig26_06, pctDig26_07],
-          borderColor: '#6366f1',
-          backgroundColor: 'rgba(99,102,241,0.1)',
+          borderColor: '#0071E3',
+          backgroundColor: 'rgba(0, 113, 227, 0.08)',
           fill: true,
-          tension: 0.3,
+          tension: 0.35,
           borderWidth: 3,
           pointRadius: 5,
-          pointBackgroundColor: '#6366f1'
+          pointBackgroundColor: '#0071E3',
+          pointHoverRadius: 7
         },
         {
-          label: '% Digital+Tele / Empresa',
+          label: '% Digital + Tele / Empresa',
           data: [pctDt25, pctDt26_06, pctDt26_07],
-          borderColor: '#10b981',
+          borderColor: '#34C759',
           backgroundColor: 'transparent',
           borderDash: [5, 5],
-          tension: 0.3,
+          tension: 0.35,
           borderWidth: 2.5,
           pointRadius: 4,
-          pointBackgroundColor: '#10b981'
+          pointBackgroundColor: '#34C759',
+          pointHoverRadius: 6
         }
       ]
     },
@@ -91,51 +98,80 @@ function updateCharts() {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'top', labels: { font: { family: 'Inter', size: 12, weight: '600' } } },
+        legend: {
+          position: 'top',
+          labels: {
+            font: { family: '-apple-system, Inter', size: 12, weight: '600' },
+            usePointStyle: true,
+            boxWidth: 8
+          }
+        },
         tooltip: {
+          backgroundColor: 'rgba(29, 29, 31, 0.92)',
+          titleFont: { family: '-apple-system, Inter', size: 12, weight: '700' },
+          bodyFont: { family: '-apple-system, Inter', size: 12 },
+          padding: 10,
+          cornerRadius: 8,
           callbacks: {
-            label: ctx => ctx.dataset.label + ': ' + ctx.raw.toFixed(2).replace('.', ',') + '%'
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.raw.toFixed(2).replace('.', ',')}%`
           }
         }
       },
       scales: {
         y: {
-          beginAtZero: true,
+          grid: { color: 'rgba(0, 0, 0, 0.04)' },
           ticks: {
-            callback: v => v.toFixed(1).replace('.', ',') + '%',
-            font: { family: 'Inter', size: 11 }
+            font: { family: '-apple-system, Inter', size: 11 },
+            callback: v => v.toFixed(1) + '%'
           }
         },
         x: {
-          ticks: { font: { family: 'Inter', size: 11 } }
+          grid: { display: false },
+          ticks: { font: { family: '-apple-system, Inter', size: 11, weight: '600' } }
         }
       }
     }
   });
 
-  // Chart 2: Mix de Canais — Mês Atual
-  const pDig = tot26_07 > 0 ? (dig26_07 / tot26_07 * 100).toFixed(2).replace('.', ',') : '0';
-  const pTele = tot26_07 > 0 ? (tele26_07 / tot26_07 * 100).toFixed(2).replace('.', ',') : '0';
-  const pLoja = tot26_07 > 0 ? (loja26_07 / tot26_07 * 100).toFixed(2).replace('.', ',') : '0';
+  // Chart 2: Mix de Canais — Apple Donut Style
+  const pctLoja = tot26_07 > 0 ? (loja26_07 / tot26_07 * 100) : 0;
+  const pctTele = tot26_07 > 0 ? (tele26_07 / tot26_07 * 100) : 0;
+  const pctDig = tot26_07 > 0 ? (dig26_07 / tot26_07 * 100) : 0;
 
   if (chartMix) chartMix.destroy();
   chartMix = new Chart(mixCtx, {
     type: 'doughnut',
     data: {
-      labels: [`Digital (${pDig}%)`, `Televendas (${pTele}%)`, `Loja Física (${pLoja}%)`],
-      datasets: [{
-        data: [dig26_07, tele26_07, loja26_07],
-        backgroundColor: ['#6366f1', '#10b981', '#cbd5e1']
-      }]
+      labels: ['Loja Física (Varejo)', 'Digital (App/Site/Parcerias)', 'Televendas & Tele-entrega'],
+      datasets: [
+        {
+          data: [pctLoja, pctDig, pctTele],
+          backgroundColor: ['#5856D6', '#0071E3', '#30B0C7'],
+          borderWidth: 2,
+          borderColor: '#FFFFFF',
+          hoverOffset: 6
+        }
+      ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      cutout: '72%',
       plugins: {
-        legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 12, weight: '600' } } },
+        legend: {
+          position: 'bottom',
+          labels: {
+            font: { family: '-apple-system, Inter', size: 11, weight: '600' },
+            usePointStyle: true,
+            padding: 14
+          }
+        },
         tooltip: {
+          backgroundColor: 'rgba(29, 29, 31, 0.92)',
+          padding: 10,
+          cornerRadius: 8,
           callbacks: {
-            label: ctx => ctx.label + ': R$ ' + Math.round(ctx.raw).toLocaleString('pt-BR')
+            label: ctx => ` ${ctx.label}: ${ctx.raw.toFixed(2).replace('.', ',')}%`
           }
         }
       }

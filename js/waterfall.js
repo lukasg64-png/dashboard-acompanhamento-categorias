@@ -36,8 +36,8 @@ const CANAL_GROUPS = {
 
 /* ── Init ────────────────────────────────────────────── */
 function initWaterfall() {
-  // Tab navigation
-  const tabBtns = document.querySelectorAll('#mainTabNav .tab-btn');
+  // Tab navigation Apple Style
+  const tabBtns = document.querySelectorAll('#mainTabNav .apple-tab-btn, #mainTabNav .tab-btn');
   tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const tabId = btn.dataset.tab;
@@ -47,6 +47,7 @@ function initWaterfall() {
       const target = document.getElementById(tabId);
       if (target) target.classList.add('active');
       if (tabId === 'tabWaterfall') triggerWaterfall();
+      if (tabId === 'tabShareMatrix' && typeof updateCharts === 'function') updateCharts();
     });
   });
 
@@ -69,9 +70,9 @@ function initWaterfall() {
 function wireupPillBar(containerId, dataAttr, callback) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  container.querySelectorAll('.wf-pill').forEach(btn => {
+  container.querySelectorAll('.segmented-btn, .wf-pill').forEach(btn => {
     btn.addEventListener('click', () => {
-      container.querySelectorAll('.wf-pill').forEach(b => b.classList.remove('active'));
+      container.querySelectorAll('.segmented-btn, .wf-pill').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       callback(btn.dataset[dataAttr]);
     });
@@ -351,38 +352,49 @@ function renderWaterfallKPIs(data) {
   if (!kpiRow) return;
 
   const deltaColor = data.totalDelta >= 0 ? '#16a34a' : '#dc2626';
-  const up = data.items.filter(i => i.delta > 0).length;
-  const down = data.items.filter(i => i.delta < 0).length;
+  const deltaSign = data.totalDelta >= 0 ? '+' : '';
+  const deltaCls = data.totalDelta >= 0 ? 'accent-green' : 'accent-red';
   const topGrower = data.items.filter(i => i.delta > 0).sort((a, b) => b.deltaPct - a.deltaPct)[0];
   const topFaller = data.items.filter(i => i.delta < 0).sort((a, b) => a.deltaPct - b.deltaPct)[0];
 
   kpiRow.innerHTML = `
-    <div class="wf-kpi-card">
-      <div class="wf-kpi-label">TOTAL BASE (${data.compLabel})</div>
-      <div class="wf-kpi-value">${wfFmtCompact(data.totalBase)}</div>
+    <div class="apple-kpi-card accent-blue">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">FATURAMENTO BASE (${esc(data.compLabel)})</span>
+      </div>
+      <div class="kpi-value-main">${wfFmtCompact(data.totalBase)}</div>
+      <div class="kpi-sub-value">Período comparativo base</div>
     </div>
-    <div class="wf-kpi-card">
-      <div class="wf-kpi-label">TOTAL ATUAL (${data.curLabel})</div>
-      <div class="wf-kpi-value">${wfFmtCompact(data.totalCurrent)}</div>
+    <div class="apple-kpi-card ${deltaCls}">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">VARIAÇÃO TOTAL</span>
+      </div>
+      <div class="kpi-value-main" style="color: ${deltaColor};">${deltaSign}${wfFmtCompact(data.totalDelta)}</div>
+      <div class="kpi-footer-deltas">
+        <span class="apple-tag ${data.totalDelta >= 0 ? 'tag-pos' : 'tag-neg'}">${deltaSign}${wfFmtPct(data.totalDeltaPct)}</span>
+        <span class="sublabel">vs base</span>
+      </div>
     </div>
-    <div class="wf-kpi-card">
-      <div class="wf-kpi-label">VARIAÇÃO</div>
-      <div class="wf-kpi-value" style="color: ${deltaColor}">${data.totalDelta >= 0 ? '+' : ''}${wfFmtCompact(data.totalDelta)}</div>
-      <div class="wf-kpi-delta">${wfTagPct(data.totalDeltaPct)}</div>
+    <div class="apple-kpi-card accent-indigo">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">FATURAMENTO FINAL (${esc(data.curLabel)})</span>
+      </div>
+      <div class="kpi-value-main">${wfFmtCompact(data.totalCurrent)}</div>
+      <div class="kpi-sub-value">Total do período atual</div>
     </div>
-    <div class="wf-kpi-card">
-      <div class="wf-kpi-label">⬆ CRESCERAM / ⬇ CAÍRAM</div>
-      <div class="wf-kpi-value"><span style="color:#16a34a">${up}</span> / <span style="color:#dc2626">${down}</span></div>
+    <div class="apple-kpi-card accent-green">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">MAIOR CRESCIMENTO</span>
+      </div>
+      <div class="kpi-value-main" style="font-size:16px; color:var(--apple-green-text);">${topGrower ? esc(topGrower.label) : '—'}</div>
+      <div class="kpi-sub-value">${topGrower ? '+' + wfFmtCompact(topGrower.delta) : ''} (${topGrower ? wfFmtPct(topGrower.deltaPct) : ''})</div>
     </div>
-    <div class="wf-kpi-card">
-      <div class="wf-kpi-label">🏆 MAIOR CRESCIMENTO</div>
-      <div class="wf-kpi-value" style="font-size:14px; color:#16a34a">${topGrower ? topGrower.label : '—'}</div>
-      <div class="wf-kpi-delta">${topGrower ? wfFmtPct(topGrower.deltaPct) : ''}</div>
-    </div>
-    <div class="wf-kpi-card">
-      <div class="wf-kpi-label">⚠ MAIOR QUEDA</div>
-      <div class="wf-kpi-value" style="font-size:14px; color:#dc2626">${topFaller ? topFaller.label : '—'}</div>
-      <div class="wf-kpi-delta">${topFaller ? wfFmtPct(topFaller.deltaPct) : ''}</div>
+    <div class="apple-kpi-card accent-red">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">MAIOR QUEDA</span>
+      </div>
+      <div class="kpi-value-main" style="font-size:16px; color:var(--apple-red-text);">${topFaller ? esc(topFaller.label) : '—'}</div>
+      <div class="kpi-sub-value">${topFaller ? wfFmtCompact(topFaller.delta) : ''} (${topFaller ? wfFmtPct(topFaller.deltaPct) : ''})</div>
     </div>
   `;
 }

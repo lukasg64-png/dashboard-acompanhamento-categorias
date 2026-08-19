@@ -129,8 +129,8 @@ function wireEvents() {
     });
   }
 
-  // Month button handler (if present)
-  const monthBtns = document.querySelectorAll('#monthSelector .month-btn');
+  // Month button handler (Apple segmented control)
+  const monthBtns = document.querySelectorAll('#monthSelector .segmented-btn, #monthSelector .month-btn');
   monthBtns.forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const month = btn.dataset.month;
@@ -298,11 +298,11 @@ function wireEvents() {
   });
 
   // Expand / Collapse all
-  sel('btnExpandAll').addEventListener('click', () => {
+  if (sel('btnExpandAll')) sel('btnExpandAll').addEventListener('click', () => {
     getFilteredGrupos().forEach(g => STATE.expandedCat.add(g.grupo));
     renderCategorias();
   });
-  sel('btnCollapseAll').addEventListener('click', () => { STATE.expandedCat.clear(); renderCategorias(); });
+  if (sel('btnCollapseAll')) sel('btnCollapseAll').addEventListener('click', () => { STATE.expandedCat.clear(); renderCategorias(); });
 
   // Column sorting on all sortable headers (Canais & Categorias)
   document.querySelectorAll('th.sortable').forEach(th => {
@@ -598,12 +598,23 @@ function badgePct(val) {
   const arrow = val >= 0 ? '▲' : '▼';
   return `<span class="badge ${cls}">${arrow} ${Math.abs(val).toFixed(2).replace('.', ',')}%</span>`;
 }
+function renderShareCell(pct) {
+  if (pct == null || isNaN(pct)) return '-';
+  const p = Math.max(0, Math.min(100, pct));
+  return `
+    <div class="share-bar-cell">
+      <span>${fmtPct(pct)}</span>
+      <div class="share-bar-bg"><div class="share-bar-fill" style="width: ${p.toFixed(1)}%;"></div></div>
+    </div>
+  `;
+}
+
 function badgePP(val) {
-  if (val == null || isNaN(val)) return '<span class="badge-pp neu">-</span>';
-  const cls = val > 0.001 ? 'pos' : (val < -0.001 ? 'neg' : 'neu');
+  if (val == null || isNaN(val)) return '<span class="apple-tag tag-neu">-</span>';
+  const cls = val > 0.001 ? 'tag-pos' : (val < -0.001 ? 'tag-neg' : 'tag-neu');
   const arrow = val > 0.001 ? '▲' : (val < -0.001 ? '▼' : '');
   const sign = val > 0 ? '+' : '';
-  return `<span class="badge-pp ${cls}">${arrow} ${sign}${val.toFixed(2).replace('.', ',')} p.p.</span>`;
+  return `<span class="apple-tag ${cls}">${arrow} ${sign}${val.toFixed(2).replace('.', ',')} p.p.</span>`;
 }
 function deltaRS(val) {
   if (val == null || isNaN(val)) return '-';
@@ -905,18 +916,20 @@ function updateTableHeaders() {
   const yoyLabel = isAgosto ? 'Ago/25' : 'Jul/25';
 
   // Canais table headers
-  if (sel('thCanaisCur')) sel('thCanaisCur').textContent = curLabel;
-  if (sel('thCanaisMom')) sel('thCanaisMom').textContent = momLabel;
-  if (sel('thCanaisYoy')) sel('thCanaisYoy').textContent = yoyLabel;
-  if (sel('thPartCanaisCur')) sel('thPartCanaisCur').textContent = `Part. ${curLabel}`;
-  if (sel('thPartCanaisMom')) sel('thPartCanaisMom').textContent = `Part. ${momLabel}`;
-  if (sel('thPartCanaisYoy')) sel('thPartCanaisYoy').textContent = `Part. ${yoyLabel}`;
+  if (sel('thCanalCol1')) sel('thCanalCol1').textContent = curLabel;
+  if (sel('thCanalCol2')) sel('thCanalCol2').textContent = momLabel;
+  if (sel('thCanalCol3')) sel('thCanalCol3').textContent = yoyLabel;
+  if (sel('thCanalPartCol1')) sel('thCanalPartCol1').textContent = `Share ${curLabel}`;
+  if (sel('thCanalPartCol2')) sel('thCanalPartCol2').textContent = `Share ${momLabel}`;
+  if (sel('thCanalPartCol3')) sel('thCanalPartCol3').textContent = `Share ${yoyLabel}`;
 
   // Categorias table headers
-  if (sel('thVendaJul26')) sel('thVendaJul26').textContent = curLabel;
-  if (sel('thVendaJun26')) sel('thVendaJun26').textContent = momLabel;
-  if (sel('thVendaJul25')) sel('thVendaJul25').textContent = yoyLabel;
-  if (sel('thPartJul26')) sel('thPartJul26').textContent = `Part. ${curLabel}`;
+  if (sel('thCatCol1')) sel('thCatCol1').textContent = curLabel;
+  if (sel('thCatCol2')) sel('thCatCol2').textContent = momLabel;
+  if (sel('thCatCol3')) sel('thCatCol3').textContent = yoyLabel;
+  if (sel('thPartJul26')) sel('thPartJul26').textContent = `Share ${curLabel}`;
+  if (sel('thPartJun26')) sel('thPartJun26').textContent = `Share ${momLabel}`;
+  if (sel('thPartJul25')) sel('thPartJul25').textContent = `Share ${yoyLabel}`;
   if (sel('thPartJun26')) sel('thPartJun26').textContent = `Part. ${momLabel}`;
   if (sel('thPartJul25')) sel('thPartJul25').textContent = `Part. ${yoyLabel}`;
 }
@@ -937,46 +950,69 @@ function render() {
 }
 
 function renderRefPeriodo() {
-  const el = sel('refPeriodo');
+  const el = sel('refPeriodoText') || sel('refPeriodo');
   if (!el) return;
   if (STATE.mesReferencia === 'agosto') {
-    const pInfo = DATA.kpis?.periodo_info?.periodo_str || '01 a 19/08/2026';
-    const maxDia = DATA.kpis?.periodo_info?.dias_fechados || 19;
+    const pInfo = DATA.kpis?.periodo_info?.periodo_str || '01 a 18/08/2026';
+    const maxDia = DATA.kpis?.periodo_info?.dias_fechados || 18;
     if (STATE.startDay === 1 && STATE.endDay >= maxDia) {
-      el.textContent = `Agosto/2026 (${pInfo}) vs Julho/2026 (MoM) | Agosto/2026 vs Agosto/2025 (YoY)`;
+      el.textContent = `Agosto/2026 (${pInfo} D-1) • MoM vs Jul/26 • YoY vs Ago/25`;
     } else {
       const dS = String(STATE.startDay).padStart(2, '0');
       const dE = String(Math.min(STATE.endDay, maxDia)).padStart(2, '0');
-      el.textContent = `Agosto/2026 (Dias ${dS} a ${dE}/08) vs Julho/2026 (Dias ${dS}-${dE} MoM) | vs Agosto/2025 (YoY)`;
+      el.textContent = `Agosto/2026 (Dias ${dS} a ${dE}/08) • MoM vs Jul/26 • YoY vs Ago/25`;
     }
   } else {
     if (STATE.startDay === 1 && STATE.endDay === 31) {
-      el.textContent = 'Julho/2026 vs Junho/2026 (MoM) | Julho/2026 vs Julho/2025 (YoY)';
+      el.textContent = 'Julho/2026 (Fechado) • MoM vs Jun/26 • YoY vs Jul/25';
     } else {
       const dStart = String(STATE.startDay).padStart(2, '0');
       const dEnd = String(STATE.endDay).padStart(2, '0');
-      el.textContent = `Período: Dias ${dStart} a ${dEnd} (Comparativo MTD)`;
+      el.textContent = `Julho/2026 (Dias ${dStart} a ${dEnd}/07) • Comparativo MTD`;
     }
   }
 }
 
-/* ── 5 KPI Cards Executivos ───────────────────────── */
+/* ── 6 KPI Cards Executivos 360° (Apple Style) ────────────── */
 function renderExecutiveKpis() {
   const strip = sel('kpiStrip');
   if (!strip) return;
 
-  const grupos = getFilteredGrupos();
-  const vJul26 = grupos.reduce((s, g) => s + (g.venda_jul_26 || 0), 0);
-  const vJun26 = grupos.reduce((s, g) => s + (g.venda_jun_26 || 0), 0);
-  const vJul25 = grupos.reduce((s, g) => s + (g.venda_jul_25 || 0), 0);
+  const canais = getFilteredCanaisList();
+  const maxDiaAgo = (DATA.kpis?.periodo_info?.dias_fechados) || 18;
+  const defaultEnd = STATE.mesReferencia === 'agosto' ? maxDiaAgo : 31;
+  const useDays = (STATE.startDay !== 1 || STATE.endDay < defaultEnd);
 
-  const vDigJul26 = grupos.reduce((s, g) => s + (g.venda_digital_jul_26 || 0), 0);
-  const vDigJun26 = grupos.reduce((s, g) => s + (g.venda_digital_jun_26 || 0), 0);
-  const vDigJul25 = grupos.reduce((s, g) => s + (g.venda_digital_jul_25 || 0), 0);
+  const sumVal = (list, field) => list.reduce((s, c) => {
+    let val = c[field] || 0;
+    if (useDays) {
+      const daysField = field === 'venda_jul_26' ? 'd26_07' :
+                        field === 'venda_jun_26' ? 'd26_06' : 'd25';
+      if (c[daysField]) {
+        val = sumDays(c[daysField], STATE.startDay, STATE.endDay);
+      }
+    }
+    return s + val;
+  }, 0);
 
-  const vDtJul26 = grupos.reduce((s, g) => s + (g.venda_dt_jul_26 || 0), 0);
-  const vDtJun26 = grupos.reduce((s, g) => s + (g.venda_dt_jun_26 || 0), 0);
-  const vDtJul25 = grupos.reduce((s, g) => s + (g.venda_dt_jul_25 || 0), 0);
+  const vJul26 = sumVal(canais, 'venda_jul_26');
+  const vJun26 = sumVal(canais, 'venda_jun_26');
+  const vJul25 = sumVal(canais, 'venda_jul_25');
+
+  const digCanais = canais.filter(c => c.grupo === 'digital');
+  const vDigJul26 = sumVal(digCanais, 'venda_jul_26');
+  const vDigJun26 = sumVal(digCanais, 'venda_jun_26');
+  const vDigJul25 = sumVal(digCanais, 'venda_jul_25');
+
+  const dtCanais = canais.filter(c => c.grupo === 'digital' || c.grupo === 'tele');
+  const vDtJul26 = sumVal(dtCanais, 'venda_jul_26');
+  const vDtJun26 = sumVal(dtCanais, 'venda_jun_26');
+  const vDtJul25 = sumVal(dtCanais, 'venda_jul_25');
+
+  const lojaCanais = canais.filter(c => c.grupo === 'loja');
+  const vLojaJul26 = sumVal(lojaCanais, 'venda_jul_26');
+  const vLojaJun26 = sumVal(lojaCanais, 'venda_jun_26');
+  const vLojaJul25 = sumVal(lojaCanais, 'venda_jul_25');
 
   const momPctTotal = vJun26 > 0 ? ((vJul26 / vJun26) - 1) * 100 : 0;
   const momRsTotal = vJul26 - vJun26;
@@ -991,43 +1027,101 @@ function renderExecutiveKpis() {
   const dtMom = vDtJun26 > 0 ? ((vDtJul26 / vDtJun26) - 1) * 100 : 0;
   const dtYoy = vDtJul25 > 0 ? ((vDtJul26 / vDtJul25) - 1) * 100 : 0;
 
+  const pctLoja = vJul26 > 0 ? (vLojaJul26 / vJul26 * 100) : 0;
+  const lojaMom = vLojaJun26 > 0 ? ((vLojaJul26 / vLojaJun26) - 1) * 100 : 0;
+  const lojaYoy = vLojaJul25 > 0 ? ((vLojaJul26 / vLojaJul25) - 1) * 100 : 0;
+
   const label1 = (STATE.mesReferencia === 'agosto')
       ? (() => {
-          const pInfo = DATA.kpis?.periodo_info?.periodo_str || '01 a 19/08';
-          const maxDia = DATA.kpis?.periodo_info?.dias_fechados || 19;
+          const pInfo = DATA.kpis?.periodo_info?.periodo_str || '01 a 18/08';
+          const maxDia = DATA.kpis?.periodo_info?.dias_fechados || 18;
           if (STATE.startDay === 1 && STATE.endDay >= maxDia)
-            return `FATURAMENTO TOTAL EMPRESA (AGO/26 - ${pInfo})`;
-          return `FATURAMENTO (AGO/26 - DIAS ${STATE.startDay}-${Math.min(STATE.endDay, maxDia)})`;
+            return `FATURAMENTO LÍQUIDO (${pInfo})`;
+          return `FATURAMENTO (DIAS ${STATE.startDay}-${Math.min(STATE.endDay, maxDia)}/08)`;
         })()
-      : (STATE.startDay === 1 && STATE.endDay === 31) ? 'FATURAMENTO TOTAL EMPRESA (JUL/26)' : `FATURAMENTO (DIAS ${STATE.startDay}-${STATE.endDay})`;
+      : (STATE.startDay === 1 && STATE.endDay === 31) ? 'FATURAMENTO TOTAL (JUL/26)' : `FATURAMENTO (DIAS ${STATE.startDay}-${STATE.endDay}/07)`;
 
   strip.innerHTML = `
-    <div class="kpi-card">
-      <div class="kpi-label">${esc(label1)}</div>
-      <div class="kpi-value">${fmtCompact(vJul26)}</div>
-      <div class="kpi-delta">${tagPct(momPctTotal)} <span class="sublabel">MoM</span> ${tagPct(yoyPctTotal)} <span class="sublabel">YoY</span></div>
+    <!-- Card 1: Faturamento Líquido -->
+    <div class="apple-kpi-card accent-blue">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">${esc(label1)}</span>
+        <span class="apple-tag tag-neu">Total</span>
+      </div>
+      <div class="kpi-value-main">${fmtCompact(vJul26)}</div>
+      <div class="kpi-sub-value">${fmtRS(vJul26)}</div>
+      <div class="kpi-footer-deltas">
+        ${tagPct(momPctTotal)} <span class="sublabel">MoM</span>
+        ${tagPct(yoyPctTotal)} <span class="sublabel">YoY</span>
+      </div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-label">CRESCIMENTO MOM</div>
-      <div class="kpi-value">${fmtPct(momPctTotal)}</div>
-      <div class="kpi-delta">${deltaRS(momRsTotal)} <span class="sublabel">nominal</span></div>
+
+    <!-- Card 2: Crescimento MoM -->
+    <div class="apple-kpi-card ${momPctTotal >= 0 ? 'accent-green' : 'accent-red'}">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">CRESCIMENTO MoM</span>
+        <span class="apple-tag ${momPctTotal >= 0 ? 'tag-pos' : 'tag-neg'}">vs Mês Ant.</span>
+      </div>
+      <div class="kpi-value-main" style="color: ${momPctTotal >= 0 ? 'var(--apple-green-text)' : 'var(--apple-red-text)'};">${fmtPct(momPctTotal)}</div>
+      <div class="kpi-sub-value">${deltaRS(momRsTotal)} nominal</div>
+      <div class="kpi-footer-deltas">
+        <span class="sublabel">Base anterior: ${fmtCompact(vJun26)}</span>
+      </div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-label">EVOLUÇÃO YOY</div>
-      <div class="kpi-value">${fmtPct(yoyPctTotal)}</div>
-      <div class="kpi-delta">${deltaRS(yoyRsTotal)} <span class="sublabel">nominal</span></div>
+
+    <!-- Card 3: Evolução YoY -->
+    <div class="apple-kpi-card ${yoyPctTotal >= 0 ? 'accent-green' : 'accent-red'}">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">EVOLUÇÃO YoY</span>
+        <span class="apple-tag ${yoyPctTotal >= 0 ? 'tag-pos' : 'tag-neg'}">vs Ano Ant.</span>
+      </div>
+      <div class="kpi-value-main" style="color: ${yoyPctTotal >= 0 ? 'var(--apple-green-text)' : 'var(--apple-red-text)'};">${fmtPct(yoyPctTotal)}</div>
+      <div class="kpi-sub-value">${deltaRS(yoyRsTotal)} nominal</div>
+      <div class="kpi-footer-deltas">
+        <span class="sublabel">Base anterior: ${fmtCompact(vJul25)}</span>
+      </div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-label">% DIGITAL / EMPRESA</div>
-      <div class="kpi-value">${fmtPct(pctDig)}</div>
-      <div class="kpi-subval">${fmtCompact(vDigJul26)}</div>
-      <div class="kpi-delta">${tagPct(digMom)} <span class="sublabel">Cresc.</span> ${tagPct(digYoy)} <span class="sublabel">Evol.</span></div>
+
+    <!-- Card 4: Share Digital -->
+    <div class="apple-kpi-card accent-teal">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">SHARE DIGITAL</span>
+        <span class="apple-tag tag-neu">App + Site</span>
+      </div>
+      <div class="kpi-value-main" style="color: var(--apple-teal);">${fmtPct(pctDig)}</div>
+      <div class="kpi-sub-value">${fmtCompact(vDigJul26)}</div>
+      <div class="kpi-footer-deltas">
+        ${tagPct(digMom)} <span class="sublabel">Cresc.</span>
+        ${tagPct(digYoy)} <span class="sublabel">Evol.</span>
+      </div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-label">% DIGITAL+TELE / EMPRESA</div>
-      <div class="kpi-value">${fmtPct(pctDt)}</div>
-      <div class="kpi-subval">${fmtCompact(vDtJul26)}</div>
-      <div class="kpi-delta">${tagPct(dtMom)} <span class="sublabel">Cresc.</span> ${tagPct(dtYoy)} <span class="sublabel">Evol.</span></div>
+
+    <!-- Card 5: Share Digital + Tele -->
+    <div class="apple-kpi-card accent-indigo">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">SHARE DIGITAL + TELE</span>
+        <span class="apple-tag tag-neu">Remoto</span>
+      </div>
+      <div class="kpi-value-main" style="color: var(--apple-indigo);">${fmtPct(pctDt)}</div>
+      <div class="kpi-sub-value">${fmtCompact(vDtJul26)}</div>
+      <div class="kpi-footer-deltas">
+        ${tagPct(dtMom)} <span class="sublabel">Cresc.</span>
+        ${tagPct(dtYoy)} <span class="sublabel">Evol.</span>
+      </div>
+    </div>
+
+    <!-- Card 6: Share Loja Física -->
+    <div class="apple-kpi-card accent-orange">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">SHARE LOJA FÍSICA</span>
+        <span class="apple-tag tag-neu">Presencial</span>
+      </div>
+      <div class="kpi-value-main" style="color: var(--apple-orange);">${fmtPct(pctLoja)}</div>
+      <div class="kpi-sub-value">${fmtCompact(vLojaJul26)}</div>
+      <div class="kpi-footer-deltas">
+        ${tagPct(lojaMom)} <span class="sublabel">Cresc.</span>
+        ${tagPct(lojaYoy)} <span class="sublabel">Evol.</span>
+      </div>
     </div>
   `;
 }
@@ -1152,24 +1246,24 @@ function renderCanais() {
 
   compilacoes.forEach(comp => {
     const isExp = STATE.expandedCh.has(comp.id);
-    const toggleIcon = isExp ? '▼' : '►';
+    const toggleIcon = isExp ? '▼' : '▶';
 
     html += `
-      <tr class="row-grupo" style="font-weight: 600; background: rgba(99,102,241,0.05);">
-        <td class="col-grupo" style="cursor:pointer;" onclick="toggleChGroup('${comp.id}')">
-          <span class="toggle-cat">${toggleIcon}</span> <strong style="color: var(--accent-primary, #6366f1);">${esc(comp.name)}</strong>
+      <tr class="row-group" style="cursor:pointer;" onclick="toggleChGroup('${comp.id}')">
+        <td class="col-grupo">
+          <span class="toggle-icon">${toggleIcon}</span> <strong style="color: var(--apple-blue);">${esc(comp.name)}</strong>
         </td>
-        <td class="text-right font-weight-600">${fmtRS(comp.v26)}</td>
-        <td class="text-right">${fmtRS(comp.v26_06)}</td>
-        <td class="text-right">${fmtRS(comp.v25)}</td>
-        <td class="text-right">${badgePct(comp.mom_pct)}</td>
-        <td class="text-right">${deltaRS(comp.mom_rs)}</td>
-        <td class="text-right">${badgePct(comp.yoy_pct)}</td>
-        <td class="text-right">${deltaRS(comp.yoy_rs)}</td>
-        <td class="text-right">${fmtPct(comp.sh26)}</td>
-        <td class="text-right">${fmtPct(comp.sh26_06)}</td>
-        <td class="text-right">${fmtPct(comp.sh25)}</td>
-        <td class="text-right">${badgePP(comp.var_pp)}</td>
+        <td class="num font-weight-600">${fmtRS(comp.v26)}</td>
+        <td class="num">${fmtRS(comp.v26_06)}</td>
+        <td class="num">${fmtRS(comp.v25)}</td>
+        <td class="num">${badgePct(comp.mom_pct)}</td>
+        <td class="num">${deltaRS(comp.mom_rs)}</td>
+        <td class="num">${badgePct(comp.yoy_pct)}</td>
+        <td class="num">${deltaRS(comp.yoy_rs)}</td>
+        <td class="num">${renderShareCell(comp.sh26)}</td>
+        <td class="num">${renderShareCell(comp.sh26_06)}</td>
+        <td class="num">${renderShareCell(comp.sh25)}</td>
+        <td class="num">${badgePP(comp.var_pp)}</td>
       </tr>
     `;
 
@@ -1181,19 +1275,19 @@ function renderCanais() {
         const c_var_pp = c_sh26 - c_sh25;
 
         html += `
-          <tr class="row-linha" style="background: rgba(255,255,255,0.01);">
-            <td class="col-linha" style="padding-left: 30px;">└ ${esc(c.canal)}</td>
-            <td class="text-right">${fmtRS(c.v26)}</td>
-            <td class="text-right">${fmtRS(c.v26_06)}</td>
-            <td class="text-right">${fmtRS(c.v25)}</td>
-            <td class="text-right">${badgePct(c.mom_pct)}</td>
-            <td class="text-right">${deltaRS(c.mom_rs)}</td>
-            <td class="text-right">${badgePct(c.yoy_pct)}</td>
-            <td class="text-right">${deltaRS(c.yoy_rs)}</td>
-            <td class="text-right">${fmtPct(c_sh26)}</td>
-            <td class="text-right">${fmtPct(c_sh26_06)}</td>
-            <td class="text-right">${fmtPct(c_sh25)}</td>
-            <td class="text-right">${badgePP(c_var_pp)}</td>
+          <tr class="row-linha">
+            <td class="col-linha" style="padding-left: 36px; color: var(--text-secondary);">└ ${esc(c.canal)}</td>
+            <td class="num">${fmtRS(c.v26)}</td>
+            <td class="num">${fmtRS(c.v26_06)}</td>
+            <td class="num">${fmtRS(c.v25)}</td>
+            <td class="num">${badgePct(c.mom_pct)}</td>
+            <td class="num">${deltaRS(c.mom_rs)}</td>
+            <td class="num">${badgePct(c.yoy_pct)}</td>
+            <td class="num">${deltaRS(c.yoy_rs)}</td>
+            <td class="num">${renderShareCell(c_sh26)}</td>
+            <td class="num">${renderShareCell(c_sh26_06)}</td>
+            <td class="num">${renderShareCell(c_sh25)}</td>
+            <td class="num">${badgePP(c_var_pp)}</td>
           </tr>
         `;
       });
@@ -1206,19 +1300,19 @@ function renderCanais() {
   const tot_yoy_pct = tot25 > 0 ? (tot_yoy_rs / tot25) * 100 : 0;
 
   html += `
-    <tr style="font-weight: 700; background: rgba(99,102,241,0.1); border-top: 2px solid var(--border);">
+    <tr style="font-weight: 700; background: rgba(0, 113, 227, 0.06); border-top: 2px solid var(--border);">
       <td>EMPRESA TOTAL</td>
-      <td class="text-right">${fmtRS(tot26)}</td>
-      <td class="text-right">${fmtRS(tot26_06)}</td>
-      <td class="text-right">${fmtRS(tot25)}</td>
-      <td class="text-right">${badgePct(tot_mom_pct)}</td>
-      <td class="text-right">${deltaRS(tot_mom_rs)}</td>
-      <td class="text-right">${badgePct(tot_yoy_pct)}</td>
-      <td class="text-right">${deltaRS(tot_yoy_rs)}</td>
-      <td class="text-right">100,00%</td>
-      <td class="text-right">100,00%</td>
-      <td class="text-right">100,00%</td>
-      <td class="text-right">${badgePP(0)}</td>
+      <td class="num">${fmtRS(tot26)}</td>
+      <td class="num">${fmtRS(tot26_06)}</td>
+      <td class="num">${fmtRS(tot25)}</td>
+      <td class="num">${badgePct(tot_mom_pct)}</td>
+      <td class="num">${deltaRS(tot_mom_rs)}</td>
+      <td class="num">${badgePct(tot_yoy_pct)}</td>
+      <td class="num">${deltaRS(tot_yoy_rs)}</td>
+      <td class="num">${renderShareCell(100)}</td>
+      <td class="num">${renderShareCell(100)}</td>
+      <td class="num">${renderShareCell(100)}</td>
+      <td class="num">${badgePP(0)}</td>
     </tr>
   `;
 
@@ -1281,24 +1375,24 @@ function renderCategorias() {
     const var_pp = sh26 - sh25;
 
     const isExp = STATE.expandedCat.has(g.grupo);
-    const toggleIcon = isExp ? '▼' : '►';
+    const toggleIcon = isExp ? '▼' : '▶';
 
     html += `
-      <tr class="row-grupo" data-grupo="${esc(g.grupo)}">
+      <tr class="row-group" data-grupo="${esc(g.grupo)}">
         <td class="col-grupo" style="cursor:pointer;" onclick="toggleCat('${esc(g.grupo)}')">
-          <span class="toggle-cat">${toggleIcon}</span> <strong>${esc(g.grupo)}</strong>
+          <span class="toggle-icon">${toggleIcon}</span> <strong style="color: var(--text-primary);">${esc(g.grupo)}</strong>
         </td>
-        <td class="text-right font-weight-600">${fmtRS(v26)}</td>
-        <td class="text-right">${fmtRS(v26_06)}</td>
-        <td class="text-right">${fmtRS(v25)}</td>
-        <td class="text-right">${badgePct(mom_pct)}</td>
-        <td class="text-right">${deltaRS(mom_rs)}</td>
-        <td class="text-right">${badgePct(yoy_pct)}</td>
-        <td class="text-right">${deltaRS(yoy_rs)}</td>
-        <td class="text-right">${fmtPct(sh26)}</td>
-        <td class="text-right">${fmtPct(sh26_06)}</td>
-        <td class="text-right">${fmtPct(sh25)}</td>
-        <td class="text-right">${badgePP(var_pp)}</td>
+        <td class="num font-weight-600">${fmtRS(v26)}</td>
+        <td class="num">${fmtRS(v26_06)}</td>
+        <td class="num">${fmtRS(v25)}</td>
+        <td class="num">${badgePct(mom_pct)}</td>
+        <td class="num">${deltaRS(mom_rs)}</td>
+        <td class="num">${badgePct(yoy_pct)}</td>
+        <td class="num">${deltaRS(yoy_rs)}</td>
+        <td class="num">${renderShareCell(sh26)}</td>
+        <td class="num">${renderShareCell(sh26_06)}</td>
+        <td class="num">${renderShareCell(sh25)}</td>
+        <td class="num">${badgePP(var_pp)}</td>
       </tr>
     `;
 
@@ -1364,18 +1458,15 @@ function renderCategorias() {
 
         if (STATE.partMode === 'digital_empresa') {
           h_v26 = item.dig_v26; h_v26_06 = item.dig_v26_06; h_v25 = item.dig_v25;
-          // Penetração Digital da Linha
           h_sh26 = item.tot_v26 > 0 ? (item.dig_v26 / item.tot_v26 * 100) : 0;
           h_sh26_06 = item.tot_v26_06 > 0 ? (item.dig_v26_06 / item.tot_v26_06 * 100) : 0;
           h_sh25 = item.tot_v25 > 0 ? (item.dig_v25 / item.tot_v25 * 100) : 0;
         } else if (STATE.partMode === 'dt_empresa') {
           h_v26 = item.dt_v26; h_v26_06 = item.dt_v26_06; h_v25 = item.dt_v25;
-          // Penetração Digital+Tele da Linha
           h_sh26 = item.tot_v26 > 0 ? (item.dt_v26 / item.tot_v26 * 100) : 0;
           h_sh26_06 = item.tot_v26_06 > 0 ? (item.dt_v26_06 / item.tot_v26_06 * 100) : 0;
           h_sh25 = item.tot_v25 > 0 ? (item.dt_v25 / item.tot_v25 * 100) : 0;
         } else {
-          // Participação da Linha no Total da Empresa
           h_sh26 = totEmp26 > 0 ? (item.tot_v26 / totEmp26 * 100) : 0;
           h_sh26_06 = totEmp26_06 > 0 ? (item.tot_v26_06 / totEmp26_06 * 100) : 0;
           h_sh25 = totEmp25 > 0 ? (item.tot_v25 / totEmp25 * 100) : 0;
@@ -1430,19 +1521,19 @@ function renderCategorias() {
 
       subItems.forEach(h => {
         html += `
-          <tr class="row-linha" style="background: rgba(255,255,255,0.02);">
-            <td class="col-linha" style="padding-left: 30px;">└ ${esc(h.linha)}</td>
-            <td class="text-right">${fmtRS(h.h_v26)}</td>
-            <td class="text-right">${fmtRS(h.h_v26_06)}</td>
-            <td class="text-right">${fmtRS(h.h_v25)}</td>
-            <td class="text-right">${badgePct(h.h_mom_pct)}</td>
-            <td class="text-right">${deltaRS(h.h_mom_rs)}</td>
-            <td class="text-right">${badgePct(h.h_yoy_pct)}</td>
-            <td class="text-right">${deltaRS(h.h_yoy_rs)}</td>
-            <td class="text-right">${fmtPct(h.h_sh26)}</td>
-            <td class="text-right">${fmtPct(h.h_sh26_06)}</td>
-            <td class="text-right">${fmtPct(h.h_sh25)}</td>
-            <td class="text-right">${badgePP(h.h_var_pp)}</td>
+          <tr class="row-linha">
+            <td class="col-linha" style="padding-left: 36px; color: var(--text-secondary);">└ ${esc(h.linha)}</td>
+            <td class="num">${fmtRS(h.h_v26)}</td>
+            <td class="num">${fmtRS(h.h_v26_06)}</td>
+            <td class="num">${fmtRS(h.h_v25)}</td>
+            <td class="num">${badgePct(h.h_mom_pct)}</td>
+            <td class="num">${deltaRS(h.h_mom_rs)}</td>
+            <td class="num">${badgePct(h.h_yoy_pct)}</td>
+            <td class="num">${deltaRS(h.h_yoy_rs)}</td>
+            <td class="num">${renderShareCell(h.h_sh26)}</td>
+            <td class="num">${renderShareCell(h.h_sh26_06)}</td>
+            <td class="num">${renderShareCell(h.h_sh25)}</td>
+            <td class="num">${badgePP(h.h_var_pp)}</td>
           </tr>
         `;
       });
