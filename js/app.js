@@ -268,9 +268,11 @@ function wireEvents() {
   }
 
   // Search
-  sel('globalSearch').addEventListener('input', e => {
-    STATE.search = e.target.value.toLowerCase().trim(); render();
-  });
+  if (sel('globalSearch')) {
+    sel('globalSearch').addEventListener('input', e => {
+      STATE.search = e.target.value.toLowerCase().trim(); render();
+    });
+  }
 
   // Sort
   if (sel('sortMode')) {
@@ -317,8 +319,8 @@ function wireEvents() {
   });
 
   // Export & Print
-  sel('btnExportCsv').addEventListener('click', exportCsv);
-  sel('btnPrint').addEventListener('click', () => window.print());
+  if (sel('btnExportCsv')) sel('btnExportCsv').addEventListener('click', exportCsv);
+  if (sel('btnPrint')) sel('btnPrint').addEventListener('click', () => window.print());
 
   // Global click to close multi-select dropdowns
   document.addEventListener('click', (e) => {
@@ -1550,6 +1552,18 @@ function toggleCat(grupo) {
   if (STATE.expandedCat.has(grupo)) STATE.expandedCat.delete(grupo);
   else STATE.expandedCat.add(grupo);
   renderCategorias();
+}
+
+function exportCsv() {
+  const grupos = getFilteredGrupos();
+  let csv = 'Grupo;Venda_Jul_26;Venda_Jun_26;MoM_Pct;MoM_RS;Venda_Jul_25;YoY_Pct;YoY_RS\n';
+  grupos.forEach(g => {
+    csv += `"${g.grupo}";${g.venda_jul_26};${g.venda_jun_26};${g.mom_pct};${g.mom_rs};${g.venda_jul_25};${g.yoy_pct};${g.yoy_rs}\n`;
+  });
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'acompanhamento_categorias.csv'; a.click();
 }
 
 function fmtInt(val) {
