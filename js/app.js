@@ -788,7 +788,10 @@ function getFilteredCanaisList() {
 function getFilteredGrupos() {
   const hier = getFilteredHier();
   const map = {};
-  const useDays = (STATE.mesReferencia === 'julho') && (STATE.startDay !== 1 || STATE.endDay !== 31);
+  // useDays: ativo para qualquer mês quando há filtro de período != intervalo padrão
+  const maxDiaAgo = (DATA.kpis?.periodo_info?.dias_fechados) || 19;
+  const defaultEnd = STATE.mesReferencia === 'agosto' ? maxDiaAgo : 31;
+  const useDays = (STATE.startDay !== 1 || STATE.endDay !== defaultEnd);
 
   hier.forEach(c => {
     let v26 = c.venda_jul_26 || 0;
@@ -938,7 +941,14 @@ function renderRefPeriodo() {
   if (!el) return;
   if (STATE.mesReferencia === 'agosto') {
     const pInfo = DATA.kpis?.periodo_info?.periodo_str || '01 a 19/08/2026';
-    el.textContent = `Agosto/2026 (${pInfo}) vs Julho/2026 (MoM) | Agosto/2026 vs Agosto/2025 (YoY)`;
+    const maxDia = DATA.kpis?.periodo_info?.dias_fechados || 19;
+    if (STATE.startDay === 1 && STATE.endDay >= maxDia) {
+      el.textContent = `Agosto/2026 (${pInfo}) vs Julho/2026 (MoM) | Agosto/2026 vs Agosto/2025 (YoY)`;
+    } else {
+      const dS = String(STATE.startDay).padStart(2, '0');
+      const dE = String(Math.min(STATE.endDay, maxDia)).padStart(2, '0');
+      el.textContent = `Agosto/2026 (Dias ${dS} a ${dE}/08) vs Julho/2026 (Dias ${dS}-${dE} MoM) | vs Agosto/2025 (YoY)`;
+    }
   } else {
     if (STATE.startDay === 1 && STATE.endDay === 31) {
       el.textContent = 'Julho/2026 vs Junho/2026 (MoM) | Julho/2026 vs Julho/2025 (YoY)';
@@ -981,13 +991,15 @@ function renderExecutiveKpis() {
   const dtMom = vDtJun26 > 0 ? ((vDtJul26 / vDtJun26) - 1) * 100 : 0;
   const dtYoy = vDtJul25 > 0 ? ((vDtJul26 / vDtJul25) - 1) * 100 : 0;
 
-  let label1 = '';
-  if (STATE.mesReferencia === 'agosto') {
-    const pInfo = DATA.kpis?.periodo_info?.periodo_str || '01 a 19/08';
-    label1 = `FATURAMENTO TOTAL EMPRESA (AGO/26 - ${pInfo})`;
-  } else {
-    label1 = (STATE.startDay === 1 && STATE.endDay === 31) ? 'FATURAMENTO TOTAL EMPRESA (JUL/26)' : `FATURAMENTO (DIAS ${STATE.startDay}-${STATE.endDay})`;
-  }
+  const label1 = (STATE.mesReferencia === 'agosto')
+      ? (() => {
+          const pInfo = DATA.kpis?.periodo_info?.periodo_str || '01 a 19/08';
+          const maxDia = DATA.kpis?.periodo_info?.dias_fechados || 19;
+          if (STATE.startDay === 1 && STATE.endDay >= maxDia)
+            return `FATURAMENTO TOTAL EMPRESA (AGO/26 - ${pInfo})`;
+          return `FATURAMENTO (AGO/26 - DIAS ${STATE.startDay}-${Math.min(STATE.endDay, maxDia)})`;
+        })()
+      : (STATE.startDay === 1 && STATE.endDay === 31) ? 'FATURAMENTO TOTAL EMPRESA (JUL/26)' : `FATURAMENTO (DIAS ${STATE.startDay}-${STATE.endDay})`;
 
   strip.innerHTML = `
     <div class="kpi-card">
@@ -1026,7 +1038,9 @@ function renderCanais() {
   if (!tbody) return;
 
   const filteredCanaisList = getFilteredCanaisList();
-  const useDays = (STATE.mesReferencia === 'julho') && (STATE.startDay !== 1 || STATE.endDay !== 31);
+  const maxDiaAgo = (DATA.kpis?.periodo_info?.dias_fechados) || 19;
+  const defaultEnd = STATE.mesReferencia === 'agosto' ? maxDiaAgo : 31;
+  const useDays = (STATE.startDay !== 1 || STATE.endDay !== defaultEnd);
 
   const digitalChs = [];
   const teleChs = [];
@@ -1224,7 +1238,9 @@ function renderCategorias() {
 
   const grupos = getFilteredGrupos();
   const hier = getFilteredHier();
-  const useDays = (STATE.mesReferencia === 'julho') && (STATE.startDay !== 1 || STATE.endDay !== 31);
+  const maxDiaAgo2 = (DATA.kpis?.periodo_info?.dias_fechados) || 19;
+  const defaultEnd2 = STATE.mesReferencia === 'agosto' ? maxDiaAgo2 : 31;
+  const useDays = (STATE.startDay !== 1 || STATE.endDay !== defaultEnd2);
 
   let totEmp26 = 0, totEmp26_06 = 0, totEmp25 = 0;
   totEmp26 = grupos.reduce((s, g) => s + (g.venda_jul_26 || 0), 0);

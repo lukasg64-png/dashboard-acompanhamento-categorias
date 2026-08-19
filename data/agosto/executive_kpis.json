@@ -1,28 +1,28 @@
 {
   "total_empresa": {
-    "venda_jul_26": 519942765.97,
+    "venda_jul_26": 521554406.24,
     "venda_jun_26": 563858971.79,
-    "venda_jul_25": 488336731.0,
-    "mom_pct": -7.79,
-    "mom_rs": -43916205.82,
-    "yoy_pct": 6.47,
-    "yoy_rs": 31606034.97
+    "venda_jul_25": 488336731.04,
+    "mom_pct": -7.5,
+    "mom_rs": -42304565.55,
+    "yoy_pct": 6.8,
+    "yoy_rs": 33217675.2
   },
   "digital": {
-    "venda_jul_26": 34085204.09,
-    "venda_jun_26": 34391524.12,
-    "venda_jul_25": 21475908.85,
+    "venda_jul_26": 34199614.72,
+    "venda_jun_26": 34391524.13,
+    "venda_jul_25": 21475908.88,
     "share_jul_26": 6.56,
-    "mom_pct": -0.89,
-    "yoy_pct": 58.71
+    "mom_pct": -0.56,
+    "yoy_pct": 59.25
   },
   "digital_tele": {
-    "venda_jul_26": 45677642.99,
+    "venda_jul_26": 45831847.53,
     "venda_jun_26": 47090731.02,
-    "venda_jul_25": 32507346.19,
+    "venda_jul_25": 32507346.23,
     "share_jul_26": 8.79,
-    "mom_pct": -3.0,
-    "yoy_pct": 40.51
+    "mom_pct": -2.67,
+    "yoy_pct": 40.99
   },
   "periodo_info": {
     "mes": "Agosto/2026",

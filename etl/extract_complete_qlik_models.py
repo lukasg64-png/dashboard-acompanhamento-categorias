@@ -128,9 +128,8 @@ async def fetch_all_qlik_cubes():
                             if (typeof r[2] === 'number' && r[2] > 0) diasComVenda.add(Number(r[1]));
                         });
                         const maxDia = diasComVenda.size > 0 ? Math.max(...Array.from(diasComVenda)) : 19;
-                        const daysList = [];
-                        for (let d = 1; d <= maxDia; d++) daysList.push(`'${d}'`);
-                        const dayFilter = `[Dia]={${daysList.join(',')}}`;
+                        // Dia é campo numérico no Qlik — usar sintaxe de busca sem aspas simples
+                        const dayFilter = `[Dia]={"<=${maxDia}"}`;
                         
                         // 2. Categorias (Grupo + Subgrupo) com 9 medidas (MTD)
                         const c2 = await send("CreateSessionObject", docHandle, [{
@@ -296,17 +295,11 @@ async def fetch_all_qlik_cubes():
 
     canais_summary.sort(key=lambda x: x['venda_jul_26'], reverse=True)
 
-    # Fatores MTD para alinhar categorias e linhas à janela exata D-1
+    # 2. Processar Categorias Summary
+    # Nota: raw_cats e raw_hier já usam dayFilter no Set Analysis do Qlik Engine,
+    # portanto v26_06 e v25 já são valores MTD (01..max_dia) corretos — sem escala adicional.
     raw_cats = cube_results.get('categorias', [])
     raw_hier = cube_results.get('hierarquia', [])
-    
-    full_cats_jun = sum(float(r[3]) for r in raw_cats if isinstance(r[3], (int, float)) and not np.isnan(r[3]))
-    full_cats_jul25 = sum(float(r[4]) for r in raw_cats if isinstance(r[4], (int, float)) and not np.isnan(r[4]))
-    
-    factor_mom = (total_v26_06 / full_cats_jun) if full_cats_jun > 0 else 1.0
-    factor_yoy = (total_v25 / full_cats_jul25) if full_cats_jul25 > 0 else 1.0
-
-    # 2. Processar Categorias Summary
     categorias_summary = []
     for r in raw_cats:
         grp = clean_str(r[0])
@@ -314,16 +307,16 @@ async def fetch_all_qlik_cubes():
         if not grp: continue
         
         v26 = float(r[2]) if isinstance(r[2], (int, float)) and not np.isnan(r[2]) else 0.0
-        v26_06 = float(r[3]) * factor_mom if isinstance(r[3], (int, float)) and not np.isnan(r[3]) else 0.0
-        v25 = float(r[4]) * factor_yoy if isinstance(r[4], (int, float)) and not np.isnan(r[4]) else 0.0
+        v26_06 = float(r[3]) if isinstance(r[3], (int, float)) and not np.isnan(r[3]) else 0.0
+        v25 = float(r[4]) if isinstance(r[4], (int, float)) and not np.isnan(r[4]) else 0.0
         
         vDig26 = float(r[5]) if isinstance(r[5], (int, float)) and not np.isnan(r[5]) else 0.0
-        vDig26_06 = float(r[6]) * factor_mom if isinstance(r[6], (int, float)) and not np.isnan(r[6]) else 0.0
-        vDig25 = float(r[7]) * factor_yoy if isinstance(r[7], (int, float)) and not np.isnan(r[7]) else 0.0
+        vDig26_06 = float(r[6]) if isinstance(r[6], (int, float)) and not np.isnan(r[6]) else 0.0
+        vDig25 = float(r[7]) if isinstance(r[7], (int, float)) and not np.isnan(r[7]) else 0.0
         
         vDt26 = float(r[8]) if isinstance(r[8], (int, float)) and not np.isnan(r[8]) else 0.0
-        vDt26_06 = float(r[9]) * factor_mom if isinstance(r[9], (int, float)) and not np.isnan(r[9]) else 0.0
-        vDt25 = float(r[10]) * factor_yoy if isinstance(r[10], (int, float)) and not np.isnan(r[10]) else 0.0
+        vDt26_06 = float(r[9]) if isinstance(r[9], (int, float)) and not np.isnan(r[9]) else 0.0
+        vDt25 = float(r[10]) if isinstance(r[10], (int, float)) and not np.isnan(r[10]) else 0.0
         
         m_pct, m_rs = calc_growth(v26, v26_06)
         y_pct, y_rs = calc_growth(v26, v25)
@@ -360,16 +353,16 @@ async def fetch_all_qlik_cubes():
         if not grp: continue
         
         v26 = float(r[3]) if isinstance(r[3], (int, float)) and not np.isnan(r[3]) else 0.0
-        v26_06 = float(r[4]) * factor_mom if isinstance(r[4], (int, float)) and not np.isnan(r[4]) else 0.0
-        v25 = float(r[5]) * factor_yoy if isinstance(r[5], (int, float)) and not np.isnan(r[5]) else 0.0
+        v26_06 = float(r[4]) if isinstance(r[4], (int, float)) and not np.isnan(r[4]) else 0.0
+        v25 = float(r[5]) if isinstance(r[5], (int, float)) and not np.isnan(r[5]) else 0.0
         
         vDig26 = float(r[6]) if isinstance(r[6], (int, float)) and not np.isnan(r[6]) else 0.0
-        vDig26_06 = float(r[7]) * factor_mom if isinstance(r[7], (int, float)) and not np.isnan(r[7]) else 0.0
-        vDig25 = float(r[8]) * factor_yoy if isinstance(r[8], (int, float)) and not np.isnan(r[8]) else 0.0
+        vDig26_06 = float(r[7]) if isinstance(r[7], (int, float)) and not np.isnan(r[7]) else 0.0
+        vDig25 = float(r[8]) if isinstance(r[8], (int, float)) and not np.isnan(r[8]) else 0.0
         
         vDt26 = float(r[9]) if isinstance(r[9], (int, float)) and not np.isnan(r[9]) else 0.0
-        vDt26_06 = float(r[10]) * factor_mom if isinstance(r[10], (int, float)) and not np.isnan(r[10]) else 0.0
-        vDt25 = float(r[11]) * factor_yoy if isinstance(r[11], (int, float)) and not np.isnan(r[11]) else 0.0
+        vDt26_06 = float(r[10]) if isinstance(r[10], (int, float)) and not np.isnan(r[10]) else 0.0
+        vDt25 = float(r[11]) if isinstance(r[11], (int, float)) and not np.isnan(r[11]) else 0.0
         
         m_pct, m_rs = calc_growth(v26, v26_06)
         y_pct, y_rs = calc_growth(v26, v25)
@@ -401,8 +394,8 @@ async def fetch_all_qlik_cubes():
         if not grp or not canal: continue
         
         v26 = float(r[4]) if isinstance(r[4], (int, float)) and not np.isnan(r[4]) else 0.0
-        v26_06 = float(r[5]) * factor_mom if isinstance(r[5], (int, float)) and not np.isnan(r[5]) else 0.0
-        v25 = float(r[6]) * factor_yoy if isinstance(r[6], (int, float)) and not np.isnan(r[6]) else 0.0
+        v26_06 = float(r[5]) if isinstance(r[5], (int, float)) and not np.isnan(r[5]) else 0.0
+        v25 = float(r[6]) if isinstance(r[6], (int, float)) and not np.isnan(r[6]) else 0.0
         
         canais_by_hierarquia.append({
             'grupo': grp, 'subgrupo': subgrp, 'linha': linha,

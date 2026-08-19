@@ -12,6 +12,7 @@ AGOSTO_DIR = os.path.join(DATA_DIR, 'agosto')
 CSS_FILE = os.path.join(BASE, 'css', 'style.css')
 JS_APP = os.path.join(BASE, 'js', 'app.js')
 JS_CHARTS = os.path.join(BASE, 'js', 'charts.js')
+JS_WATERFALL = os.path.join(BASE, 'js', 'waterfall.js')
 HTML_TEMPLATE = os.path.join(BASE, 'index.html')
 OUTPUT = os.path.join(BASE, 'dist', 'index.html')
 
@@ -34,7 +35,7 @@ def round_record(r):
             else:
                 new_r[k] = [int(round(x)) if isinstance(x, (int, float)) else x for x in v]
         elif isinstance(v, float):
-            new_r[k] = round(v, 1)
+            new_r[k] = round(v, 2)  # Preservar precisão em centavos
         else:
             new_r[k] = v
     return new_r
@@ -98,6 +99,7 @@ def build():
     css = read(CSS_FILE)
     js_app = read(JS_APP)
     js_charts = read(JS_CHARTS)
+    js_waterfall = read(JS_WATERFALL) if os.path.exists(JS_WATERFALL) else ''
 
     inline_block = f"""
 /* ── Inline Compressed Data (auto-generated) ── */
@@ -128,8 +130,8 @@ const _PACKED = {{
         '<link rel="stylesheet" href="css/style.css">',
         f'<style>\n{css}\n</style>'
     ).replace(
-        '<script src="js/app.js"></script>\n  <script src="js/charts.js"></script>',
-        f'<script>\n{inline_block}\n{patched_app}\n</script>\n<script>\n{js_charts}\n</script>'
+        '<script src="js/app.js"></script>\n  <script src="js/charts.js"></script>\n  <script src="js/waterfall.js"></script>',
+        f'<script>\n{inline_block}\n{patched_app}\n</script>\n<script>\n{js_charts}\n</script>\n<script>\n{js_waterfall}\n</script>'
     )
 
     with open(OUTPUT, 'w', encoding='utf-8') as f:
