@@ -12,6 +12,8 @@ if hasattr(sys.stderr, 'reconfigure'): sys.stderr.reconfigure(encoding='utf-8')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ETL_DIR = os.path.join(BASE_DIR, 'etl')
+DIST_FILE = os.path.join(BASE_DIR, 'dist', 'index.html')
+GIST_ID_FILE = os.path.join(BASE_DIR, 'dist', '.gist_id')
 
 def run_step(desc, script_name):
     print(f"\n{'='*70}")
@@ -43,8 +45,20 @@ def publish_gist():
     print(f"\n{'='*70}")
     print("  5/5  PUBLICANDO NO GITHUB GIST CDN...")
     print(f"{'='*70}")
-    script_path = os.path.join(ETL_DIR, 'publish_gist.py')
-    subprocess.run([sys.executable, script_path], cwd=BASE_DIR)
+    try:
+        gist_id = '7dfb809d825e40189203b2451d48d3c6'
+        if os.path.exists(GIST_ID_FILE):
+            with open(GIST_ID_FILE, 'r') as f:
+                gist_id = f.read().strip()
+                
+        cmd = ['gh', 'gist', 'edit', gist_id, '--add', DIST_FILE]
+        res = subprocess.run(cmd, cwd=BASE_DIR, capture_output=True, text=True)
+        if res.returncode == 0:
+            print(f"  ✅ Gist {gist_id} atualizado com sucesso!")
+        else:
+            print(f"  ⚠️ Aviso no Gist: {res.stderr}")
+    except Exception as e:
+        print(f"  ⚠️ Aviso ao publicar Gist: {e}")
 
 def main():
     t0 = time.time()
@@ -53,7 +67,7 @@ def main():
     # 1. Extração ao vivo do Qlik Sense (Agosto D-1)
     run_step("1/5  EXTRAINDO AGOSTO (D-1) DO QLIK SENSE...", "extract_complete_qlik_models.py")
     
-    # 2. Processamento da Base de Julho (se necessário)
+    # 2. Processamento da Base de Julho
     run_step("2/5  PROCESSANDO BASE CONSOLIDADA DE JULHO...", "process_data.py")
     
     # 3. Gerar HTML autocontido com ambos os meses
