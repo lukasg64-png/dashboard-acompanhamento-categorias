@@ -24,17 +24,50 @@ let STATE = {
   endDay: 31
 };
 
+/* ── Loading Overlay Progress Helpers ────────────── */
+function updateLoadingProgress(pct, statusText) {
+  const bar = document.getElementById('appleLoadingBarFill');
+  const txt = document.getElementById('appleLoadingPercent');
+  const st = document.getElementById('appleLoadingStatus');
+  if (bar) bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+  if (txt) txt.textContent = `${Math.round(pct)}%`;
+  if (st && statusText) st.textContent = statusText;
+}
+
+function showLoadingProgress(initialStatus = 'Carregando base analítica...') {
+  const overlay = document.getElementById('appleLoadingOverlay');
+  if (overlay) {
+    overlay.classList.remove('hidden');
+    updateLoadingProgress(5, initialStatus);
+  }
+}
+
+function hideLoadingProgress() {
+  updateLoadingProgress(100, 'Tudo pronto!');
+  setTimeout(() => {
+    const overlay = document.getElementById('appleLoadingOverlay');
+    if (overlay) overlay.classList.add('hidden');
+  }, 350);
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+  showLoadingProgress('Inicializando motor analítico...');
+  updateLoadingProgress(15, 'Carregando indicadores corporativos...');
   await loadAllData(STATE.mesReferencia);
+  updateLoadingProgress(60, 'Configurando filtros e eventos...');
   wireEvents();
   initMultiSelects();
   updateTableHeaders();
+  updateLoadingProgress(85, 'Renderizando visualizações 360°...');
   render();
+  updateLoadingProgress(100, 'Pronto!');
+  hideLoadingProgress();
 });
 
 /* ── Data loading ─────────────────────────────────── */
 async function loadAllData(mes = 'agosto') {
   try {
+    updateLoadingProgress(25, `Buscando dados de ${mes === 'agosto' ? 'Agosto (D-1 Qlik)' : 'Julho (Fechado)'}...`);
     const prefix = mes === 'agosto' ? 'data/agosto/' : 'data/';
     const urls = [
       prefix + 'executive_kpis.json',
@@ -47,6 +80,7 @@ async function loadAllData(mes = 'agosto') {
       prefix + 'clientes_summary.json'
     ];
     const results = await Promise.all(urls.map(u => fetch(u).then(r => r.json()).catch(() => null)));
+    updateLoadingProgress(45, 'Processando hierarquia mercadológica...');
     DATA.kpis = results[0];
     DATA.canais = results[1] || [];
     DATA.canaisHier = results[2] || [];
@@ -108,6 +142,8 @@ function wireEvents() {
       if (STATE.mesReferencia === month) return;
       STATE.mesReferencia = month;
 
+      showLoadingProgress(`Carregando ${month === 'agosto' ? 'Agosto/26 (D-1 Qlik)' : 'Julho/26 (Fechado)'}...`);
+
       // Reset filters
       STATE.diretores.clear();
       STATE.distritais.clear();
@@ -125,9 +161,12 @@ function wireEvents() {
 
       // Load data
       await loadAllData(STATE.mesReferencia);
+      updateLoadingProgress(80, 'Atualizando filtros...');
       populateAllMultiSelects();
       updateTableHeaders();
+      updateLoadingProgress(95, 'Renderizando tabelas e gráficos...');
       render();
+      hideLoadingProgress();
     });
   }
 
@@ -140,6 +179,8 @@ function wireEvents() {
       STATE.mesReferencia = month;
       if (mesSel) mesSel.value = month;
       monthBtns.forEach(b => b.classList.toggle('active', b.dataset.month === month));
+
+      showLoadingProgress(`Carregando ${month === 'agosto' ? 'Agosto/26 (D-1 Qlik)' : 'Julho/26 (Fechado)'}...`);
 
       STATE.diretores.clear();
       STATE.distritais.clear();
@@ -156,9 +197,12 @@ function wireEvents() {
       STATE.endDay = 31;
 
       await loadAllData(STATE.mesReferencia);
+      updateLoadingProgress(80, 'Atualizando filtros...');
       populateAllMultiSelects();
       updateTableHeaders();
+      updateLoadingProgress(95, 'Renderizando tabelas e gráficos...');
       render();
+      hideLoadingProgress();
     });
   });
 

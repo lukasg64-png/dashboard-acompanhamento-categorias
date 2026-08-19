@@ -93,6 +93,157 @@ body {
   overflow-x: hidden;
 }
 
+/* ── Apple Loading Overlay & Real Percentage Bar ───────────── */
+.apple-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(245, 245, 247, 0.94);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s ease;
+}
+
+.apple-loading-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.apple-loading-card {
+  width: 90%;
+  max-width: 440px;
+  background: #FFFFFF;
+  border-radius: var(--radius-xl);
+  padding: 36px 32px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: appleModalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes appleModalPop {
+  0% { transform: scale(0.92) translateY(12px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.apple-loading-icon-wrapper {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 20px;
+}
+
+.apple-loading-logo {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(145deg, #0071E3, #004bb5);
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  color: #FFFFFF;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 24px;
+  box-shadow: 0 8px 24px rgba(0, 113, 227, 0.32);
+}
+
+.apple-loading-spinner-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 24px;
+  border: 3px solid transparent;
+  border-top-color: var(--apple-blue);
+  border-right-color: var(--apple-indigo);
+  animation: appleSpin 1.2s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+}
+
+@keyframes appleSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.apple-loading-title {
+  font-family: 'Outfit', -apple-system, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  letter-spacing: -0.4px;
+}
+
+.apple-loading-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+.apple-loading-progress-wrapper {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.apple-loading-bar-track {
+  width: 100%;
+  height: 10px;
+  background: #EBEBED;
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.apple-loading-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #0071E3 0%, #5856D6 50%, #30B0C7 100%);
+  background-size: 200% 100%;
+  border-radius: 999px;
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: appleGradientShift 2s linear infinite;
+}
+
+@keyframes appleGradientShift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.apple-loading-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.apple-loading-status {
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 12px;
+  text-align: left;
+  max-width: 75%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.apple-loading-percent {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  color: var(--apple-blue);
+  font-size: 16px;
+  letter-spacing: -0.2px;
+}
+
 /* ── Top Bar Apple Glassmorphism ───────────────────────────── */
 .topbar {
   position: sticky;
@@ -784,6 +935,28 @@ body {
 </head>
 <body>
 
+  <!-- Apple Loading Overlay com Barra de Progresso Real (%) -->
+  <div class="apple-loading-overlay" id="appleLoadingOverlay">
+    <div class="apple-loading-card">
+      <div class="apple-loading-icon-wrapper">
+        <div class="apple-loading-spinner-ring"></div>
+        <div class="apple-loading-logo">SJ</div>
+      </div>
+      <div class="apple-loading-title">Acompanhamento 360°</div>
+      <div class="apple-loading-subtitle">Carregando Dados Executivos de Categorias & Canais</div>
+      
+      <div class="apple-loading-progress-wrapper">
+        <div class="apple-loading-bar-track">
+          <div class="apple-loading-bar-fill" id="appleLoadingBarFill"></div>
+        </div>
+        <div class="apple-loading-meta">
+          <span class="apple-loading-status" id="appleLoadingStatus">Inicializando motor analítico...</span>
+          <span class="apple-loading-percent" id="appleLoadingPercent">0%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Top bar Apple Glassmorphism -->
   <header class="topbar">
     <div class="topbar-left">
@@ -1278,29 +1451,67 @@ let STATE = {
   endDay: 31
 };
 
+/* ── Loading Overlay Progress Helpers ────────────── */
+function updateLoadingProgress(pct, statusText) {
+  const bar = document.getElementById('appleLoadingBarFill');
+  const txt = document.getElementById('appleLoadingPercent');
+  const st = document.getElementById('appleLoadingStatus');
+  if (bar) bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+  if (txt) txt.textContent = `${Math.round(pct)}%`;
+  if (st && statusText) st.textContent = statusText;
+}
+
+function showLoadingProgress(initialStatus = 'Carregando base analítica...') {
+  const overlay = document.getElementById('appleLoadingOverlay');
+  if (overlay) {
+    overlay.classList.remove('hidden');
+    updateLoadingProgress(5, initialStatus);
+  }
+}
+
+function hideLoadingProgress() {
+  updateLoadingProgress(100, 'Tudo pronto!');
+  setTimeout(() => {
+    const overlay = document.getElementById('appleLoadingOverlay');
+    if (overlay) overlay.classList.add('hidden');
+  }, 350);
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+  showLoadingProgress('Inicializando motor analítico...');
+  updateLoadingProgress(15, 'Carregando indicadores corporativos...');
   await loadAllData(STATE.mesReferencia);
+  updateLoadingProgress(60, 'Configurando filtros e eventos...');
   wireEvents();
   initMultiSelects();
   updateTableHeaders();
+  updateLoadingProgress(85, 'Renderizando visualizações 360°...');
   render();
+  updateLoadingProgress(100, 'Pronto!');
+  hideLoadingProgress();
 });
 
 /* ── Data loading ─────────────────────────────────── */
 async function loadAllData(mes = 'agosto') {
   if (typeof _PACKED !== 'undefined') {
     const pkg = _PACKED[mes] || _PACKED['agosto'] || _PACKED['julho'];
+    if (typeof updateLoadingProgress === 'function') updateLoadingProgress(20, 'Carregando KPIs e Canais...');
     DATA.kpis = pkg.kpis;
     DATA.canais = pkg.canais;
+    if (typeof updateLoadingProgress === 'function') updateLoadingProgress(40, 'Descompactando Canais e Hierarquia...');
     DATA.canaisHier = _decompress(pkg.canais_hier_packed);
+    if (typeof updateLoadingProgress === 'function') updateLoadingProgress(60, 'Descompactando Categorias...');
     DATA.categorias = _decompress(pkg.categorias_packed);
+    if (typeof updateLoadingProgress === 'function') updateLoadingProgress(75, 'Estruturando Hierarquia...');
     DATA.hierarquia = _decompress(pkg.hierarquia_packed);
     DATA.filtroHierarquia = pkg.filtroHierarquia;
     DATA.filtrosProduto = pkg.filtrosProduto;
     DATA.clientes = pkg.clientes || null;
+    if (typeof updateLoadingProgress === 'function') updateLoadingProgress(85, 'Concluindo base de dados...');
     return;
   }
   try {
+    updateLoadingProgress(25, `Buscando dados de ${mes === 'agosto' ? 'Agosto (D-1 Qlik)' : 'Julho (Fechado)'}...`);
     const prefix = mes === 'agosto' ? 'data/agosto/' : 'data/';
     const urls = [
       prefix + 'executive_kpis.json',
@@ -1313,6 +1524,7 @@ async function loadAllData(mes = 'agosto') {
       prefix + 'clientes_summary.json'
     ];
     const results = await Promise.all(urls.map(u => fetch(u).then(r => r.json()).catch(() => null)));
+    updateLoadingProgress(45, 'Processando hierarquia mercadológica...');
     DATA.kpis = results[0];
     DATA.canais = results[1] || [];
     DATA.canaisHier = results[2] || [];
@@ -1374,6 +1586,8 @@ function wireEvents() {
       if (STATE.mesReferencia === month) return;
       STATE.mesReferencia = month;
 
+      showLoadingProgress(`Carregando ${month === 'agosto' ? 'Agosto/26 (D-1 Qlik)' : 'Julho/26 (Fechado)'}...`);
+
       // Reset filters
       STATE.diretores.clear();
       STATE.distritais.clear();
@@ -1391,9 +1605,12 @@ function wireEvents() {
 
       // Load data
       await loadAllData(STATE.mesReferencia);
+      updateLoadingProgress(80, 'Atualizando filtros...');
       populateAllMultiSelects();
       updateTableHeaders();
+      updateLoadingProgress(95, 'Renderizando tabelas e gráficos...');
       render();
+      hideLoadingProgress();
     });
   }
 
@@ -1406,6 +1623,8 @@ function wireEvents() {
       STATE.mesReferencia = month;
       if (mesSel) mesSel.value = month;
       monthBtns.forEach(b => b.classList.toggle('active', b.dataset.month === month));
+
+      showLoadingProgress(`Carregando ${month === 'agosto' ? 'Agosto/26 (D-1 Qlik)' : 'Julho/26 (Fechado)'}...`);
 
       STATE.diretores.clear();
       STATE.distritais.clear();
@@ -1422,9 +1641,12 @@ function wireEvents() {
       STATE.endDay = 31;
 
       await loadAllData(STATE.mesReferencia);
+      updateLoadingProgress(80, 'Atualizando filtros...');
       populateAllMultiSelects();
       updateTableHeaders();
+      updateLoadingProgress(95, 'Renderizando tabelas e gráficos...');
       render();
+      hideLoadingProgress();
     });
   });
 
