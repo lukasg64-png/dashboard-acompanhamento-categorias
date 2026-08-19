@@ -1,0 +1,633 @@
+/* waterfall.js — v2 — Dynamic Waterfall with Pivot-Table Controls */
+
+let waterfallChart = null;
+
+/* ── Waterfall State ────────────────────────────────── */
+const WF = {
+  dimension: 'categoria',  // categoria, subgrupo, linha, laboratorio, canal_agregado, canal, diretor, distrital
+  comparison: 'mom',        // mom, yoy
+  metric: 'total',          // total, digital, dt
+  sort: 'impacto',          // impacto, crescimento, queda, alpha
+  limit: 20
+};
+
+const DIM_LABELS = {
+  categoria: 'Categorias',
+  subgrupo: 'Subgrupos',
+  linha: 'Linhas',
+  laboratorio: 'Laboratórios',
+  canal_agregado: 'Canais (Agrupado)',
+  canal: 'Canais (Detalhado)',
+  diretor: 'Diretores',
+  distrital: 'Distritais'
+};
+
+const METRIC_LABELS = {
+  total: 'Venda Total',
+  digital: 'Venda Digital',
+  dt: 'Digital + Tele'
+};
+
+const CANAL_GROUPS = {
+  'Loja Física': ['Venda Balcão', 'Venda Caixa', 'Credito Facil', 'Auto Atendimento', 'Recarga'],
+  'Venda Digital': ['APP', 'iFood', 'SITE', 'APP Tele Entrega', 'SITE Tele Entrega', 'e_Commerce', 'Rappi'],
+  'Televendas': ['Venda Tele Entrega', 'Tele Encaminhada Lojas', 'Venda Tele Entrega Central', 'Tele Vizinhança']
+};
+
+/* ── Init ────────────────────────────────────────────── */
+function initWaterfall() {
+  // Tab navigation
+  const tabBtns = document.querySelectorAll('#mainTabNav .tab-btn');
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tabId = btn.dataset.tab;
+      tabBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      const target = document.getElementById(tabId);
+      if (target) target.classList.add('active');
+      if (tabId === 'tabWaterfall') triggerWaterfall();
+    });
+  });
+
+  // Pill bar: Dimension
+  wireupPillBar('wfDimension', 'dim', val => { WF.dimension = val; triggerWaterfall(); });
+  // Pill bar: Comparison
+  wireupPillBar('wfComparison', 'comp', val => { WF.comparison = val; triggerWaterfall(); });
+  // Pill bar: Metric
+  wireupPillBar('wfMetric', 'metric', val => { WF.metric = val; triggerWaterfall(); });
+
+  // Select: Sort
+  const sortSel = document.getElementById('wfSort');
+  if (sortSel) sortSel.addEventListener('change', e => { WF.sort = e.target.value; triggerWaterfall(); });
+
+  // Select: Limit
+  const limitSel = document.getElementById('wfLimit');
+  if (limitSel) limitSel.addEventListener('change', e => { WF.limit = parseInt(e.target.value) || 20; triggerWaterfall(); });
+}
+
+function wireupPillBar(containerId, dataAttr, callback) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.querySelectorAll('.wf-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      container.querySelectorAll('.wf-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      callback(btn.dataset[dataAttr]);
+    });
+  });
+}
+
+function triggerWaterfall() {
+  updateConfigSummary();
+  renderWaterfall();
+}
+
+/* ── Config Summary Tags ─────────────────────────────── */
+function updateConfigSummary() {
+  const el = document.getElementById('wfConfigSummary');
+  if (!el) return;
+
+  const isAgosto = (typeof STATE !== 'undefined' && STATE.mesReferencia === 'agosto');
+  const curLabel = isAgosto ? 'Ago/26' : 'Jul/26';
+  const compLabel = WF.comparison === 'mom'
+    ? (isAgosto ? 'Jul/26' : 'Jun/26')
+    : (isAgosto ? 'Ago/25' : 'Jul/25');
+
+  const compText = WF.comparison === 'mom' ? `MoM: ${compLabel} → ${curLabel}` : `YoY: ${compLabel} → ${curLabel}`;
+
+  // Active sidebar filters
+  let filterTags = '';
+  if (typeof STATE !== 'undefined') {
+    if (STATE.diretores.size > 0) filterTags += tag('👤', `Diretor: ${Array.from(STATE.diretores).join(', ')}`);
+    if (STATE.distritais.size > 0) filterTags += tag('📍', `Distrital: ${Array.from(STATE.distritais).join(', ')}`);
+    if (STATE.grupos.size > 0) filterTags += tag('📦', `Grupo: ${Array.from(STATE.grupos).join(', ')}`);
+    if (STATE.grupoCanal !== 'ALL') filterTags += tag('🏪', `Canal: ${STATE.grupoCanal}`);
+  }
+
+  el.innerHTML = `
+    ${tag('📐', DIM_LABELS[WF.dimension])}
+    ${tag('⚡', compText)}
+    ${tag('💰', METRIC_LABELS[WF.metric])}
+    ${tag('🔀', document.getElementById('wfSort')?.options[document.getElementById('wfSort')?.selectedIndex]?.text || WF.sort)}
+    ${tag('📊', 'Top ' + WF.limit)}
+    ${filterTags}
+  `;
+}
+
+function tag(icon, text) {
+  return `<span class="wf-config-tag"><span class="tag-icon">${icon}</span>${text}</span>`;
+}
+
+/* ── Get Waterfall Data ──────────────────────────────── */
+function getWaterfallData() {
+  const isAgosto = (typeof STATE !== 'undefined' && STATE.mesReferencia === 'agosto');
+  const curLabel = isAgosto ? 'Ago/26' : 'Jul/26';
+  const isMom = WF.comparison === 'mom';
+  const compLabel = isMom
+    ? (isAgosto ? 'Jul/26' : 'Jun/26')
+    : (isAgosto ? 'Ago/25' : 'Jul/25');
+
+  let items = [];
+  let title = '';
+
+  // Choose value fields based on metric
+  const curField = WF.metric === 'digital' ? 'venda_digital_jul_26' : WF.metric === 'dt' ? 'venda_dt_jul_26' : 'venda_jul_26';
+  const momField = WF.metric === 'digital' ? 'venda_digital_jun_26' : WF.metric === 'dt' ? 'venda_dt_jun_26' : 'venda_jun_26';
+  const yoyField = WF.metric === 'digital' ? 'venda_digital_jul_25' : WF.metric === 'dt' ? 'venda_dt_jul_25' : 'venda_jul_25';
+  const baseField = isMom ? momField : yoyField;
+
+  const dimLabel = DIM_LABELS[WF.dimension];
+  const compType = isMom ? 'MoM' : 'YoY';
+  title = `${dimLabel}: ${compLabel} → ${curLabel} (${compType}) — ${METRIC_LABELS[WF.metric]}`;
+
+  switch (WF.dimension) {
+    case 'categoria':
+      items = buildFromGrupos(curField, baseField);
+      break;
+    case 'subgrupo':
+      items = buildFromHierField('subgrupo', curField, baseField);
+      break;
+    case 'linha':
+      items = buildFromHierField('linha', curField, baseField);
+      break;
+    case 'laboratorio':
+      items = buildFromHierField('laboratorio', curField, baseField);
+      break;
+    case 'canal_agregado':
+      items = buildCanaisAgregados(isMom);
+      break;
+    case 'canal':
+      items = buildCanaisDetalhado(isMom);
+      break;
+    case 'diretor':
+      items = buildFromCatField('diretor', curField, baseField);
+      break;
+    case 'distrital':
+      items = buildFromCatField('distrital', curField, baseField);
+      break;
+  }
+
+  // Calculate delta
+  items = items.map(item => ({
+    ...item,
+    delta: item.current - item.base,
+    deltaPct: item.base > 0 ? ((item.current / item.base) - 1) * 100 : (item.current > 0 ? 100 : 0)
+  })).filter(i => Math.abs(i.delta) > 0.01);
+
+  // Sort
+  switch (WF.sort) {
+    case 'impacto':
+      items.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+      break;
+    case 'crescimento':
+      items.sort((a, b) => (b.deltaPct) - (a.deltaPct));
+      break;
+    case 'queda':
+      items.sort((a, b) => (a.deltaPct) - (b.deltaPct));
+      break;
+    case 'alpha':
+      items.sort((a, b) => a.label.localeCompare(b.label));
+      break;
+  }
+
+  // Limit
+  if (WF.limit < 50 && items.length > WF.limit) items = items.slice(0, WF.limit);
+
+  const totalBase = items.reduce((s, i) => s + i.base, 0);
+  const totalCurrent = items.reduce((s, i) => s + i.current, 0);
+  const totalDelta = totalCurrent - totalBase;
+  const totalDeltaPct = totalBase > 0 ? ((totalCurrent / totalBase) - 1) * 100 : 0;
+
+  return { items, title, totalBase, totalCurrent, totalDelta, totalDeltaPct, curLabel, compLabel };
+}
+
+/* ── Data Builders ───────────────────────────────────── */
+
+function buildFromGrupos(curField, baseField) {
+  const grupos = (typeof getFilteredGrupos === 'function') ? getFilteredGrupos() : [];
+  return grupos.map(g => ({
+    label: cleanGroupName(g.grupo),
+    current: g[curField] || 0,
+    base: g[baseField] || 0
+  }));
+}
+
+function buildFromHierField(field, curField, baseField) {
+  const hier = getFilteredHierData();
+  const map = {};
+  hier.forEach(c => {
+    const key = c[field] || '';
+    if (!key) return;
+    if (!map[key]) map[key] = { current: 0, base: 0 };
+    map[key].current += (c[curField] || 0);
+    map[key].base += (c[baseField] || 0);
+  });
+  return Object.entries(map).map(([label, v]) => ({ label: cleanGroupName(label), current: v.current, base: v.base }));
+}
+
+function buildFromCatField(field, curField, baseField) {
+  const hier = getFilteredHierData();
+  const map = {};
+  hier.forEach(c => {
+    const key = c[field] || '';
+    if (!key) return;
+    if (!map[key]) map[key] = { current: 0, base: 0 };
+    map[key].current += (c[curField] || 0);
+    map[key].base += (c[baseField] || 0);
+  });
+  return Object.entries(map).map(([label, v]) => ({ label: cleanGroupName(label), current: v.current, base: v.base }));
+}
+
+function buildCanaisAgregados(isMom) {
+  const canais = (typeof getFilteredCanaisList === 'function') ? getFilteredCanaisList() : (DATA.canais || []);
+  const useDays = (typeof STATE !== 'undefined' && STATE.mesReferencia === 'julho') && (STATE.startDay !== 1 || STATE.endDay !== 31);
+
+  // Build group map
+  const canalToGroup = {};
+  Object.entries(CANAL_GROUPS).forEach(([grp, members]) => {
+    members.forEach(m => { canalToGroup[m] = grp; });
+  });
+
+  // Filter groups based on metric
+  const allowedGroups = getMetricAllowedGroups();
+
+  const groupMap = {};
+  canais.forEach(c => {
+    const grp = canalToGroup[c.canal] || 'Outros';
+    if (allowedGroups && !allowedGroups.has(grp)) return;
+
+    let v26 = c.venda_jul_26 || 0;
+    let vMom = c.venda_jun_26 || 0;
+    let vYoy = c.venda_jul_25 || 0;
+
+    if (useDays) {
+      if (c.d26_07) v26 = sumDays(c.d26_07, STATE.startDay, STATE.endDay);
+      if (c.d26_06) vMom = sumDays(c.d26_06, STATE.startDay, STATE.endDay);
+      if (c.d25) vYoy = sumDays(c.d25, STATE.startDay, STATE.endDay);
+    }
+
+    if (!groupMap[grp]) groupMap[grp] = { current: 0, base: 0 };
+    groupMap[grp].current += v26;
+    groupMap[grp].base += isMom ? vMom : vYoy;
+  });
+
+  return Object.entries(groupMap).map(([label, v]) => ({ label, current: v.current, base: v.base }));
+}
+
+function buildCanaisDetalhado(isMom) {
+  const canais = (typeof getFilteredCanaisList === 'function') ? getFilteredCanaisList() : (DATA.canais || []);
+  const useDays = (typeof STATE !== 'undefined' && STATE.mesReferencia === 'julho') && (STATE.startDay !== 1 || STATE.endDay !== 31);
+
+  // Filter channels based on metric
+  const allowedGroups = getMetricAllowedGroups();
+  const canalToGroup = {};
+  if (allowedGroups) {
+    Object.entries(CANAL_GROUPS).forEach(([grp, members]) => {
+      members.forEach(m => { canalToGroup[m] = grp; });
+    });
+  }
+
+  return canais.filter(c => {
+    if (!allowedGroups) return true;
+    const grp = canalToGroup[c.canal] || 'Outros';
+    return allowedGroups.has(grp);
+  }).map(c => {
+    let v26 = c.venda_jul_26 || 0;
+    let vMom = c.venda_jun_26 || 0;
+    let vYoy = c.venda_jul_25 || 0;
+
+    if (useDays) {
+      if (c.d26_07) v26 = sumDays(c.d26_07, STATE.startDay, STATE.endDay);
+      if (c.d26_06) vMom = sumDays(c.d26_06, STATE.startDay, STATE.endDay);
+      if (c.d25) vYoy = sumDays(c.d25, STATE.startDay, STATE.endDay);
+    }
+
+    return { label: c.canal, current: v26, base: isMom ? vMom : vYoy };
+  });
+}
+
+/* Returns null for 'total' (no filter), or a Set of allowed group names */
+function getMetricAllowedGroups() {
+  if (WF.metric === 'digital') return new Set(['Venda Digital']);
+  if (WF.metric === 'dt') return new Set(['Venda Digital', 'Televendas']);
+  return null; // total — all groups allowed
+}
+
+function getFilteredHierData() {
+  if (typeof getFilteredHier === 'function') return getFilteredHier();
+  return DATA.hierarquia || [];
+}
+
+/* ── Helpers ─────────────────────────────────────────── */
+function cleanGroupName(name) {
+  if (!name) return '';
+  return name.replace(/\(\d+\)$/, '').trim();
+}
+
+function wfFmtCompact(val) {
+  if (typeof fmtCompact === 'function') return fmtCompact(val);
+  const abs = Math.abs(val);
+  if (abs >= 1e9) return 'R$ ' + (val / 1e9).toFixed(2).replace('.', ',') + ' Bi';
+  if (abs >= 1e6) return 'R$ ' + (val / 1e6).toFixed(1).replace('.', ',') + ' Mi';
+  if (abs >= 1e3) return 'R$ ' + (val / 1e3).toFixed(0) + ' mil';
+  return 'R$ ' + val.toFixed(0);
+}
+
+function wfFmtPct(val) {
+  const sign = val >= 0 ? '+' : '';
+  return sign + val.toFixed(2).replace('.', ',') + '%';
+}
+
+function wfTagPct(val) {
+  if (typeof tagPct === 'function') return tagPct(val);
+  const cls = val > 0 ? 'pos' : val < 0 ? 'neg' : 'neu';
+  return `<span class="badge ${cls}">${wfFmtPct(val)}</span>`;
+}
+
+/* ── Render KPIs ─────────────────────────────────────── */
+function renderWaterfallKPIs(data) {
+  const kpiRow = document.getElementById('wfKpiRow');
+  if (!kpiRow) return;
+
+  const deltaColor = data.totalDelta >= 0 ? '#16a34a' : '#dc2626';
+  const up = data.items.filter(i => i.delta > 0).length;
+  const down = data.items.filter(i => i.delta < 0).length;
+  const topGrower = data.items.filter(i => i.delta > 0).sort((a, b) => b.deltaPct - a.deltaPct)[0];
+  const topFaller = data.items.filter(i => i.delta < 0).sort((a, b) => a.deltaPct - b.deltaPct)[0];
+
+  kpiRow.innerHTML = `
+    <div class="wf-kpi-card">
+      <div class="wf-kpi-label">TOTAL BASE (${data.compLabel})</div>
+      <div class="wf-kpi-value">${wfFmtCompact(data.totalBase)}</div>
+    </div>
+    <div class="wf-kpi-card">
+      <div class="wf-kpi-label">TOTAL ATUAL (${data.curLabel})</div>
+      <div class="wf-kpi-value">${wfFmtCompact(data.totalCurrent)}</div>
+    </div>
+    <div class="wf-kpi-card">
+      <div class="wf-kpi-label">VARIAÇÃO</div>
+      <div class="wf-kpi-value" style="color: ${deltaColor}">${data.totalDelta >= 0 ? '+' : ''}${wfFmtCompact(data.totalDelta)}</div>
+      <div class="wf-kpi-delta">${wfTagPct(data.totalDeltaPct)}</div>
+    </div>
+    <div class="wf-kpi-card">
+      <div class="wf-kpi-label">⬆ CRESCERAM / ⬇ CAÍRAM</div>
+      <div class="wf-kpi-value"><span style="color:#16a34a">${up}</span> / <span style="color:#dc2626">${down}</span></div>
+    </div>
+    <div class="wf-kpi-card">
+      <div class="wf-kpi-label">🏆 MAIOR CRESCIMENTO</div>
+      <div class="wf-kpi-value" style="font-size:14px; color:#16a34a">${topGrower ? topGrower.label : '—'}</div>
+      <div class="wf-kpi-delta">${topGrower ? wfFmtPct(topGrower.deltaPct) : ''}</div>
+    </div>
+    <div class="wf-kpi-card">
+      <div class="wf-kpi-label">⚠ MAIOR QUEDA</div>
+      <div class="wf-kpi-value" style="font-size:14px; color:#dc2626">${topFaller ? topFaller.label : '—'}</div>
+      <div class="wf-kpi-delta">${topFaller ? wfFmtPct(topFaller.deltaPct) : ''}</div>
+    </div>
+  `;
+}
+
+/* ── Render Detail Table ─────────────────────────────── */
+function renderWaterfallTable(data) {
+  const thead = document.getElementById('wfDetailThead');
+  const tbody = document.getElementById('wfDetailTbody');
+  if (!thead || !tbody) return;
+
+  thead.innerHTML = `<tr>
+    <th class="col-name">#</th>
+    <th class="col-name">${DIM_LABELS[WF.dimension]}</th>
+    <th class="col-num">${data.compLabel}</th>
+    <th class="col-num">${data.curLabel}</th>
+    <th class="col-num">Var. R$</th>
+    <th class="col-num">Var. %</th>
+    <th class="col-num">Impacto %</th>
+  </tr>`;
+
+  const totalDelta = Math.abs(data.totalDelta) || 1;
+
+  tbody.innerHTML = data.items.map((item, i) => {
+    const impacto = (item.delta / totalDelta * 100);
+    const cls = item.delta >= 0 ? 'pos' : 'neg';
+    return `<tr>
+      <td style="color:var(--text-3); font-size:11px; text-align:center; width:30px;">${i + 1}</td>
+      <td class="col-name" style="font-weight:600;">${item.label}</td>
+      <td class="col-num">${typeof fmtRS === 'function' ? fmtRS(item.base) : wfFmtCompact(item.base)}</td>
+      <td class="col-num">${typeof fmtRS === 'function' ? fmtRS(item.current) : wfFmtCompact(item.current)}</td>
+      <td class="col-num"><span class="badge ${cls}" style="font-size:11px;">${item.delta >= 0 ? '+' : ''}${wfFmtCompact(item.delta)}</span></td>
+      <td class="col-num"><span class="badge ${cls}" style="font-size:11px;">${wfFmtPct(item.deltaPct)}</span></td>
+      <td class="col-num" style="font-size:11px; color:var(--text-2);">${impacto >= 0 ? '+' : ''}${impacto.toFixed(1).replace('.', ',')}%</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── Render Waterfall Chart ──────────────────────────── */
+function renderWaterfall() {
+  const data = getWaterfallData();
+  const wrap = document.getElementById('wfChartWrap');
+  if (!wrap) return;
+
+  // Ensure canvas exists (might have been replaced by empty message)
+  if (!wrap.querySelector('canvas')) {
+    wrap.innerHTML = '<canvas id="chartWaterfall"></canvas>';
+  }
+  const canvas = document.getElementById('chartWaterfall');
+  if (!canvas) return;
+
+  // Render KPIs and table
+  renderWaterfallKPIs(data);
+  renderWaterfallTable(data);
+
+  if (data.items.length === 0) {
+    if (waterfallChart) { waterfallChart.destroy(); waterfallChart = null; }
+    wrap.innerHTML = '<div class="wf-empty">Sem dados para esta configuração</div>';
+    return;
+  }
+
+  // Build chart data
+  const labels = [data.compLabel, ...data.items.map(i => i.label), data.curLabel];
+  const baseVal = data.totalBase;
+  let running = baseVal;
+
+  const barData = [];
+  const bgColors = [];
+  const borderColors = [];
+
+  // Base bar
+  barData.push([0, baseVal]);
+  bgColors.push('#475569');
+  borderColors.push('#334155');
+
+  // Delta bars
+  data.items.forEach(item => {
+    const start = running;
+    running += item.delta;
+    if (item.delta >= 0) {
+      barData.push([start, running]);
+      bgColors.push('#22c55e');
+      borderColors.push('#16a34a');
+    } else {
+      barData.push([running, start]);
+      bgColors.push('#ef4444');
+      borderColors.push('#dc2626');
+    }
+  });
+
+  // Total bar
+  barData.push([0, data.totalCurrent]);
+  bgColors.push('#475569');
+  borderColors.push('#334155');
+
+  // Running values for connectors
+  const runningValues = [baseVal];
+  { let r = baseVal; data.items.forEach(item => { r += item.delta; runningValues.push(r); }); runningValues.push(data.totalCurrent); }
+
+  // Connector plugin
+  const connectorPlugin = {
+    id: 'waterfallConnector',
+    afterDatasetDraw(chart) {
+      const { ctx } = chart;
+      const meta = chart.getDatasetMeta(0);
+      ctx.save();
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      for (let i = 0; i < meta.data.length - 1; i++) {
+        if (i + 1 === meta.data.length - 1) continue;
+        const curr = meta.data[i];
+        const next = meta.data[i + 1];
+        const runVal = runningValues[i + 1];
+        const yLine = chart.scales.y.getPixelForValue(runVal);
+        ctx.beginPath();
+        ctx.moveTo(curr.x + curr.width / 2, yLine);
+        ctx.lineTo(next.x - next.width / 2, yLine);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  };
+
+  // Labels plugin
+  const labelsPlugin = {
+    id: 'waterfallLabels',
+    afterDatasetDraw(chart) {
+      const { ctx } = chart;
+      const meta = chart.getDatasetMeta(0);
+      ctx.save();
+      ctx.font = '600 10px Inter';
+      ctx.textAlign = 'center';
+      meta.data.forEach((bar, idx) => {
+        const d = barData[idx];
+        const isTotal = (idx === 0 || idx === labels.length - 1);
+        let displayVal, yPos, color;
+        if (isTotal) {
+          displayVal = wfFmtCompact(d[1]);
+          yPos = bar.y - 8;
+          color = '#334155';
+        } else {
+          const item = data.items[idx - 1];
+          displayVal = (item.delta >= 0 ? '+' : '') + wfFmtCompact(item.delta);
+          if (item.delta >= 0) {
+            yPos = chart.scales.y.getPixelForValue(Math.max(d[0], d[1])) - 8;
+            color = '#15803d';
+          } else {
+            yPos = chart.scales.y.getPixelForValue(Math.min(d[0], d[1])) - 8;
+            color = '#b91c1c';
+          }
+        }
+        ctx.fillStyle = color;
+        ctx.fillText(displayVal, bar.x, yPos);
+      });
+      ctx.restore();
+    }
+  };
+
+  if (waterfallChart) waterfallChart.destroy();
+
+  waterfallChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: barData,
+        backgroundColor: bgColors,
+        borderColor: borderColors,
+        borderWidth: 1,
+        borderRadius: 4,
+        borderSkipped: false,
+        barPercentage: 0.75,
+        categoryPercentage: 0.85
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 500, easing: 'easeOutQuart' },
+      layout: { padding: { top: 30, bottom: 10 } },
+      plugins: {
+        legend: { display: false },
+        title: {
+          display: true,
+          text: data.title,
+          font: { family: 'Outfit', size: 14, weight: '700' },
+          color: '#1a1d23',
+          padding: { bottom: 12 }
+        },
+        tooltip: {
+          backgroundColor: '#1e293b',
+          titleFont: { family: 'Inter', size: 13, weight: '700' },
+          bodyFont: { family: 'Inter', size: 12 },
+          padding: 12,
+          cornerRadius: 8,
+          callbacks: {
+            title: ctx => ctx[0].label,
+            label: ctx => {
+              const idx = ctx.dataIndex;
+              const d = barData[idx];
+              if (idx === 0) return `Total Base: R$ ${Math.round(d[1]).toLocaleString('pt-BR')}`;
+              if (idx === labels.length - 1) return `Total Atual: R$ ${Math.round(d[1]).toLocaleString('pt-BR')}`;
+              const item = data.items[idx - 1];
+              return [
+                `Atual: R$ ${Math.round(item.current).toLocaleString('pt-BR')}`,
+                `Base: R$ ${Math.round(item.base).toLocaleString('pt-BR')}`,
+                `Var: ${item.delta >= 0 ? '+' : ''}R$ ${Math.round(item.delta).toLocaleString('pt-BR')}`,
+                `Var %: ${wfFmtPct(item.deltaPct)}`
+              ];
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: {
+            font: { family: 'Inter', size: 10, weight: '600' },
+            color: '#5a6070',
+            maxRotation: 45,
+            minRotation: 0,
+            autoSkip: false
+          }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+          ticks: {
+            font: { family: 'Inter', size: 11 },
+            color: '#8b90a0',
+            callback: v => {
+              if (Math.abs(v) >= 1e9) return (v / 1e9).toFixed(1) + ' Bi';
+              if (Math.abs(v) >= 1e6) return (v / 1e6).toFixed(0) + ' Mi';
+              if (Math.abs(v) >= 1e3) return (v / 1e3).toFixed(0) + ' mil';
+              return v;
+            }
+          }
+        }
+      }
+    },
+    plugins: [connectorPlugin, labelsPlugin]
+  });
+}
+
+/* ── Hook into app.js lifecycle ─────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  initWaterfall();
+});

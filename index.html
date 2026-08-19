@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acompanhamento de Categorias — Farmácias São João</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="logo">SJ</div>
+      <div>
+        <h1>Acompanhamento de Categorias</h1>
+        <span class="subtitle">Análise de Crescimento & Evolução — Reunião de Diretoria</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="month-selector" id="monthSelector">
+        <button type="button" class="month-btn active" data-month="agosto" id="btnMesAgosto">
+          📅 Agosto/26 (01-17)
+        </button>
+        <button type="button" class="month-btn" data-month="julho" id="btnMesJulho">
+          📅 Julho/26 (Fechado)
+        </button>
+      </div>
+      <div class="ref-periodo" id="refPeriodo">Carregando...</div>
+      <button class="btn-icon" id="btnExportCsv" title="Exportar CSV">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4m4-5l5 5 5-5m-5 5V3"/></svg>
+      </button>
+      <button class="btn-icon" id="btnPrint" title="Imprimir / PDF">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2m-6 0h-4v4h8v-4z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Workspace -->
+  <div class="workspace">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+
+      <!-- Filtro de Datas / Período -->
+      <div class="sidebar-section" style="background: rgba(99,102,241,0.08); padding: 10px; border-radius: 8px; border: 1px solid rgba(99,102,241,0.2);">
+        <label class="sidebar-label" style="color: var(--accent-primary, #6366f1); font-weight: 600;">📅 Período de Análise</label>
+        <select class="sidebar-select" id="filterPeriodoPreset">
+          <option value="FULL">Mês Completo (Dia 01 a 31)</option>
+          <option value="MTD_15">Até o dia 15 (MTD)</option>
+          <option value="MTD_20">Até o dia 20 (MTD)</option>
+          <option value="CUSTOM">Personalizado (Escolher dias)</option>
+        </select>
+        <div id="customDaysRange" style="display: none; margin-top: 8px; gap: 6px; align-items: center; justify-content: space-between;">
+          <label style="font-size: 11px; color: var(--text-muted);">Dias:</label>
+          <div style="display: flex; gap: 4px; align-items: center;">
+            <input type="number" id="filterStartDay" min="1" max="31" value="1" class="sidebar-select" style="width: 50px; padding: 4px; text-align: center;">
+            <span>até</span>
+            <input type="number" id="filterEndDay" min="1" max="31" value="31" class="sidebar-select" style="width: 50px; padding: 4px; text-align: center;">
+          </div>
+        </div>
+      </div>
+
+      <hr class="sidebar-divider">
+
+      <div class="sidebar-section">
+        <label class="sidebar-label">Diretor</label>
+        <div id="msDiretor" class="ms-container"></div>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="sidebar-label">Distrital</label>
+        <div id="msDistrital" class="ms-container"></div>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="sidebar-label">Coordenador</label>
+        <div id="msCoordenador" class="ms-container"></div>
+      </div>
+
+      <hr class="sidebar-divider">
+
+      <div class="sidebar-section">
+        <label class="sidebar-label">Grupo</label>
+        <div id="msGrupo" class="ms-container"></div>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="sidebar-label">Subgrupo</label>
+        <div id="msSubgrupo" class="ms-container"></div>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="sidebar-label">Linha</label>
+        <div id="msLinha" class="ms-container"></div>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="sidebar-label">Laboratório</label>
+        <div id="msLaboratorio" class="ms-container"></div>
+      </div>
+
+      <hr class="sidebar-divider">
+
+      <!-- Filtro de Exclusão (Filtro Negativo) -->
+      <div class="sidebar-section" style="background: rgba(239, 68, 68, 0.06); padding: 10px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2);">
+        <label class="sidebar-label" style="color: #ef4444; font-weight: 600;">🚫 Excluir do Relatório</label>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <select class="sidebar-select" id="filterExcluirTipo">
+            <option value="NONE">Nenhum (Incluir tudo)</option>
+            <option value="linha">Excluir Linha específica</option>
+            <option value="grupo">Excluir Grupo específico</option>
+            <option value="subgrupo">Excluir Subgrupo específico</option>
+            <option value="laboratorio">Excluir Laboratório específico</option>
+            <option value="canal">Excluir Canal específico</option>
+          </select>
+          <div id="boxExcluirValor" style="display: none;">
+            <select class="sidebar-select" id="filterExcluirValor">
+              <option value="NONE">Selecione o item a EXCLUIR...</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <hr class="sidebar-divider">
+
+      <div class="sidebar-section">
+        <label class="sidebar-label">Grupo de Canal</label>
+        <select class="sidebar-select" id="filterGrupoCanal">
+          <option value="ALL">Todos os Grupos de Canais</option>
+          <option value="digital">Venda Digital</option>
+          <option value="tele">Venda Tele</option>
+          <option value="digital_tele">Venda Digital + Tele</option>
+          <option value="loja">Venda Loja Física</option>
+        </select>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="sidebar-label">Canal Detalhado</label>
+        <select class="sidebar-select" id="filterCanalDetalhado">
+          <option value="ALL">Todos os Canais</option>
+          <optgroup label="Venda Digital">
+            <option value="APP">APP</option>
+            <option value="iFood">iFood</option>
+            <option value="SITE">SITE</option>
+            <option value="APP Tele Entrega">APP Tele Entrega</option>
+            <option value="SITE Tele Entrega">SITE Tele Entrega</option>
+            <option value="e_Commerce">e_Commerce</option>
+            <option value="Rappi">Rappi</option>
+          </optgroup>
+          <optgroup label="Venda Tele">
+            <option value="Venda Tele Entrega">Venda Tele Entrega</option>
+            <option value="Tele Encaminhada Lojas">Tele Encaminhada Lojas</option>
+            <option value="Venda Tele Entrega Central">Venda Tele Entrega Central</option>
+            <option value="Tele Vizinhança">Tele Vizinhança</option>
+          </optgroup>
+          <optgroup label="Venda Loja Física">
+            <option value="Venda Balcão">Venda Balcão</option>
+            <option value="Venda Caixa">Venda Caixa</option>
+            <option value="Credito Facil">Credito Facil</option>
+            <option value="Auto Atendimento">Auto Atendimento</option>
+            <option value="Recarga">Recarga</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <hr class="sidebar-divider">
+
+      <div class="sidebar-section">
+        <label class="sidebar-label">Buscar</label>
+        <input type="text" class="sidebar-search" id="globalSearch" placeholder="Grupo, linha, canal...">
+      </div>
+
+      <div class="sidebar-section">
+        <label class="sidebar-label">Ordenação</label>
+        <select class="sidebar-select" id="sortMode">
+          <option value="faturamento">Maior Faturamento</option>
+          <option value="mom_pct">Maior Crescimento MoM %</option>
+          <option value="yoy_pct">Maior Evolução YoY %</option>
+          <option value="mom_rs">Maior Var. MoM R$</option>
+          <option value="yoy_rs">Maior Var. YoY R$</option>
+          <option value="alpha">Ordem Alfabética</option>
+        </select>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="sidebar-label">Seções</label>
+        <div class="toggle-group">
+          <label class="toggle-item"><input type="checkbox" checked data-section="section-kpis"> KPIs</label>
+          <label class="toggle-item"><input type="checkbox" checked data-section="section-canais"> Canais</label>
+          <label class="toggle-item"><input type="checkbox" checked data-section="section-categorias"> Categorias</label>
+          <label class="toggle-item"><input type="checkbox" checked data-section="section-digital"> Participação Digital</label>
+        </div>
+      </div>
+
+      <div class="sidebar-section sidebar-upload">
+        <label class="sidebar-label">Atualizar Base</label>
+        <div class="upload-zone" id="uploadZone">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 16V4m0 0L8 8m4-4l4 4"/><path d="M20 16v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2"/></svg>
+          <span>Arraste <strong>.json</strong> aqui</span>
+          <input type="file" id="fileInput" accept=".json" style="display:none">
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="content">
+
+      <!-- Tab Navigation -->
+      <div class="tab-nav" id="mainTabNav">
+        <button class="tab-btn active" data-tab="tabAnalise" id="btnTabAnalise">
+          <span class="tab-icon">📊</span> Análise Detalhada
+        </button>
+        <button class="tab-btn" data-tab="tabWaterfall" id="btnTabWaterfall">
+          <span class="tab-icon">📈</span> Waterfall Crescimento
+        </button>
+      </div>
+
+      <!-- TAB 1: Análise Detalhada (existing content) -->
+      <div class="tab-content active" id="tabAnalise">
+
+      <!-- KPIs -->
+      <section class="section" id="section-kpis">
+        <div class="kpi-strip" id="kpiStrip"></div>
+      </section>
+
+      <!-- Canais (ANTES de categorias) -->
+      <section class="section" id="section-canais">
+        <div class="section-header">
+          <h2>Abertura por Canal de Venda & Compilações</h2>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="tableCanais">
+            <thead>
+              <tr>
+                <th class="col-name">Canal / Compilação</th>
+                <th class="col-num sortable" data-sort="venda_jul_26" id="thCanaisCur">Ago/26</th>
+                <th class="col-num sortable" data-sort="venda_jun_26" id="thCanaisMom">Jul/26</th>
+                <th class="col-num sortable" data-sort="venda_jul_25" id="thCanaisYoy">Ago/25</th>
+                <th class="col-num sortable" data-sort="mom_pct">MoM %</th>
+                <th class="col-num sortable" data-sort="mom_rs">MoM R$</th>
+                <th class="col-num sortable" data-sort="yoy_pct">YoY %</th>
+                <th class="col-num sortable" data-sort="yoy_rs">YoY R$</th>
+                <th class="col-num" id="thPartCanaisCur">Part. Ago/26</th>
+                <th class="col-num" id="thPartCanaisMom">Part. Jul/26</th>
+                <th class="col-num" id="thPartCanaisYoy">Part. Ago/25</th>
+                <th class="col-num">Var. p.p.</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyCanais"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Categorias -->
+      <section class="section" id="section-categorias">
+        <div class="section-header">
+          <div>
+            <h2>Crescimento & Evolução por Categoria</h2>
+            <span class="section-sub">Comparativo de Vendas & Participação nos 3 Períodos</span>
+          </div>
+          <div class="section-actions">
+            <button class="btn-small" id="btnExpandAll">Expandir tudo</button>
+            <button class="btn-small" id="btnCollapseAll">Recolher tudo</button>
+          </div>
+        </div>
+
+        <!-- Seletor de Modo de Participação -->
+        <div class="part-mode-bar">
+          <span class="part-mode-label">Visão de Participação:</span>
+          <div class="part-mode-tabs" id="partModeTabs">
+            <button class="part-tab active" data-mode="total_empresa" title="Participação da Categoria no Total de Vendas da Empresa">% Total x Empresa</button>
+            <button class="part-tab" data-mode="digital_empresa" title="Penetração Digital: Venda Digital da Categoria sobre a Venda Total da Categoria">% Digital x Categoria</button>
+            <button class="part-tab" data-mode="dt_empresa" title="Penetração Digital+Tele: Venda Digital+Tele da Categoria sobre a Venda Total da Categoria">% Digital + Tele x Categoria</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table" id="tableCategorias">
+            <thead>
+              <tr>
+                <th class="col-name">Grupo / Linha</th>
+                <th class="col-num sortable" data-sort="venda_jul_26" id="thVendaJul26">Jul/26</th>
+                <th class="col-num sortable" data-sort="venda_jun_26" id="thVendaJun26">Jun/26</th>
+                <th class="col-num sortable" data-sort="venda_jul_25" id="thVendaJul25">Jul/25</th>
+                <th class="col-num sortable" data-sort="mom_pct">MoM %</th>
+                <th class="col-num sortable" data-sort="mom_rs">MoM R$</th>
+                <th class="col-num sortable" data-sort="yoy_pct">YoY %</th>
+                <th class="col-num sortable" data-sort="yoy_rs">YoY R$</th>
+                <th class="col-num sortable" data-sort="part_jul_26" id="thPartJul26">Part. Jul/26</th>
+                <th class="col-num sortable" data-sort="part_jun_26" id="thPartJun26">Part. Jun/26</th>
+                <th class="col-num sortable" data-sort="part_jul_25" id="thPartJul25">Part. Jul/25</th>
+                <th class="col-num" id="thVarPP" title="Variação YoY em pontos percentuais">Var. p.p.</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyCategorias"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Digital -->
+      <section class="section" id="section-digital">
+        <div class="section-header">
+          <h2>Participação Digital — Evolução Histórica</h2>
+        </div>
+        <div class="charts-row">
+          <div class="chart-box">
+            <h3>Penetração Digital sobre Empresa (%)</h3>
+            <div class="chart-canvas-wrap"><canvas id="chartDigitalTrend"></canvas></div>
+          </div>
+          <div class="chart-box">
+            <h3>Mix de Canais — Mês Atual</h3>
+            <div class="chart-canvas-wrap"><canvas id="chartChannelMix"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      </div><!-- /tabAnalise -->
+
+      <!-- TAB 2: Waterfall Crescimento -->
+      <div class="tab-content" id="tabWaterfall">
+
+        <div class="wf-header">
+          <h2>📈 Decomposição de Crescimento — Waterfall</h2>
+          <span class="wf-header-sub">Monte sua visão: escolha dimensão, comparação, métrica e ordenação</span>
+        </div>
+
+        <!-- Dynamic Control Panel -->
+        <div class="wf-controls" id="wfControls">
+
+          <!-- Row 1: Dimension & Comparison -->
+          <div class="wf-ctrl-row">
+            <div class="wf-ctrl-group">
+              <label class="wf-ctrl-label">📐 Decompor por</label>
+              <div class="wf-pill-bar" id="wfDimension">
+                <button class="wf-pill active" data-dim="categoria">Categorias</button>
+                <button class="wf-pill" data-dim="subgrupo">Subgrupos</button>
+                <button class="wf-pill" data-dim="linha">Linhas</button>
+                <button class="wf-pill" data-dim="laboratorio">Laboratórios</button>
+                <button class="wf-pill" data-dim="canal_agregado">Canais (Agrupado)</button>
+                <button class="wf-pill" data-dim="canal">Canais (Detalhado)</button>
+                <button class="wf-pill" data-dim="diretor">Diretores</button>
+                <button class="wf-pill" data-dim="distrital">Distritais</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 2: Comparison, Metric, Sort, Limit -->
+          <div class="wf-ctrl-row">
+            <div class="wf-ctrl-group">
+              <label class="wf-ctrl-label">⚡ Comparação</label>
+              <div class="wf-pill-bar" id="wfComparison">
+                <button class="wf-pill active" data-comp="mom">MoM (Mês Anterior)</button>
+                <button class="wf-pill" data-comp="yoy">YoY (Ano Anterior)</button>
+              </div>
+            </div>
+
+            <div class="wf-ctrl-group">
+              <label class="wf-ctrl-label">💰 Métrica</label>
+              <div class="wf-pill-bar" id="wfMetric">
+                <button class="wf-pill active" data-metric="total">Venda Total</button>
+                <button class="wf-pill" data-metric="digital">Venda Digital</button>
+                <button class="wf-pill" data-metric="dt">Digital + Tele</button>
+              </div>
+            </div>
+
+            <div class="wf-ctrl-group">
+              <label class="wf-ctrl-label">🔀 Ordenar por</label>
+              <select class="wf-select" id="wfSort">
+                <option value="impacto">Maior Impacto R$</option>
+                <option value="crescimento">Maior Crescimento %</option>
+                <option value="queda">Maior Queda %</option>
+                <option value="alpha">Ordem Alfabética</option>
+              </select>
+            </div>
+
+            <div class="wf-ctrl-group">
+              <label class="wf-ctrl-label">📊 Exibir</label>
+              <select class="wf-select" id="wfLimit">
+                <option value="10">Top 10</option>
+                <option value="15">Top 15</option>
+                <option value="20" selected>Top 20</option>
+                <option value="30">Top 30</option>
+                <option value="50">Todos</option>
+              </select>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Active config summary -->
+        <div class="wf-config-summary" id="wfConfigSummary"></div>
+
+        <!-- Summary KPI cards -->
+        <div class="wf-kpi-row" id="wfKpiRow"></div>
+
+        <!-- Waterfall chart -->
+        <div class="wf-chart-container" id="wfChartWrap">
+          <canvas id="chartWaterfall"></canvas>
+        </div>
+
+        <!-- Legend -->
+        <div class="wf-legend">
+          <div class="wf-legend-item">
+            <div class="wf-legend-dot" style="background:#475569;"></div>
+            <span>Total (Base / Atual)</span>
+          </div>
+          <div class="wf-legend-item">
+            <div class="wf-legend-dot" style="background:#22c55e;"></div>
+            <span>Crescimento</span>
+          </div>
+          <div class="wf-legend-item">
+            <div class="wf-legend-dot" style="background:#ef4444;"></div>
+            <span>Queda</span>
+          </div>
+        </div>
+
+        <!-- Data table below chart -->
+        <div class="wf-table-section">
+          <div class="wf-table-header">
+            <h3>📋 Detalhamento dos Itens</h3>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="wfDetailTable">
+              <thead id="wfDetailThead"></thead>
+              <tbody id="wfDetailTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /tabWaterfall -->
+
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/waterfall.js"></script>
+</body>
+</html>

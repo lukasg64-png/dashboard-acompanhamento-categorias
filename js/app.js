@@ -1,0 +1,1398 @@
+/* app.js — Acompanhamento de Categorias — v14 (Suporte a Mês de Referência: Agosto Parcial & Julho Fechado) */
+
+let DATA = { kpis: null, canais: [], canaisHier: [], categorias: [], hierarquia: [], filtroHierarquia: {}, filtrosProduto: null };
+let STATE = {
+  mesReferencia: 'agosto', // 'agosto' ou 'julho'
+  diretores: new Set(),
+  distritais: new Set(),
+  coordenadores: new Set(),
+  grupos: new Set(),
+  subgrupos: new Set(),
+  linhas: new Set(),
+  laboratorios: new Set(),
+  grupoCanal: 'ALL',
+  canalDetalhado: 'ALL',
+  excluirTipo: 'NONE',
+  excluirValor: 'NONE',
+  search: '',
+  sort: 'faturamento',
+  partMode: 'total_empresa', // 'total_empresa', 'digital_empresa', 'dt_empresa'
+  expandedCat: new Set(),
+  expandedCh: new Set(['digital', 'digital_tele', 'loja']),
+  periodPreset: 'FULL',
+  startDay: 1,
+  endDay: 31
+};
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadAllData(STATE.mesReferencia);
+  wireEvents();
+  initMultiSelects();
+  updateTableHeaders();
+  render();
+});
+
+/* ── Data loading ─────────────────────────────────── */
+async function loadAllData(mes = 'agosto') {
+  try {
+    const prefix = mes === 'agosto' ? 'data/agosto/' : 'data/';
+    const urls = [
+      prefix + 'executive_kpis.json',
+      prefix + 'canais_summary.json',
+      prefix + 'canais_by_hierarquia.json',
+      prefix + 'categorias_summary.json',
+      prefix + 'hierarquia_detalhada.json',
+      prefix + 'filtro_hierarquia.json',
+      prefix + 'filtros_produto.json'
+    ];
+    const results = await Promise.all(urls.map(u => fetch(u).then(r => r.json()).catch(() => null)));
+    DATA.kpis = results[0];
+    DATA.canais = results[1] || [];
+    DATA.canaisHier = results[2] || [];
+    DATA.categorias = results[3] || [];
+    DATA.hierarquia = results[4] || [];
+    DATA.filtroHierarquia = results[5] || {};
+    DATA.filtrosProduto = results[6] || null;
+  } catch (e) { console.error('Erro ao carregar dados:', e); }
+}
+
+/* ── Helper para soma de vetores de dias ─────────────── */
+function sumDays(arr, startDay, endDay) {
+  if (!arr || !arr.length) return 0;
+  let s = 0;
+  const maxIdx = Math.min(arr.length, endDay);
+  for (let i = startDay - 1; i < maxIdx; i++) {
+    s += (arr[i] || 0);
+  }
+  return s;
+}
+
+/* ── Events ───────────────────────────────────────── */
+function wireEvents() {
+  // Month selector handler
+  const monthBtns = document.querySelectorAll('#monthSelector .month-btn');
+  monthBtns.forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const month = btn.dataset.month;
+      if (STATE.mesReferencia === month) return;
+      STATE.mesReferencia = month;
+      monthBtns.forEach(b => b.classList.toggle('active', b.dataset.month === month));
+
+      // Reset filters
+      STATE.diretores.clear();
+      STATE.distritais.clear();
+      STATE.coordenadores.clear();
+      STATE.grupos.clear();
+      STATE.subgrupos.clear();
+      STATE.linhas.clear();
+      STATE.laboratorios.clear();
+      STATE.expandedCat.clear();
+      STATE.search = '';
+      if (sel('globalSearch')) sel('globalSearch').value = '';
+
+      // Reset period preset
+      if (STATE.mesReferencia === 'agosto') {
+        STATE.startDay = 1; STATE.endDay = 17;
+      } else {
+        STATE.startDay = 1; STATE.endDay = 31;
+      }
+
+      // Load data
+      await loadAllData(STATE.mesReferencia);
+      populateAllMultiSelects();
+      updateTableHeaders();
+      render();
+    });
+  });
+
+  const presetSel = sel('filterPeriodoPreset');
+  if (presetSel) {
+    presetSel.addEventListener('change', e => {
+      STATE.periodPreset = e.target.value;
+      const customBox = sel('customDaysRange');
+      if (STATE.periodPreset === 'FULL') {
+        STATE.startDay = 1; STATE.endDay = 31;
+        if (customBox) customBox.style.display = 'none';
+      } else if (STATE.periodPreset === 'MTD_15') {
+        STATE.startDay = 1; STATE.endDay = 15;
+        if (customBox) customBox.style.display = 'none';
+      } else if (STATE.periodPreset === 'MTD_20') {
+        STATE.startDay = 1; STATE.endDay = 20;
+        if (customBox) customBox.style.display = 'none';
+      } else if (STATE.periodPreset === 'CUSTOM') {
+        if (customBox) customBox.style.display = 'flex';
+        STATE.startDay = parseInt(sel('filterStartDay').value) || 1;
+        STATE.endDay = parseInt(sel('filterEndDay').value) || 31;
+      }
+      STATE.expandedCat.clear(); render();
+    });
+  }
+
+  const sDay = sel('filterStartDay');
+  if (sDay) sDay.addEventListener('change', e => {
+    STATE.startDay = Math.max(1, Math.min(31, parseInt(e.target.value) || 1)); render();
+  });
+
+  const eDay = sel('filterEndDay');
+  if (eDay) eDay.addEventListener('change', e => {
+    STATE.endDay = Math.max(1, Math.min(31, parseInt(e.target.value) || 31)); render();
+  });
+
+  // Exclusion filter handlers (Filtro Negativo / Excluir)
+  const excTipoSel = sel('filterExcluirTipo');
+  const excValBox = sel('boxExcluirValor');
+  const excValSel = sel('filterExcluirValor');
+
+  if (excTipoSel && excValSel) {
+    excTipoSel.addEventListener('change', e => {
+      STATE.excluirTipo = e.target.value;
+      STATE.excluirValor = 'NONE';
+
+      if (STATE.excluirTipo === 'NONE') {
+        if (excValBox) excValBox.style.display = 'none';
+        render();
+      } else {
+        if (excValBox) excValBox.style.display = 'block';
+        populateExclusionValues();
+      }
+    });
+
+    excValSel.addEventListener('change', e => {
+      STATE.excluirValor = e.target.value;
+      STATE.expandedCat.clear(); render();
+    });
+  }
+
+  // Channel filters
+  const grpCanalSel = sel('filterGrupoCanal');
+  const canalDetSel = sel('filterCanalDetalhado');
+
+  if (grpCanalSel) {
+    grpCanalSel.addEventListener('change', e => {
+      STATE.grupoCanal = e.target.value;
+      if (canalDetSel) {
+        canalDetSel.value = 'ALL';
+        STATE.canalDetalhado = 'ALL';
+      }
+      if (STATE.grupoCanal === 'digital') {
+        STATE.partMode = 'digital_empresa';
+      } else if (STATE.grupoCanal === 'digital_tele' || STATE.grupoCanal === 'tele') {
+        STATE.partMode = 'dt_empresa';
+      } else {
+        STATE.partMode = 'total_empresa';
+      }
+      updatePartTabsUI();
+      STATE.expandedCat.clear(); render();
+    });
+  }
+
+  if (canalDetSel) {
+    canalDetSel.addEventListener('change', e => {
+      STATE.canalDetalhado = e.target.value;
+      if (STATE.canalDetalhado !== 'ALL') {
+        const ch = (DATA.canais || []).find(c => c.canal === STATE.canalDetalhado);
+        if (ch) {
+          if (ch.grupo === 'digital') {
+            STATE.grupoCanal = 'digital';
+            STATE.partMode = 'digital_empresa';
+          } else if (ch.grupo === 'tele') {
+            STATE.grupoCanal = 'tele';
+            STATE.partMode = 'dt_empresa';
+          } else if (ch.grupo === 'loja') {
+            STATE.grupoCanal = 'loja';
+            STATE.partMode = 'total_empresa';
+          }
+          if (grpCanalSel) grpCanalSel.value = STATE.grupoCanal;
+          updatePartTabsUI();
+        }
+      }
+      STATE.expandedCat.clear(); render();
+    });
+  }
+
+  // Search
+  sel('globalSearch').addEventListener('input', e => {
+    STATE.search = e.target.value.toLowerCase().trim(); render();
+  });
+
+  // Sort
+  if (sel('sortMode')) {
+    sel('sortMode').addEventListener('change', e => { STATE.sort = e.target.value; render(); });
+  }
+
+  // Participation mode tabs
+  const tabsContainer = sel('partModeTabs');
+  if (tabsContainer) {
+    tabsContainer.querySelectorAll('.part-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabsContainer.querySelectorAll('.part-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        STATE.partMode = tab.dataset.mode;
+        STATE.expandedCat.clear();
+        render();
+      });
+    });
+  }
+
+  // Section toggles
+  document.querySelectorAll('.toggle-group input[data-section]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const sec = document.getElementById(cb.dataset.section);
+      if (sec) sec.style.display = cb.checked ? '' : 'none';
+    });
+  });
+
+  // Expand / Collapse all
+  sel('btnExpandAll').addEventListener('click', () => {
+    getFilteredGrupos().forEach(g => STATE.expandedCat.add(g.grupo));
+    renderCategorias();
+  });
+  sel('btnCollapseAll').addEventListener('click', () => { STATE.expandedCat.clear(); renderCategorias(); });
+
+  // Column sorting on all sortable headers (Canais & Categorias)
+  document.querySelectorAll('th.sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const sVal = th.dataset.sort;
+      if (sel('sortMode')) sel('sortMode').value = sVal;
+      STATE.sort = sVal;
+      render();
+    });
+  });
+
+  // Export & Print
+  sel('btnExportCsv').addEventListener('click', exportCsv);
+  sel('btnPrint').addEventListener('click', () => window.print());
+
+  // Global click to close multi-select dropdowns
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.ms-container')) {
+      document.querySelectorAll('.ms-container.open').forEach(c => c.classList.remove('open'));
+    }
+  });
+}
+
+function updatePartTabsUI() {
+  const tabsContainer = sel('partModeTabs');
+  if (tabsContainer) {
+    tabsContainer.querySelectorAll('.part-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.mode === STATE.partMode);
+    });
+  }
+}
+
+function sel(id) { return document.getElementById(id); }
+
+/* ── Multi-Select Component Engine ─────────────────── */
+function renderMultiSelect(containerId, optionsList, selectedSet, placeholderText, onChangeCallback) {
+  const container = sel(containerId);
+  if (!container) return;
+
+  const currentSearch = container.querySelector('.ms-search')?.value.toLowerCase() || '';
+
+  const selectedCount = selectedSet.size;
+  let btnLabel = placeholderText;
+  if (selectedCount > 0) {
+    if (selectedCount === 1) btnLabel = Array.from(selectedSet)[0];
+    else btnLabel = `${selectedCount} Selecionados`;
+  }
+
+  let html = `
+    <button type="button" class="ms-btn">
+      <span class="ms-btn-text">${esc(btnLabel)}</span>
+      ${selectedCount > 1 ? `<span class="ms-badge">${selectedCount}</span>` : ''}
+      <span class="ms-arrow">▼</span>
+    </button>
+    <div class="ms-dropdown">
+      <input type="text" class="ms-search" placeholder="Pesquisar..." value="${esc(currentSearch)}">
+      <div class="ms-actions">
+        <button type="button" class="ms-action-btn btn-select-all">Selecionar Todos</button>
+        <button type="button" class="ms-action-btn btn-clear-all">Limpar</button>
+      </div>
+      <div class="ms-list"></div>
+    </div>
+  `;
+
+  container.innerHTML = html;
+
+  const btn = container.querySelector('.ms-btn');
+  const searchInput = container.querySelector('.ms-search');
+  const btnSelectAll = container.querySelector('.btn-select-all');
+  const btnClearAll = container.querySelector('.btn-clear-all');
+  const listContainer = container.querySelector('.ms-list');
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.querySelectorAll('.ms-container.open').forEach(c => {
+      if (c !== container) c.classList.remove('open');
+    });
+    container.classList.toggle('open');
+    if (container.classList.contains('open')) searchInput.focus();
+  });
+
+  const renderItems = () => {
+    const q = searchInput.value.toLowerCase().trim();
+    const filteredOptions = optionsList.filter(opt => opt.toLowerCase().includes(q));
+
+    if (filteredOptions.length === 0) {
+      listContainer.innerHTML = '<div style="font-size:11px; color:#8b90a0; padding:4px;">Nenhum item encontrado</div>';
+      return;
+    }
+
+    listContainer.innerHTML = filteredOptions.map(opt => {
+      const isChecked = selectedSet.has(opt);
+      return `
+        <label class="ms-item">
+          <input type="checkbox" value="${esc(opt)}" ${isChecked ? 'checked' : ''}>
+          <span>${esc(opt)}</span>
+        </label>
+      `;
+    }).join('');
+
+    listContainer.querySelectorAll('input[type="checkbox"]').forEach(chk => {
+      chk.addEventListener('change', (e) => {
+        const val = e.target.value;
+        if (e.target.checked) selectedSet.add(val);
+        else selectedSet.delete(val);
+
+        updateBtnState();
+        if (onChangeCallback) onChangeCallback();
+      });
+    });
+  };
+
+  const updateBtnState = () => {
+    const count = selectedSet.size;
+    const txtEl = container.querySelector('.ms-btn-text');
+    if (count === 0) {
+      txtEl.textContent = placeholderText;
+      const b = container.querySelector('.ms-badge');
+      if (b) b.remove();
+    } else if (count === 1) {
+      txtEl.textContent = Array.from(selectedSet)[0];
+      const b = container.querySelector('.ms-badge');
+      if (b) b.remove();
+    } else {
+      txtEl.textContent = `${count} Selecionados`;
+      let b = container.querySelector('.ms-badge');
+      if (!b) {
+        b = document.createElement('span');
+        b.className = 'ms-badge';
+        container.querySelector('.ms-btn').insertBefore(b, container.querySelector('.ms-arrow'));
+      }
+      b.textContent = count;
+    }
+  };
+
+  searchInput.addEventListener('input', renderItems);
+
+  btnSelectAll.addEventListener('click', () => {
+    optionsList.forEach(opt => selectedSet.add(opt));
+    renderItems();
+    updateBtnState();
+    if (onChangeCallback) onChangeCallback();
+  });
+
+  btnClearAll.addEventListener('click', () => {
+    selectedSet.clear();
+    renderItems();
+    updateBtnState();
+    if (onChangeCallback) onChangeCallback();
+  });
+
+  renderItems();
+}
+
+function initMultiSelects() {
+  populateAllMultiSelects();
+}
+
+function populateAllMultiSelects() {
+  const fh = DATA.filtroHierarquia || {};
+  const hier = DATA.hierarquia || [];
+
+  // Diretores
+  const diretores = (fh.diretores || []).sort();
+  renderMultiSelect('msDiretor', diretores, STATE.diretores, 'Todos os Diretores', () => {
+    STATE.expandedCat.clear(); render();
+  });
+
+  // Distritais
+  const distritais = (fh.distritais || []).sort();
+  renderMultiSelect('msDistrital', distritais, STATE.distritais, 'Todas as Distritais', () => {
+    STATE.expandedCat.clear(); render();
+  });
+
+  // Grupos
+  const grupos = (fh.grupos || []).sort();
+  renderMultiSelect('msGrupo', grupos, STATE.grupos, 'Todos os Grupos', () => {
+    updateCascadingSubgrupos();
+    STATE.expandedCat.clear(); render();
+  });
+
+  updateCascadingSubgrupos();
+}
+
+function updateCascadingSubgrupos() {
+  const hier = DATA.hierarquia || [];
+  let availableSubgrupos = [];
+  let availableLinhas = [];
+  let availableLaboratorios = [];
+
+  if (STATE.grupos.size > 0) {
+    const filteredHier = hier.filter(h => STATE.grupos.has(h.grupo));
+    availableSubgrupos = [...new Set(filteredHier.map(h => h.subgrupo).filter(Boolean))].sort();
+  } else {
+    availableSubgrupos = (DATA.filtroHierarquia.subgrupos || []).sort();
+  }
+
+  // Clean obsolete selected subgrupos
+  Array.from(STATE.subgrupos).forEach(sg => {
+    if (!availableSubgrupos.includes(sg)) STATE.subgrupos.delete(sg);
+  });
+
+  renderMultiSelect('msSubgrupo', availableSubgrupos, STATE.subgrupos, 'Todos os Subgrupos', () => {
+    updateCascadingLinhas();
+    STATE.expandedCat.clear(); render();
+  });
+
+  updateCascadingLinhas();
+}
+
+function updateCascadingLinhas() {
+  const hier = DATA.hierarquia || [];
+  let filteredHier = hier;
+
+  if (STATE.grupos.size > 0) filteredHier = filteredHier.filter(h => STATE.grupos.has(h.grupo));
+  if (STATE.subgrupos.size > 0) filteredHier = filteredHier.filter(h => STATE.subgrupos.has(h.subgrupo));
+
+  let availableLinhas = [...new Set(filteredHier.map(h => h.linha).filter(Boolean))].sort();
+  if (availableLinhas.length === 0 && STATE.grupos.size === 0 && STATE.subgrupos.size === 0) {
+    availableLinhas = (DATA.filtroHierarquia.linhas || []).sort();
+  }
+
+  Array.from(STATE.linhas).forEach(l => {
+    if (!availableLinhas.includes(l)) STATE.linhas.delete(l);
+  });
+
+  renderMultiSelect('msLinha', availableLinhas, STATE.linhas, 'Todas as Linhas', () => {
+    updateCascadingLaboratorios();
+    STATE.expandedCat.clear(); render();
+  });
+
+  updateCascadingLaboratorios();
+}
+
+function updateCascadingLaboratorios() {
+  const hier = DATA.hierarquia || [];
+  let filteredHier = hier;
+
+  if (STATE.grupos.size > 0) filteredHier = filteredHier.filter(h => STATE.grupos.has(h.grupo));
+  if (STATE.subgrupos.size > 0) filteredHier = filteredHier.filter(h => STATE.subgrupos.has(h.subgrupo));
+  if (STATE.linhas.size > 0) filteredHier = filteredHier.filter(h => STATE.linhas.has(h.linha));
+
+  let availableLabs = [...new Set(filteredHier.map(h => h.laboratorio).filter(Boolean))].sort();
+  if (availableLabs.length === 0) {
+    availableLabs = (DATA.filtroHierarquia.laboratorios || []).sort();
+  }
+
+  Array.from(STATE.laboratorios).forEach(lab => {
+    if (!availableLabs.includes(lab)) STATE.laboratorios.delete(lab);
+  });
+
+  renderMultiSelect('msLaboratorio', availableLabs, STATE.laboratorios, 'Todos os Laboratórios', () => {
+    STATE.expandedCat.clear(); render();
+  });
+}
+
+function populateExclusionValues() {
+  const excValSel = sel('filterExcluirValor');
+  if (!excValSel) return;
+
+  let list = [];
+  if (STATE.excluirTipo === 'linha') list = DATA.filtroHierarquia.linhas || [];
+  else if (STATE.excluirTipo === 'grupo') list = DATA.filtroHierarquia.grupos || [];
+  else if (STATE.excluirTipo === 'subgrupo') list = DATA.filtroHierarquia.subgrupos || [];
+  else if (STATE.excluirTipo === 'laboratorio') list = DATA.filtroHierarquia.laboratorios || [];
+  else if (STATE.excluirTipo === 'canal') list = DATA.canais.map(c => c.canal);
+
+  list = [...new Set(list)].sort();
+  excValSel.innerHTML = '<option value="NONE">Selecione o item a EXCLUIR...</option>' +
+    list.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join('');
+}
+
+/* ── Formatting ───────────────────────────────────── */
+function fmtRS(val) {
+  if (val == null || isNaN(val)) return '-';
+  return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+function fmtCompact(val) {
+  if (val == null || isNaN(val)) return '-';
+  const abs = Math.abs(val);
+  if (abs >= 1e9) return 'R$ ' + (val / 1e9).toFixed(1).replace('.', ',') + ' Bi';
+  if (abs >= 1e6) return 'R$ ' + (val / 1e6).toFixed(1).replace('.', ',') + ' Mi';
+  if (abs >= 1e3) return 'R$ ' + Math.round(val / 1e3).toLocaleString('pt-BR') + ' Mil';
+  return fmtRS(val);
+}
+function fmtPct(val) {
+  if (val == null || isNaN(val)) return '-';
+  return val.toFixed(2).replace('.', ',') + '%';
+}
+function badgePct(val) {
+  if (val == null || isNaN(val)) return '<span class="badge">-</span>';
+  const cls = val >= 0 ? 'pos' : 'neg';
+  const arrow = val >= 0 ? '▲' : '▼';
+  return `<span class="badge ${cls}">${arrow} ${Math.abs(val).toFixed(2).replace('.', ',')}%</span>`;
+}
+function badgePP(val) {
+  if (val == null || isNaN(val)) return '<span class="badge-pp neu">-</span>';
+  const cls = val > 0.001 ? 'pos' : (val < -0.001 ? 'neg' : 'neu');
+  const arrow = val > 0.001 ? '▲' : (val < -0.001 ? '▼' : '');
+  const sign = val > 0 ? '+' : '';
+  return `<span class="badge-pp ${cls}">${arrow} ${sign}${val.toFixed(2).replace('.', ',')} p.p.</span>`;
+}
+function deltaRS(val) {
+  if (val == null || isNaN(val)) return '-';
+  const cls = val >= 0 ? 'delta-pos' : 'delta-neg';
+  const sign = val >= 0 ? '+' : '';
+  return `<span class="${cls}">${sign}${fmtRS(val)}</span>`;
+}
+function tagPct(val) {
+  if (val == null || isNaN(val)) return '';
+  const cls = val >= 0 ? 'tag-pos' : 'tag-neg';
+  const arrow = val >= 0 ? '▲' : '▼';
+  return `<span class="tag ${cls}">${arrow} ${Math.abs(val).toFixed(2).replace('.', ',')}%</span>`;
+}
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/* ── Filtered data helpers ────────────────────────── */
+function applyHierarchyFilter(arr) {
+  let items = arr;
+
+  if (STATE.diretores.size > 0) items = items.filter(c => STATE.diretores.has(c.diretor));
+  if (STATE.distritais.size > 0) items = items.filter(c => STATE.distritais.has(c.distrital));
+  if (STATE.grupos.size > 0) items = items.filter(c => STATE.grupos.has(c.grupo));
+  if (STATE.subgrupos.size > 0) items = items.filter(c => STATE.subgrupos.has(c.subgrupo));
+  if (STATE.linhas.size > 0) items = items.filter(c => STATE.linhas.has(c.linha));
+  if (STATE.laboratorios.size > 0) items = items.filter(c => STATE.laboratorios.has(c.laboratorio));
+
+  if (STATE.excluirTipo !== 'NONE' && STATE.excluirValor !== 'NONE') {
+    const prop = STATE.excluirTipo;
+    items = items.filter(c => c[prop] !== STATE.excluirValor);
+  }
+
+  return items;
+}
+
+function getFilteredHier() {
+  if ((STATE.canalDetalhado && STATE.canalDetalhado !== 'ALL') || (STATE.grupoCanal && STATE.grupoCanal !== 'ALL')) {
+    let items = DATA.canaisHier || [];
+
+    if (STATE.diretores.size > 0) items = items.filter(c => STATE.diretores.has(c.diretor));
+    if (STATE.distritais.size > 0) items = items.filter(c => STATE.distritais.has(c.distrital));
+    if (STATE.grupos.size > 0) items = items.filter(c => STATE.grupos.has(c.grupo));
+    if (STATE.subgrupos.size > 0) items = items.filter(c => STATE.subgrupos.has(c.subgrupo));
+    if (STATE.linhas.size > 0) items = items.filter(c => STATE.linhas.has(c.linha));
+    if (STATE.laboratorios.size > 0) items = items.filter(c => STATE.laboratorios.has(c.laboratorio));
+
+    if (STATE.excluirTipo !== 'NONE' && STATE.excluirValor !== 'NONE') {
+      const prop = STATE.excluirTipo === 'grupo' ? 'grupo' :
+                   STATE.excluirTipo === 'subgrupo' ? 'subgrupo' :
+                   STATE.excluirTipo === 'linha' ? 'linha' :
+                   STATE.excluirTipo === 'laboratorio' ? 'laboratorio' :
+                   STATE.excluirTipo === 'canal' ? 'canal' : '';
+      if (prop) items = items.filter(c => c[prop] !== STATE.excluirValor);
+    }
+
+    if (STATE.canalDetalhado && STATE.canalDetalhado !== 'ALL') {
+      items = items.filter(c => c.canal === STATE.canalDetalhado);
+    } else if (STATE.grupoCanal === 'digital') {
+      items = items.filter(c => c.canal_grupo === 'digital');
+    } else if (STATE.grupoCanal === 'tele') {
+      items = items.filter(c => c.canal_grupo === 'tele');
+    } else if (STATE.grupoCanal === 'digital_tele') {
+      items = items.filter(c => c.canal_grupo === 'digital' || c.canal_grupo === 'tele');
+    } else if (STATE.grupoCanal === 'loja') {
+      items = items.filter(c => c.canal_grupo === 'loja');
+    }
+
+    const map = {};
+    items.forEach(c => {
+      const key = `${c.grupo}||${c.subgrupo}||${c.linha}`;
+      if (!map[key]) {
+        map[key] = {
+          diretor: c.diretor, distrital: c.distrital,
+          grupo: c.grupo, subgrupo: c.subgrupo, linha: c.linha,
+          laboratorio: c.laboratorio || '',
+          venda_jul_26: 0, venda_jun_26: 0, venda_jul_25: 0,
+          venda_digital_jul_26: 0, venda_digital_jun_26: 0, venda_digital_jul_25: 0,
+          venda_dt_jul_26: 0, venda_dt_jun_26: 0, venda_dt_jul_25: 0
+        };
+      }
+      const v26 = c.v26 || 0;
+      const v26_06 = c.v26_06 || 0;
+      const v25 = c.v25 || 0;
+
+      map[key].venda_jul_26 += v26;
+      map[key].venda_jun_26 += v26_06;
+      map[key].venda_jul_25 += v25;
+
+      if (c.canal_grupo === 'digital') {
+        map[key].venda_digital_jul_26 += v26;
+        map[key].venda_digital_jun_26 += v26_06;
+        map[key].venda_digital_jul_25 += v25;
+        map[key].venda_dt_jul_26 += v26;
+        map[key].venda_dt_jun_26 += v26_06;
+        map[key].venda_dt_jul_25 += v25;
+      } else if (c.canal_grupo === 'tele') {
+        map[key].venda_dt_jul_26 += v26;
+        map[key].venda_dt_jun_26 += v26_06;
+        map[key].venda_dt_jul_25 += v25;
+      }
+    });
+
+    return Object.values(map);
+  }
+
+  return applyHierarchyFilter(DATA.hierarquia);
+}
+
+/* ── Filtered Channels Helper ── */
+function getFilteredCanaisList() {
+  if (!DATA.canaisHier || !DATA.canaisHier.length) {
+    let list = DATA.canais || [];
+    if (STATE.excluirTipo === 'canal' && STATE.excluirValor !== 'NONE') {
+      list = list.filter(c => c.canal !== STATE.excluirValor);
+    }
+    return list;
+  }
+
+  let items = DATA.canaisHier;
+
+  if (STATE.diretores.size > 0) items = items.filter(c => STATE.diretores.has(c.diretor));
+  if (STATE.distritais.size > 0) items = items.filter(c => STATE.distritais.has(c.distrital));
+  if (STATE.grupos.size > 0) items = items.filter(c => STATE.grupos.has(c.grupo));
+  if (STATE.subgrupos.size > 0) items = items.filter(c => STATE.subgrupos.has(c.subgrupo));
+  if (STATE.linhas.size > 0) items = items.filter(c => STATE.linhas.has(c.linha));
+  if (STATE.laboratorios.size > 0) items = items.filter(c => STATE.laboratorios.has(c.laboratorio));
+
+  if (STATE.excluirTipo !== 'NONE' && STATE.excluirValor !== 'NONE') {
+    const prop = STATE.excluirTipo === 'grupo' ? 'grupo' :
+                 STATE.excluirTipo === 'subgrupo' ? 'subgrupo' :
+                 STATE.excluirTipo === 'linha' ? 'linha' :
+                 STATE.excluirTipo === 'laboratorio' ? 'laboratorio' :
+                 STATE.excluirTipo === 'canal' ? 'canal' : '';
+    if (prop) items = items.filter(c => c[prop] !== STATE.excluirValor);
+  }
+
+  if (STATE.canalDetalhado && STATE.canalDetalhado !== 'ALL') {
+    items = items.filter(c => c.canal === STATE.canalDetalhado);
+  } else if (STATE.grupoCanal === 'digital') {
+    items = items.filter(c => c.canal_grupo === 'digital');
+  } else if (STATE.grupoCanal === 'tele') {
+    items = items.filter(c => c.canal_grupo === 'tele');
+  } else if (STATE.grupoCanal === 'digital_tele') {
+    items = items.filter(c => c.canal_grupo === 'digital' || c.canal_grupo === 'tele');
+  } else if (STATE.grupoCanal === 'loja') {
+    items = items.filter(c => c.canal_grupo === 'loja');
+  }
+
+  const map = {};
+  items.forEach(c => {
+    if (!map[c.canal]) {
+      map[c.canal] = {
+        canal: c.canal,
+        grupo: c.canal_grupo,
+        venda_jul_26: 0, venda_jun_26: 0, venda_jul_25: 0,
+        d25: [], d26_06: [], d26_07: []
+      };
+    }
+    map[c.canal].venda_jul_26 += (c.v26 || 0);
+    map[c.canal].venda_jun_26 += (c.v26_06 || 0);
+    map[c.canal].venda_jul_25 += (c.v25 || 0);
+
+    if (c.d25) {
+      if (!map[c.canal].d25.length) map[c.canal].d25 = [...c.d25];
+      else c.d25.forEach((v, i) => map[c.canal].d25[i] = (map[c.canal].d25[i] || 0) + v);
+    }
+    if (c.d26_06) {
+      if (!map[c.canal].d26_06.length) map[c.canal].d26_06 = [...c.d26_06];
+      else c.d26_06.forEach((v, i) => map[c.canal].d26_06[i] = (map[c.canal].d26_06[i] || 0) + v);
+    }
+    if (c.d26_07) {
+      if (!map[c.canal].d26_07.length) map[c.canal].d26_07 = [...c.d26_07];
+      else c.d26_07.forEach((v, i) => map[c.canal].d26_07[i] = (map[c.canal].d26_07[i] || 0) + v);
+    }
+  });
+
+  return Object.values(map);
+}
+
+function getFilteredGrupos() {
+  const hier = getFilteredHier();
+  const map = {};
+  const useDays = (STATE.mesReferencia === 'julho') && (STATE.startDay !== 1 || STATE.endDay !== 31);
+
+  hier.forEach(c => {
+    let v26 = c.venda_jul_26 || 0;
+    let v26_06 = c.venda_jun_26 || 0;
+    let v25 = c.venda_jul_25 || 0;
+
+    let v_dig26 = c.venda_digital_jul_26 || 0;
+    let v_dig26_06 = c.venda_digital_jun_26 || 0;
+    let v_dig25 = c.venda_digital_jul_25 || 0;
+
+    let v_dt26 = c.venda_dt_jul_26 || 0;
+    let v_dt26_06 = c.venda_dt_jun_26 || 0;
+    let v_dt25 = c.venda_dt_jul_25 || 0;
+
+    if (useDays) {
+      if (c.d26_07) v26 = sumDays(c.d26_07, STATE.startDay, STATE.endDay);
+      if (c.d26_06) v26_06 = sumDays(c.d26_06, STATE.startDay, STATE.endDay);
+      if (c.d25) v25 = sumDays(c.d25, STATE.startDay, STATE.endDay);
+
+      if (c.dig_d26_07) v_dig26 = sumDays(c.dig_d26_07, STATE.startDay, STATE.endDay);
+      if (c.dig_d26_06) v_dig26_06 = sumDays(c.dig_d26_06, STATE.startDay, STATE.endDay);
+      if (c.dig_d25) v_dig25 = sumDays(c.dig_d25, STATE.startDay, STATE.endDay);
+
+      if (c.dt_d26_07) v_dt26 = sumDays(c.dt_d26_07, STATE.startDay, STATE.endDay);
+      if (c.dt_d26_06) v_dt26_06 = sumDays(c.dt_d26_06, STATE.startDay, STATE.endDay);
+      if (c.dt_d25) v_dt25 = sumDays(c.dt_d25, STATE.startDay, STATE.endDay);
+    }
+
+    if (!map[c.grupo]) {
+      map[c.grupo] = {
+        grupo: c.grupo,
+        venda_jul_26: 0, venda_jun_26: 0, venda_jul_25: 0,
+        venda_digital_jul_26: 0, venda_digital_jun_26: 0, venda_digital_jul_25: 0,
+        venda_dt_jul_26: 0, venda_dt_jun_26: 0, venda_dt_jul_25: 0
+      };
+    }
+
+    map[c.grupo].venda_jul_26 += v26;
+    map[c.grupo].venda_jun_26 += v26_06;
+    map[c.grupo].venda_jul_25 += v25;
+
+    map[c.grupo].venda_digital_jul_26 += v_dig26;
+    map[c.grupo].venda_digital_jun_26 += v_dig26_06;
+    map[c.grupo].venda_digital_jul_25 += v_dig25;
+
+    map[c.grupo].venda_dt_jul_26 += v_dt26;
+    map[c.grupo].venda_dt_jun_26 += v_dt26_06;
+    map[c.grupo].venda_dt_jul_25 += v_dt25;
+  });
+
+  let grupos = Object.values(map).map(g => {
+    g.mom_pct = g.venda_jun_26 > 0 ? ((g.venda_jul_26 / g.venda_jun_26) - 1) * 100 : 0;
+    g.mom_rs = g.venda_jul_26 - g.venda_jun_26;
+    g.yoy_pct = g.venda_jul_25 > 0 ? ((g.venda_jul_26 / g.venda_jul_25) - 1) * 100 : 0;
+    g.yoy_rs = g.venda_jul_26 - g.venda_jul_25;
+    return g;
+  }).filter(g => g.venda_jul_26 !== 0 || g.venda_jun_26 !== 0 || g.venda_jul_25 !== 0);
+
+  if (STATE.search) {
+    grupos = grupos.filter(g => {
+      if (g.grupo.toLowerCase().includes(STATE.search)) return true;
+      return hier.some(h => h.grupo === g.grupo && h.linha && h.linha.toLowerCase().includes(STATE.search));
+    });
+  }
+
+  // ORDENAÇÃO DINÂMICA NÍVEL 1 (GRUPOS)
+  switch (STATE.sort) {
+    case 'faturamento':
+    case 'venda_jul_26':
+    case 'jul26':
+      grupos.sort((a, b) => {
+        let va = a.venda_jul_26, vb = b.venda_jul_26;
+        if (STATE.partMode === 'digital_empresa') { va = a.venda_digital_jul_26; vb = b.venda_digital_jul_26; }
+        else if (STATE.partMode === 'dt_empresa') { va = a.venda_dt_jul_26; vb = b.venda_dt_jul_26; }
+        return (vb || 0) - (va || 0);
+      });
+      break;
+    case 'venda_jun_26':
+    case 'jun26':
+      grupos.sort((a, b) => (b.venda_jun_26 || 0) - (a.venda_jun_26 || 0));
+      break;
+    case 'venda_jul_25':
+    case 'jul25':
+      grupos.sort((a, b) => (b.venda_jul_25 || 0) - (a.venda_jul_25 || 0));
+      break;
+    case 'mom_pct':
+      grupos.sort((a, b) => (b.mom_pct || 0) - (a.mom_pct || 0));
+      break;
+    case 'yoy_pct':
+      grupos.sort((a, b) => (b.yoy_pct || 0) - (a.yoy_pct || 0));
+      break;
+    case 'mom_rs':
+      grupos.sort((a, b) => (b.mom_rs || 0) - (a.mom_rs || 0));
+      break;
+    case 'yoy_rs':
+      grupos.sort((a, b) => (b.yoy_rs || 0) - (a.yoy_rs || 0));
+      break;
+    case 'alpha':
+      grupos.sort((a, b) => a.grupo.localeCompare(b.grupo));
+      break;
+  }
+
+  return grupos;
+}
+
+/* ── Dynamic Table Headers ────────────────────────── */
+function updateTableHeaders() {
+  const isAgosto = (STATE.mesReferencia === 'agosto');
+  const curLabel = isAgosto ? 'Ago/26' : 'Jul/26';
+  const momLabel = isAgosto ? 'Jul/26' : 'Jun/26';
+  const yoyLabel = isAgosto ? 'Ago/25' : 'Jul/25';
+
+  // Canais table headers
+  if (sel('thCanaisCur')) sel('thCanaisCur').textContent = curLabel;
+  if (sel('thCanaisMom')) sel('thCanaisMom').textContent = momLabel;
+  if (sel('thCanaisYoy')) sel('thCanaisYoy').textContent = yoyLabel;
+  if (sel('thPartCanaisCur')) sel('thPartCanaisCur').textContent = `Part. ${curLabel}`;
+  if (sel('thPartCanaisMom')) sel('thPartCanaisMom').textContent = `Part. ${momLabel}`;
+  if (sel('thPartCanaisYoy')) sel('thPartCanaisYoy').textContent = `Part. ${yoyLabel}`;
+
+  // Categorias table headers
+  if (sel('thVendaJul26')) sel('thVendaJul26').textContent = curLabel;
+  if (sel('thVendaJun26')) sel('thVendaJun26').textContent = momLabel;
+  if (sel('thVendaJul25')) sel('thVendaJul25').textContent = yoyLabel;
+  if (sel('thPartJul26')) sel('thPartJul26').textContent = `Part. ${curLabel}`;
+  if (sel('thPartJun26')) sel('thPartJun26').textContent = `Part. ${momLabel}`;
+  if (sel('thPartJul25')) sel('thPartJul25').textContent = `Part. ${yoyLabel}`;
+}
+
+/* ── Main render ──────────────────────────────────── */
+function render() {
+  updateTableHeaders();
+  renderRefPeriodo();
+  renderExecutiveKpis();
+  renderCategorias();
+  renderCanais();
+  if (typeof updateCharts === 'function') updateCharts();
+  // Update waterfall if its tab is currently active
+  const wfTab = document.getElementById('tabWaterfall');
+  if (wfTab && wfTab.classList.contains('active') && typeof triggerWaterfall === 'function') {
+    triggerWaterfall();
+  }
+}
+
+function renderRefPeriodo() {
+  const el = sel('refPeriodo');
+  if (!el) return;
+  if (STATE.mesReferencia === 'agosto') {
+    el.textContent = 'Agosto/2026 (01 a 17) vs Julho/2026 (01 a 17) (MoM) | Agosto/2026 vs Agosto/2025 (YoY)';
+  } else {
+    if (STATE.startDay === 1 && STATE.endDay === 31) {
+      el.textContent = 'Julho/2026 vs Junho/2026 (MoM) | Julho/2026 vs Julho/2025 (YoY)';
+    } else {
+      const dStart = String(STATE.startDay).padStart(2, '0');
+      const dEnd = String(STATE.endDay).padStart(2, '0');
+      el.textContent = `Período: Dias ${dStart} a ${dEnd} (Comparativo MTD)`;
+    }
+  }
+}
+
+/* ── 5 KPI Cards Executivos ───────────────────────── */
+function renderExecutiveKpis() {
+  const strip = sel('kpiStrip');
+  if (!strip) return;
+
+  const grupos = getFilteredGrupos();
+  const vJul26 = grupos.reduce((s, g) => s + (g.venda_jul_26 || 0), 0);
+  const vJun26 = grupos.reduce((s, g) => s + (g.venda_jun_26 || 0), 0);
+  const vJul25 = grupos.reduce((s, g) => s + (g.venda_jul_25 || 0), 0);
+
+  const vDigJul26 = grupos.reduce((s, g) => s + (g.venda_digital_jul_26 || 0), 0);
+  const vDigJun26 = grupos.reduce((s, g) => s + (g.venda_digital_jun_26 || 0), 0);
+  const vDigJul25 = grupos.reduce((s, g) => s + (g.venda_digital_jul_25 || 0), 0);
+
+  const vDtJul26 = grupos.reduce((s, g) => s + (g.venda_dt_jul_26 || 0), 0);
+  const vDtJun26 = grupos.reduce((s, g) => s + (g.venda_dt_jun_26 || 0), 0);
+  const vDtJul25 = grupos.reduce((s, g) => s + (g.venda_dt_jul_25 || 0), 0);
+
+  const momPctTotal = vJun26 > 0 ? ((vJul26 / vJun26) - 1) * 100 : 0;
+  const momRsTotal = vJul26 - vJun26;
+  const yoyPctTotal = vJul25 > 0 ? ((vJul26 / vJul25) - 1) * 100 : 0;
+  const yoyRsTotal = vJul26 - vJul25;
+
+  const pctDig = vJul26 > 0 ? (vDigJul26 / vJul26 * 100) : 0;
+  const digMom = vDigJun26 > 0 ? ((vDigJul26 / vDigJun26) - 1) * 100 : 0;
+  const digYoy = vDigJul25 > 0 ? ((vDigJul26 / vDigJul25) - 1) * 100 : 0;
+
+  const pctDt = vJul26 > 0 ? (vDtJul26 / vJul26 * 100) : 0;
+  const dtMom = vDtJun26 > 0 ? ((vDtJul26 / vDtJun26) - 1) * 100 : 0;
+  const dtYoy = vDtJul25 > 0 ? ((vDtJul26 / vDtJul25) - 1) * 100 : 0;
+
+  let label1 = '';
+  if (STATE.mesReferencia === 'agosto') {
+    label1 = 'FATURAMENTO TOTAL EMPRESA (AGO/26 - D01 a 17)';
+  } else {
+    label1 = (STATE.startDay === 1 && STATE.endDay === 31) ? 'FATURAMENTO TOTAL EMPRESA (JUL/26)' : `FATURAMENTO (DIAS ${STATE.startDay}-${STATE.endDay})`;
+  }
+
+  strip.innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-label">${esc(label1)}</div>
+      <div class="kpi-value">${fmtCompact(vJul26)}</div>
+      <div class="kpi-delta">${tagPct(momPctTotal)} <span class="sublabel">MoM</span> ${tagPct(yoyPctTotal)} <span class="sublabel">YoY</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">CRESCIMENTO MOM</div>
+      <div class="kpi-value">${fmtPct(momPctTotal)}</div>
+      <div class="kpi-delta">${deltaRS(momRsTotal)} <span class="sublabel">nominal</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">EVOLUÇÃO YOY</div>
+      <div class="kpi-value">${fmtPct(yoyPctTotal)}</div>
+      <div class="kpi-delta">${deltaRS(yoyRsTotal)} <span class="sublabel">nominal</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">% DIGITAL / EMPRESA</div>
+      <div class="kpi-value">${fmtPct(pctDig)}</div>
+      <div class="kpi-subval">${fmtCompact(vDigJul26)}</div>
+      <div class="kpi-delta">${tagPct(digMom)} <span class="sublabel">Cresc.</span> ${tagPct(digYoy)} <span class="sublabel">Evol.</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">% DIGITAL+TELE / EMPRESA</div>
+      <div class="kpi-value">${fmtPct(pctDt)}</div>
+      <div class="kpi-subval">${fmtCompact(vDtJul26)}</div>
+      <div class="kpi-delta">${tagPct(dtMom)} <span class="sublabel">Cresc.</span> ${tagPct(dtYoy)} <span class="sublabel">Evol.</span></div>
+    </div>
+  `;
+}
+
+/* ── Canais table com Compilações Expansíveis & Ordenação Dinâmica Aplicada ─────── */
+function renderCanais() {
+  const tbody = sel('tbodyCanais');
+  if (!tbody) return;
+
+  const filteredCanaisList = getFilteredCanaisList();
+  const useDays = (STATE.mesReferencia === 'julho') && (STATE.startDay !== 1 || STATE.endDay !== 31);
+
+  const digitalChs = [];
+  const teleChs = [];
+  const dtChs = [];
+  const lojaChs = [];
+
+  let tot26 = 0, tot26_06 = 0, tot25 = 0;
+
+  filteredCanaisList.forEach(c => {
+    let v26 = c.venda_jul_26 || 0;
+    let v26_06 = c.venda_jun_26 || 0;
+    let v25 = c.venda_jul_25 || 0;
+
+    if (useDays) {
+      if (c.d26_07) v26 = sumDays(c.d26_07, STATE.startDay, STATE.endDay);
+      if (c.d26_06) v26_06 = sumDays(c.d26_06, STATE.startDay, STATE.endDay);
+      if (c.d25) v25 = sumDays(c.d25, STATE.startDay, STATE.endDay);
+    }
+
+    const m_rs = v26 - v26_06;
+    const m_pct = v26_06 > 0 ? (m_rs / v26_06) * 100 : 0;
+    const y_rs = v26 - v25;
+    const y_pct = v25 > 0 ? (y_rs / v25) * 100 : 0;
+
+    const item = {
+      canal: c.canal,
+      grupo: c.grupo,
+      v26, v26_06, v25,
+      mom_pct: m_pct, mom_rs: m_rs,
+      yoy_pct: y_pct, yoy_rs: y_rs
+    };
+
+    if (c.grupo === 'digital') {
+      digitalChs.push(item);
+      dtChs.push(item);
+    } else if (c.grupo === 'tele') {
+      teleChs.push(item);
+      dtChs.push(item);
+    } else {
+      lojaChs.push(item);
+    }
+
+    tot26 += v26;
+    tot26_06 += v26_06;
+    tot25 += v25;
+  });
+
+  const sortChannelItems = (items) => {
+    switch (STATE.sort) {
+      case 'faturamento':
+      case 'venda_jul_26':
+      case 'jul26':
+        items.sort((a, b) => (b.v26 || 0) - (a.v26 || 0));
+        break;
+      case 'venda_jun_26':
+      case 'jun26':
+        items.sort((a, b) => (b.v26_06 || 0) - (a.v26_06 || 0));
+        break;
+      case 'venda_jul_25':
+      case 'jul25':
+        items.sort((a, b) => (b.v25 || 0) - (a.v25 || 0));
+        break;
+      case 'mom_pct':
+        items.sort((a, b) => (b.mom_pct || 0) - (a.mom_pct || 0));
+        break;
+      case 'mom_rs':
+        items.sort((a, b) => (b.mom_rs || 0) - (a.mom_rs || 0));
+        break;
+      case 'yoy_pct':
+        items.sort((a, b) => (b.yoy_pct || 0) - (a.yoy_pct || 0));
+        break;
+      case 'yoy_rs':
+        items.sort((a, b) => (b.yoy_rs || 0) - (a.yoy_rs || 0));
+        break;
+      case 'alpha':
+        items.sort((a, b) => a.canal.localeCompare(b.canal));
+        break;
+    }
+  };
+
+  sortChannelItems(digitalChs);
+  sortChannelItems(dtChs);
+  sortChannelItems(lojaChs);
+
+  const buildComp = (id, name, items) => {
+    const v26 = items.reduce((s, x) => s + x.v26, 0);
+    const v26_06 = items.reduce((s, x) => s + x.v26_06, 0);
+    const v25 = items.reduce((s, x) => s + x.v25, 0);
+    const m_rs = v26 - v26_06;
+    const m_pct = v26_06 > 0 ? (m_rs / v26_06) * 100 : 0;
+    const y_rs = v26 - v25;
+    const y_pct = v25 > 0 ? (y_rs / v25) * 100 : 0;
+
+    const sh26 = tot26 > 0 ? (v26 / tot26 * 100) : 0;
+    const sh26_06 = tot26_06 > 0 ? (v26_06 / tot26_06 * 100) : 0;
+    const sh25 = tot25 > 0 ? (v25 / tot25 * 100) : 0;
+    const var_pp = sh26 - sh25;
+
+    return { id, name, items, v26, v26_06, v25, mom_pct: m_pct, mom_rs: m_rs, yoy_pct: y_pct, yoy_rs: y_rs, sh26, sh26_06, sh25, var_pp };
+  };
+
+  const compDigital = buildComp('digital', 'Venda Digital', digitalChs);
+  const compDT = buildComp('digital_tele', 'Venda Digital + Tele', dtChs);
+  const compLoja = buildComp('loja', 'Venda Loja Física', lojaChs);
+
+  const compilacoes = [compDigital, compDT, compLoja];
+
+  let html = '';
+
+  compilacoes.forEach(comp => {
+    const isExp = STATE.expandedCh.has(comp.id);
+    const toggleIcon = isExp ? '▼' : '►';
+
+    html += `
+      <tr class="row-grupo" style="font-weight: 600; background: rgba(99,102,241,0.05);">
+        <td class="col-grupo" style="cursor:pointer;" onclick="toggleChGroup('${comp.id}')">
+          <span class="toggle-cat">${toggleIcon}</span> <strong style="color: var(--accent-primary, #6366f1);">${esc(comp.name)}</strong>
+        </td>
+        <td class="text-right font-weight-600">${fmtRS(comp.v26)}</td>
+        <td class="text-right">${fmtRS(comp.v26_06)}</td>
+        <td class="text-right">${fmtRS(comp.v25)}</td>
+        <td class="text-right">${badgePct(comp.mom_pct)}</td>
+        <td class="text-right">${deltaRS(comp.mom_rs)}</td>
+        <td class="text-right">${badgePct(comp.yoy_pct)}</td>
+        <td class="text-right">${deltaRS(comp.yoy_rs)}</td>
+        <td class="text-right">${fmtPct(comp.sh26)}</td>
+        <td class="text-right">${fmtPct(comp.sh26_06)}</td>
+        <td class="text-right">${fmtPct(comp.sh25)}</td>
+        <td class="text-right">${badgePP(comp.var_pp)}</td>
+      </tr>
+    `;
+
+    if (isExp) {
+      comp.items.forEach(c => {
+        const c_sh26 = tot26 > 0 ? (c.v26 / tot26 * 100) : 0;
+        const c_sh26_06 = tot26_06 > 0 ? (c.v26_06 / tot26_06 * 100) : 0;
+        const c_sh25 = tot25 > 0 ? (c.v25 / tot25 * 100) : 0;
+        const c_var_pp = c_sh26 - c_sh25;
+
+        html += `
+          <tr class="row-linha" style="background: rgba(255,255,255,0.01);">
+            <td class="col-linha" style="padding-left: 30px;">└ ${esc(c.canal)}</td>
+            <td class="text-right">${fmtRS(c.v26)}</td>
+            <td class="text-right">${fmtRS(c.v26_06)}</td>
+            <td class="text-right">${fmtRS(c.v25)}</td>
+            <td class="text-right">${badgePct(c.mom_pct)}</td>
+            <td class="text-right">${deltaRS(c.mom_rs)}</td>
+            <td class="text-right">${badgePct(c.yoy_pct)}</td>
+            <td class="text-right">${deltaRS(c.yoy_rs)}</td>
+            <td class="text-right">${fmtPct(c_sh26)}</td>
+            <td class="text-right">${fmtPct(c_sh26_06)}</td>
+            <td class="text-right">${fmtPct(c_sh25)}</td>
+            <td class="text-right">${badgePP(c_var_pp)}</td>
+          </tr>
+        `;
+      });
+    }
+  });
+
+  const tot_mom_rs = tot26 - tot26_06;
+  const tot_mom_pct = tot26_06 > 0 ? (tot_mom_rs / tot26_06) * 100 : 0;
+  const tot_yoy_rs = tot26 - tot25;
+  const tot_yoy_pct = tot25 > 0 ? (tot_yoy_rs / tot25) * 100 : 0;
+
+  html += `
+    <tr style="font-weight: 700; background: rgba(99,102,241,0.1); border-top: 2px solid var(--border);">
+      <td>EMPRESA TOTAL</td>
+      <td class="text-right">${fmtRS(tot26)}</td>
+      <td class="text-right">${fmtRS(tot26_06)}</td>
+      <td class="text-right">${fmtRS(tot25)}</td>
+      <td class="text-right">${badgePct(tot_mom_pct)}</td>
+      <td class="text-right">${deltaRS(tot_mom_rs)}</td>
+      <td class="text-right">${badgePct(tot_yoy_pct)}</td>
+      <td class="text-right">${deltaRS(tot_yoy_rs)}</td>
+      <td class="text-right">100,00%</td>
+      <td class="text-right">100,00%</td>
+      <td class="text-right">100,00%</td>
+      <td class="text-right">${badgePP(0)}</td>
+    </tr>
+  `;
+
+  tbody.innerHTML = html;
+}
+
+function toggleChGroup(id) {
+  if (STATE.expandedCh.has(id)) STATE.expandedCh.delete(id);
+  else STATE.expandedCh.add(id);
+  renderCanais();
+}
+
+/* ── Categorias table com Agregação Exata por Linha & Ordenação Dinâmica ─────────────── */
+function renderCategorias() {
+  const tbody = sel('tbodyCategorias');
+  if (!tbody) return;
+
+  const grupos = getFilteredGrupos();
+  const hier = getFilteredHier();
+  const useDays = (STATE.mesReferencia === 'julho') && (STATE.startDay !== 1 || STATE.endDay !== 31);
+
+  let totEmp26 = 0, totEmp26_06 = 0, totEmp25 = 0;
+  totEmp26 = grupos.reduce((s, g) => s + (g.venda_jul_26 || 0), 0);
+  totEmp26_06 = grupos.reduce((s, g) => s + (g.venda_jun_26 || 0), 0);
+  totEmp25 = grupos.reduce((s, g) => s + (g.venda_jul_25 || 0), 0);
+
+  let html = '';
+  grupos.forEach(g => {
+    let v26 = g.venda_jul_26, v26_06 = g.venda_jun_26, v25 = g.venda_jul_25;
+    if (STATE.partMode === 'digital_empresa') {
+      v26 = g.venda_digital_jul_26; v26_06 = g.venda_digital_jun_26; v25 = g.venda_digital_jul_25;
+    } else if (STATE.partMode === 'dt_empresa') {
+      v26 = g.venda_dt_jul_26; v26_06 = g.venda_dt_jun_26; v25 = g.venda_dt_jul_25;
+    }
+
+    const mom_rs = v26 - v26_06;
+    const mom_pct = v26_06 > 0 ? (mom_rs / v26_06) * 100 : 0;
+    const yoy_rs = v26 - v25;
+    const yoy_pct = v25 > 0 ? (yoy_rs / v25) * 100 : 0;
+
+    let sh26 = 0, sh26_06 = 0, sh25 = 0;
+    if (STATE.partMode === 'digital_empresa') {
+      // Penetração Digital da Categoria: Venda Digital do Grupo / Venda Total do Grupo
+      sh26 = g.venda_jul_26 > 0 ? (g.venda_digital_jul_26 / g.venda_jul_26 * 100) : 0;
+      sh26_06 = g.venda_jun_26 > 0 ? (g.venda_digital_jun_26 / g.venda_jun_26 * 100) : 0;
+      sh25 = g.venda_jul_25 > 0 ? (g.venda_digital_jul_25 / g.venda_jul_25 * 100) : 0;
+    } else if (STATE.partMode === 'dt_empresa') {
+      // Penetração Digital+Tele da Categoria: Venda Digital+Tele do Grupo / Venda Total do Grupo
+      sh26 = g.venda_jul_26 > 0 ? (g.venda_dt_jul_26 / g.venda_jul_26 * 100) : 0;
+      sh26_06 = g.venda_jun_26 > 0 ? (g.venda_dt_jun_26 / g.venda_jun_26 * 100) : 0;
+      sh25 = g.venda_jul_25 > 0 ? (g.venda_dt_jul_25 / g.venda_jul_25 * 100) : 0;
+    } else {
+      // Participação da Venda Total do Grupo no Total da Empresa
+      sh26 = totEmp26 > 0 ? (g.venda_jul_26 / totEmp26 * 100) : 0;
+      sh26_06 = totEmp26_06 > 0 ? (g.venda_jun_26 / totEmp26_06 * 100) : 0;
+      sh25 = totEmp25 > 0 ? (g.venda_jul_25 / totEmp25 * 100) : 0;
+    }
+    const var_pp = sh26 - sh25;
+
+    const isExp = STATE.expandedCat.has(g.grupo);
+    const toggleIcon = isExp ? '▼' : '►';
+
+    html += `
+      <tr class="row-grupo" data-grupo="${esc(g.grupo)}">
+        <td class="col-grupo" style="cursor:pointer;" onclick="toggleCat('${esc(g.grupo)}')">
+          <span class="toggle-cat">${toggleIcon}</span> <strong>${esc(g.grupo)}</strong>
+        </td>
+        <td class="text-right font-weight-600">${fmtRS(v26)}</td>
+        <td class="text-right">${fmtRS(v26_06)}</td>
+        <td class="text-right">${fmtRS(v25)}</td>
+        <td class="text-right">${badgePct(mom_pct)}</td>
+        <td class="text-right">${deltaRS(mom_rs)}</td>
+        <td class="text-right">${badgePct(yoy_pct)}</td>
+        <td class="text-right">${deltaRS(yoy_rs)}</td>
+        <td class="text-right">${fmtPct(sh26)}</td>
+        <td class="text-right">${fmtPct(sh26_06)}</td>
+        <td class="text-right">${fmtPct(sh25)}</td>
+        <td class="text-right">${badgePP(var_pp)}</td>
+      </tr>
+    `;
+
+    if (isExp) {
+      // Group child items by LINHA to prevent duplicates and sum correctly
+      const childRows = hier.filter(h => h.grupo === g.grupo);
+      const linhaMap = {};
+
+      childRows.forEach(h => {
+        const key = h.linha || h.subgrupo || 'Outros';
+
+        let tot_v26 = h.venda_jul_26 || 0;
+        let tot_v26_06 = h.venda_jun_26 || 0;
+        let tot_v25 = h.venda_jul_25 || 0;
+
+        let dig_v26 = h.venda_digital_jul_26 || 0;
+        let dig_v26_06 = h.venda_digital_jun_26 || 0;
+        let dig_v25 = h.venda_digital_jul_25 || 0;
+
+        let dt_v26 = h.venda_dt_jul_26 || 0;
+        let dt_v26_06 = h.venda_dt_jun_26 || 0;
+        let dt_v25 = h.venda_dt_jul_25 || 0;
+
+        if (useDays) {
+          if (h.d26_07) tot_v26 = sumDays(h.d26_07, STATE.startDay, STATE.endDay);
+          if (h.d26_06) tot_v26_06 = sumDays(h.d26_06, STATE.startDay, STATE.endDay);
+          if (h.d25) tot_v25 = sumDays(h.d25, STATE.startDay, STATE.endDay);
+
+          if (h.dig_d26_07) dig_v26 = sumDays(h.dig_d26_07, STATE.startDay, STATE.endDay);
+          if (h.dig_d26_06) dig_v26_06 = sumDays(h.dig_d26_06, STATE.startDay, STATE.endDay);
+          if (h.dig_d25) dig_v25 = sumDays(h.dig_d25, STATE.startDay, STATE.endDay);
+
+          if (h.dt_d26_07) dt_v26 = sumDays(h.dt_d26_07, STATE.startDay, STATE.endDay);
+          if (h.dt_d26_06) dt_v26_06 = sumDays(h.dt_d26_06, STATE.startDay, STATE.endDay);
+          if (h.dt_d25) dt_v25 = sumDays(h.dt_d25, STATE.startDay, STATE.endDay);
+        }
+
+        if (!linhaMap[key]) {
+          linhaMap[key] = {
+            linha: key,
+            tot_v26: 0, tot_v26_06: 0, tot_v25: 0,
+            dig_v26: 0, dig_v26_06: 0, dig_v25: 0,
+            dt_v26: 0, dt_v26_06: 0, dt_v25: 0
+          };
+        }
+
+        linhaMap[key].tot_v26 += tot_v26;
+        linhaMap[key].tot_v26_06 += tot_v26_06;
+        linhaMap[key].tot_v25 += tot_v25;
+
+        linhaMap[key].dig_v26 += dig_v26;
+        linhaMap[key].dig_v26_06 += dig_v26_06;
+        linhaMap[key].dig_v25 += dig_v25;
+
+        linhaMap[key].dt_v26 += dt_v26;
+        linhaMap[key].dt_v26_06 += dt_v26_06;
+        linhaMap[key].dt_v25 += dt_v25;
+      });
+
+      let subItems = Object.values(linhaMap).map(item => {
+        let h_v26 = item.tot_v26, h_v26_06 = item.tot_v26_06, h_v25 = item.tot_v25;
+        let h_sh26 = 0, h_sh26_06 = 0, h_sh25 = 0;
+
+        if (STATE.partMode === 'digital_empresa') {
+          h_v26 = item.dig_v26; h_v26_06 = item.dig_v26_06; h_v25 = item.dig_v25;
+          // Penetração Digital da Linha
+          h_sh26 = item.tot_v26 > 0 ? (item.dig_v26 / item.tot_v26 * 100) : 0;
+          h_sh26_06 = item.tot_v26_06 > 0 ? (item.dig_v26_06 / item.tot_v26_06 * 100) : 0;
+          h_sh25 = item.tot_v25 > 0 ? (item.dig_v25 / item.tot_v25 * 100) : 0;
+        } else if (STATE.partMode === 'dt_empresa') {
+          h_v26 = item.dt_v26; h_v26_06 = item.dt_v26_06; h_v25 = item.dt_v25;
+          // Penetração Digital+Tele da Linha
+          h_sh26 = item.tot_v26 > 0 ? (item.dt_v26 / item.tot_v26 * 100) : 0;
+          h_sh26_06 = item.tot_v26_06 > 0 ? (item.dt_v26_06 / item.tot_v26_06 * 100) : 0;
+          h_sh25 = item.tot_v25 > 0 ? (item.dt_v25 / item.tot_v25 * 100) : 0;
+        } else {
+          // Participação da Linha no Total da Empresa
+          h_sh26 = totEmp26 > 0 ? (item.tot_v26 / totEmp26 * 100) : 0;
+          h_sh26_06 = totEmp26_06 > 0 ? (item.tot_v26_06 / totEmp26_06 * 100) : 0;
+          h_sh25 = totEmp25 > 0 ? (item.tot_v25 / totEmp25 * 100) : 0;
+        }
+
+        const h_mom_rs = h_v26 - h_v26_06;
+        const h_mom_pct = h_v26_06 > 0 ? (h_mom_rs / h_v26_06) * 100 : 0;
+        const h_yoy_rs = h_v26 - h_v25;
+        const h_yoy_pct = h_v25 > 0 ? (h_yoy_rs / h_v25) * 100 : 0;
+        const h_var_pp = h_sh26 - h_sh25;
+
+        return {
+          linha: item.linha,
+          h_v26, h_v26_06, h_v25,
+          h_mom_rs, h_mom_pct,
+          h_yoy_rs, h_yoy_pct,
+          h_sh26, h_sh26_06, h_sh25, h_var_pp
+        };
+      });
+
+      // RANQUEAMENTO / ORDENAÇÃO DINÂMICA DO NÍVEL 2 (LINHAS)
+      switch (STATE.sort) {
+        case 'faturamento':
+        case 'venda_jul_26':
+        case 'jul26':
+          subItems.sort((a, b) => (b.h_v26 || 0) - (a.h_v26 || 0));
+          break;
+        case 'venda_jun_26':
+        case 'jun26':
+          subItems.sort((a, b) => (b.h_v26_06 || 0) - (a.h_v26_06 || 0));
+          break;
+        case 'venda_jul_25':
+        case 'jul25':
+          subItems.sort((a, b) => (b.h_v25 || 0) - (a.h_v25 || 0));
+          break;
+        case 'mom_pct':
+          subItems.sort((a, b) => (b.h_mom_pct || 0) - (a.h_mom_pct || 0));
+          break;
+        case 'yoy_pct':
+          subItems.sort((a, b) => (b.h_yoy_pct || 0) - (a.h_yoy_pct || 0));
+          break;
+        case 'mom_rs':
+          subItems.sort((a, b) => (b.h_mom_rs || 0) - (a.h_mom_rs || 0));
+          break;
+        case 'yoy_rs':
+          subItems.sort((a, b) => (b.h_yoy_rs || 0) - (a.h_yoy_rs || 0));
+          break;
+        case 'alpha':
+          subItems.sort((a, b) => a.linha.localeCompare(b.linha));
+          break;
+      }
+
+      subItems.forEach(h => {
+        html += `
+          <tr class="row-linha" style="background: rgba(255,255,255,0.02);">
+            <td class="col-linha" style="padding-left: 30px;">└ ${esc(h.linha)}</td>
+            <td class="text-right">${fmtRS(h.h_v26)}</td>
+            <td class="text-right">${fmtRS(h.h_v26_06)}</td>
+            <td class="text-right">${fmtRS(h.h_v25)}</td>
+            <td class="text-right">${badgePct(h.h_mom_pct)}</td>
+            <td class="text-right">${deltaRS(h.h_mom_rs)}</td>
+            <td class="text-right">${badgePct(h.h_yoy_pct)}</td>
+            <td class="text-right">${deltaRS(h.h_yoy_rs)}</td>
+            <td class="text-right">${fmtPct(h.h_sh26)}</td>
+            <td class="text-right">${fmtPct(h.h_sh26_06)}</td>
+            <td class="text-right">${fmtPct(h.h_sh25)}</td>
+            <td class="text-right">${badgePP(h.h_var_pp)}</td>
+          </tr>
+        `;
+      });
+    }
+  });
+
+  tbody.innerHTML = html;
+}
+
+function toggleCat(grupo) {
+  if (STATE.expandedCat.has(grupo)) STATE.expandedCat.delete(grupo);
+  else STATE.expandedCat.add(grupo);
+  renderCategorias();
+}
+
+function exportCsv() {
+  const grupos = getFilteredGrupos();
+  let csv = 'Grupo;Venda_Jul_26;Venda_Jun_26;MoM_Pct;MoM_RS;Venda_Jul_25;YoY_Pct;YoY_RS\n';
+  grupos.forEach(g => {
+    csv += `"${g.grupo}";${g.venda_jul_26};${g.venda_jun_26};${g.mom_pct};${g.mom_rs};${g.venda_jul_25};${g.yoy_pct};${g.yoy_rs}\n`;
+  });
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'acompanhamento_categorias.csv'; a.click();
+}

@@ -1,0 +1,11 @@
+.git
+node_modules
+__pycache__
+*.pyc
+*.parquet
+*.xlsx
+*.log
+.env
+.dashboard_gist_token
+coolify_*.png
+gitea-ca.crt
