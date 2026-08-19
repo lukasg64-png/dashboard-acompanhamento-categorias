@@ -67,16 +67,44 @@ function sumDays(arr, startDay, endDay) {
   return s;
 }
 
+function updateTableHeaders() {
+  const isAgo = STATE.mesReferencia === 'agosto';
+  const curLabel = isAgo ? 'Ago/26 (D-1)' : 'Jul/26';
+  const momLabel = isAgo ? 'Jul/26 (MoM)' : 'Jun/26 (MoM)';
+  const yoyLabel = isAgo ? 'Ago/25 (YoY)' : 'Jul/25 (YoY)';
+  
+  const thCanaisCur = document.getElementById('thCanaisCur');
+  const thCanaisMom = document.getElementById('thCanaisMom');
+  const thCanaisYoy = document.getElementById('thCanaisYoy');
+  if (thCanaisCur) thCanaisCur.textContent = curLabel;
+  if (thCanaisMom) thCanaisMom.textContent = momLabel;
+  if (thCanaisYoy) thCanaisYoy.textContent = yoyLabel;
+  
+  const thPartCanaisCur = document.getElementById('thPartCanaisCur');
+  const thPartCanaisMom = document.getElementById('thPartCanaisMom');
+  const thPartCanaisYoy = document.getElementById('thPartCanaisYoy');
+  if (thPartCanaisCur) thPartCanaisCur.textContent = 'Part. ' + (isAgo ? 'Ago/26' : 'Jul/26');
+  if (thPartCanaisMom) thPartCanaisMom.textContent = 'Part. ' + (isAgo ? 'Jul/26' : 'Jun/26');
+  if (thPartCanaisYoy) thPartCanaisYoy.textContent = 'Part. ' + (isAgo ? 'Ago/25' : 'Jul/25');
+  
+  const thCatCur = document.getElementById('thCatCur');
+  const thCatMom = document.getElementById('thCatMom');
+  const thCatYoy = document.getElementById('thCatYoy');
+  if (thCatCur) thCatCur.textContent = curLabel;
+  if (thCatMom) thCatMom.textContent = momLabel;
+  if (thCatYoy) thCatYoy.textContent = yoyLabel;
+}
+
 /* ── Events ───────────────────────────────────────── */
 function wireEvents() {
-  // Month selector handler
-  const monthBtns = document.querySelectorAll('#monthSelector .month-btn');
-  monthBtns.forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const month = btn.dataset.month;
+  // Month dropdown selector
+  const mesSel = sel('filterMesReferencia');
+  if (mesSel) {
+    mesSel.value = STATE.mesReferencia;
+    mesSel.addEventListener('change', async (e) => {
+      const month = e.target.value;
       if (STATE.mesReferencia === month) return;
       STATE.mesReferencia = month;
-      monthBtns.forEach(b => b.classList.toggle('active', b.dataset.month === month));
 
       // Reset filters
       STATE.diretores.clear();
@@ -90,14 +118,41 @@ function wireEvents() {
       STATE.search = '';
       if (sel('globalSearch')) sel('globalSearch').value = '';
 
-      // Reset period preset
-      if (STATE.mesReferencia === 'agosto') {
-        STATE.startDay = 1; STATE.endDay = 17;
-      } else {
-        STATE.startDay = 1; STATE.endDay = 31;
-      }
+      STATE.startDay = 1;
+      STATE.endDay = 31;
 
       // Load data
+      await loadAllData(STATE.mesReferencia);
+      populateAllMultiSelects();
+      updateTableHeaders();
+      render();
+    });
+  }
+
+  // Month button handler (if present)
+  const monthBtns = document.querySelectorAll('#monthSelector .month-btn');
+  monthBtns.forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const month = btn.dataset.month;
+      if (STATE.mesReferencia === month) return;
+      STATE.mesReferencia = month;
+      if (mesSel) mesSel.value = month;
+      monthBtns.forEach(b => b.classList.toggle('active', b.dataset.month === month));
+
+      STATE.diretores.clear();
+      STATE.distritais.clear();
+      STATE.coordenadores.clear();
+      STATE.grupos.clear();
+      STATE.subgrupos.clear();
+      STATE.linhas.clear();
+      STATE.laboratorios.clear();
+      STATE.expandedCat.clear();
+      STATE.search = '';
+      if (sel('globalSearch')) sel('globalSearch').value = '';
+
+      STATE.startDay = 1;
+      STATE.endDay = 31;
+
       await loadAllData(STATE.mesReferencia);
       populateAllMultiSelects();
       updateTableHeaders();

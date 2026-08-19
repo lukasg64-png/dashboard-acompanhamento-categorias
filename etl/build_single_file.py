@@ -1,5 +1,5 @@
 """
-build_single_file.py — Gera HTML autocontido ultracompacto (<8.5MB) com suporte a cascata total de filtros.
+build_single_file.py — Gera HTML autocontido com suporte nativo aos meses Julho (fechado) e Agosto (D-1 Qlik).
 """
 import os, json
 
@@ -8,6 +8,7 @@ if os.path.basename(BASE) == 'etl':
     BASE = os.path.dirname(BASE)
 
 DATA_DIR = os.path.join(BASE, 'data')
+AGOSTO_DIR = os.path.join(DATA_DIR, 'agosto')
 CSS_FILE = os.path.join(BASE, 'css', 'style.css')
 JS_APP = os.path.join(BASE, 'js', 'app.js')
 JS_CHARTS = os.path.join(BASE, 'js', 'charts.js')
@@ -17,8 +18,11 @@ OUTPUT = os.path.join(BASE, 'dist', 'index.html')
 def read(path):
     with open(path, 'r', encoding='utf-8') as f: return f.read()
 
-def read_json(name):
-    path = os.path.join(DATA_DIR, name if name.endswith('.json') else name + '.json')
+def read_json_dir(d, name):
+    path = os.path.join(d, name if name.endswith('.json') else name + '.json')
+    if not os.path.exists(path):
+        # Fallback to DATA_DIR
+        path = os.path.join(DATA_DIR, name if name.endswith('.json') else name + '.json')
     with open(path, 'r', encoding='utf-8') as f: return json.load(f)
 
 def round_record(r):
@@ -43,16 +47,14 @@ def compress_array(records, keys):
         rows.append([rr.get(k) for k in keys])
     return {"keys": keys, "rows": rows}
 
-def build():
-    os.makedirs(os.path.dirname(OUTPUT), exist_ok=True)
-
-    kpis = read_json('executive_kpis.json')
-    canais = read_json('canais_summary.json')
-    canais_hier = read_json('canais_by_hierarquia.json')
-    categorias = read_json('categorias_summary.json')
-    hierarquia = read_json('hierarquia_detalhada.json')
-    filtro_hier = read_json('filtro_hierarquia.json')
-    filtros_prod = read_json('filtros_produto.json')
+def pack_month_dataset(folder):
+    kpis = read_json_dir(folder, 'executive_kpis.json')
+    canais = read_json_dir(folder, 'canais_summary.json')
+    canais_hier = read_json_dir(folder, 'canais_by_hierarquia.json')
+    categorias = read_json_dir(folder, 'categorias_summary.json')
+    hierarquia = read_json_dir(folder, 'hierarquia_detalhada.json')
+    filtro_hier = read_json_dir(folder, 'filtro_hierarquia.json')
+    filtros_prod = read_json_dir(folder, 'filtros_produto.json')
 
     ch_keys = ['grupo','subgrupo','linha','canal','canal_grupo','v26','v26_06','v25','d25','d26_06','d26_07']
 
@@ -65,7 +67,7 @@ def build():
                  'dt_d25','dt_d26_06','dt_d26_07',
                  'mom_pct','mom_rs','yoy_pct','yoy_rs']
 
-    cat_keys = ['diretor','distrital','grupo',
+    cat_keys = ['diretor','distrital','grupo','subgrupo',
                 'venda_jul_26','venda_jun_26','venda_jul_25',
                 'venda_digital_jul_26','venda_digital_jun_26','venda_digital_jul_25',
                 'venda_dt_jul_26','venda_dt_jun_26','venda_dt_jul_25',
@@ -74,9 +76,24 @@ def build():
                 'dt_d25','dt_d26_06','dt_d26_07',
                 'mom_pct','mom_rs','yoy_pct','yoy_rs']
 
-    ch_compressed = compress_array(canais_hier, ch_keys)
-    hier_compressed = compress_array(hierarquia, hier_keys)
-    cat_compressed = compress_array(categorias, cat_keys)
+    return {
+        "kpis": kpis,
+        "canais": canais,
+        "canais_hier_packed": compress_array(canais_hier, ch_keys),
+        "categorias_packed": compress_array(categorias, cat_keys),
+        "hierarquia_packed": compress_array(hierarquia, hier_keys),
+        "filtroHierarquia": filtro_hier,
+        "filtrosProduto": filtros_prod
+    }
+
+def build():
+    os.makedirs(os.path.dirname(OUTPUT), exist_ok=True)
+
+    print("Empacotando dataset de Julho (fechado)...")
+    packed_julho = pack_month_dataset(DATA_DIR)
+    
+    print("Empacotando dataset de Agosto (D-1 Qlik)...")
+    packed_agosto = pack_month_dataset(AGOSTO_DIR)
 
     css = read(CSS_FILE)
     js_app = read(JS_APP)
@@ -85,6 +102,7 @@ def build():
     inline_block = f"""
 /* ── Inline Compressed Data (auto-generated) ── */
 function _decompress(packed) {{
+  if (!packed || !packed.keys || !packed.rows) return [];
   const keys = packed.keys;
   return packed.rows.map(row => {{
     const obj = {{}};
@@ -94,19 +112,14 @@ function _decompress(packed) {{
 }}
 
 const _PACKED = {{
-  kpis: {json.dumps(kpis, ensure_ascii=False, separators=(',',':'))},
-  canais: {json.dumps(canais, ensure_ascii=False, separators=(',',':'))},
-  canais_hier_packed: {json.dumps(ch_compressed, ensure_ascii=False, separators=(',',':'))},
-  categorias_packed: {json.dumps(cat_compressed, ensure_ascii=False, separators=(',',':'))},
-  hierarquia_packed: {json.dumps(hier_compressed, ensure_ascii=False, separators=(',',':'))},
-  filtroHierarquia: {json.dumps(filtro_hier, ensure_ascii=False, separators=(',',':'))},
-  filtrosProduto: {json.dumps(filtros_prod, ensure_ascii=False, separators=(',',':'))}
+  "julho": {json.dumps(packed_julho, ensure_ascii=False, separators=(',',':'))},
+  "agosto": {json.dumps(packed_agosto, ensure_ascii=False, separators=(',',':'))}
 }};
 """
 
     patched_app = js_app.replace(
         "async function loadAllData(mes = 'agosto') {",
-        "async function loadAllData(mes = 'agosto') {\n  if (typeof _PACKED !== 'undefined') {\n    DATA.kpis = _PACKED.kpis;\n    DATA.canais = _PACKED.canais;\n    DATA.canaisHier = _decompress(_PACKED.canais_hier_packed);\n    DATA.categorias = _decompress(_PACKED.categorias_packed);\n    DATA.hierarquia = _decompress(_PACKED.hierarquia_packed);\n    DATA.filtroHierarquia = _PACKED.filtroHierarquia;\n    DATA.filtrosProduto = _PACKED.filtrosProduto;\n    return;\n  }"
+        "async function loadAllData(mes = 'agosto') {\n  if (typeof _PACKED !== 'undefined') {\n    const pkg = _PACKED[mes] || _PACKED['agosto'] || _PACKED['julho'];\n    DATA.kpis = pkg.kpis;\n    DATA.canais = pkg.canais;\n    DATA.canaisHier = _decompress(pkg.canais_hier_packed);\n    DATA.categorias = _decompress(pkg.categorias_packed);\n    DATA.hierarquia = _decompress(pkg.hierarquia_packed);\n    DATA.filtroHierarquia = pkg.filtroHierarquia;\n    DATA.filtrosProduto = pkg.filtrosProduto;\n    return;\n  }"
     )
 
     html_template = read(HTML_TEMPLATE)
