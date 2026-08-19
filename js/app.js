@@ -937,7 +937,8 @@ function renderRefPeriodo() {
   const el = sel('refPeriodo');
   if (!el) return;
   if (STATE.mesReferencia === 'agosto') {
-    el.textContent = 'Agosto/2026 (01 a 17) vs Julho/2026 (01 a 17) (MoM) | Agosto/2026 vs Agosto/2025 (YoY)';
+    const pInfo = DATA.kpis?.periodo_info?.periodo_str || '01 a 19/08/2026';
+    el.textContent = `Agosto/2026 (${pInfo}) vs Julho/2026 (MoM) | Agosto/2026 vs Agosto/2025 (YoY)`;
   } else {
     if (STATE.startDay === 1 && STATE.endDay === 31) {
       el.textContent = 'Julho/2026 vs Junho/2026 (MoM) | Julho/2026 vs Julho/2025 (YoY)';
@@ -982,7 +983,8 @@ function renderExecutiveKpis() {
 
   let label1 = '';
   if (STATE.mesReferencia === 'agosto') {
-    label1 = 'FATURAMENTO TOTAL EMPRESA (AGO/26 - D01 a 17)';
+    const pInfo = DATA.kpis?.periodo_info?.periodo_str || '01 a 19/08';
+    label1 = `FATURAMENTO TOTAL EMPRESA (AGO/26 - ${pInfo})`;
   } else {
     label1 = (STATE.startDay === 1 && STATE.endDay === 31) ? 'FATURAMENTO TOTAL EMPRESA (JUL/26)' : `FATURAMENTO (DIAS ${STATE.startDay}-${STATE.endDay})`;
   }

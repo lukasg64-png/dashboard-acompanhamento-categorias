@@ -1,6 +1,6 @@
 """
-extract_complete_qlik_models.py — Extrai os modelos completos com fórmula exata de Resultado Líquido
-e vetores diários de 31 dias para Agosto/2026, Julho/2026 e Agosto/2025 diretamente do Qlik Sense Engine API.
+extract_complete_qlik_models.py — Extrai os modelos completos com fórmula oficial de Resultado Líquido
+e paginação total diretamente da API WebSocket do Qlik Sense Engine.
 """
 import os, sys, time, json, asyncio
 if hasattr(sys.stdout, 'reconfigure'): sys.stdout.reconfigure(encoding='utf-8')
@@ -56,432 +56,448 @@ async def fetch_all_qlik_cubes():
             viewport={'width': 1920, 'height': 1080}
         )
         page = await context.new_page()
+        print("  Carregando pasta do Qlik Sense...")
         await page.goto(SHEET_URL, timeout=60000)
-        await page.wait_for_timeout(8000)
+        try:
+            await page.wait_for_selector('.qv-panel-sheet', timeout=45000)
+        except Exception:
+            await page.wait_for_timeout(12000)
+        await page.wait_for_timeout(5000)
         
-        print("  2/4 Executando HyperCubes diários no Qlik Engine...")
+        print("  2/4 Executando extração paginada no Qlik Engine...")
         queries_js = '''async () => {
-            const wsUrl = `wss://${window.location.host}/app/${window.location.pathname.split('/app/')[1].split('/')[0]}`;
+            const wsUrl = `wss://${window.location.host}/app/${encodeURIComponent('671fa4f4-eb7d-418f-b4c9-936e87d8011d')}?reloadUri=https://${window.location.host}/`;
             
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 const ws = new WebSocket(wsUrl);
                 let docHandle = null;
                 const results = {};
+                let msgId = 1;
+                const pending = {};
                 
-                ws.onopen = () => {
-                    ws.send(JSON.stringify({
-                        "jsonrpc": "2.0",
-                        "id": 1,
-                        "method": "OpenDoc",
-                        "handle": -1,
-                        "params": [window.location.pathname.split('/app/')[1].split('/')[0]]
-                    }));
-                };
+                function send(method, handle, params) {
+                    return new Promise((res, rej) => {
+                        const id = msgId++;
+                        pending[id] = { res, rej };
+                        ws.send(JSON.stringify({ "jsonrpc": "2.0", "id": id, "method": method, "handle": handle, "params": params }));
+                    });
+                }
                 
-                ws.onmessage = async (event) => {
-                    const msg = JSON.parse(event.data);
-                    
-                    if (msg.id === 1 && msg.result) {
-                        docHandle = msg.result.qReturn.qHandle;
+                async function fetchAllHyperCubeRows(objHandle, totalRows, qWidth, pageSize) {
+                    let rows = [];
+                    let top = 0;
+                    while (top < totalRows) {
+                        const height = Math.min(pageSize, totalRows - top);
+                        const pageRes = await send("GetHyperCubeData", objHandle, ["/qHyperCubeDef", [{ "qTop": top, "qLeft": 0, "qHeight": height, "qWidth": qWidth }]]);
+                        const matrix = pageRes.result.qDataPages[0]?.qMatrix || [];
+                        if (matrix.length === 0) break;
+                        matrix.forEach(r => rows.push(r.map(c => c.qNum !== 'NaN' && typeof c.qNum === 'number' ? c.qNum : c.qText)));
+                        top += matrix.length;
+                    }
+                    return rows;
+                }
+                
+                ws.onopen = async () => {
+                    try {
+                        const openRes = await send("OpenDoc", -1, ["671fa4f4-eb7d-418f-b4c9-936e87d8011d"]);
+                        docHandle = openRes.result.qReturn.qHandle;
                         
                         // 1. Canais x Dia (3 períodos)
-                        ws.send(JSON.stringify({
-                            "jsonrpc": "2.0",
-                            "id": 10,
-                            "method": "CreateSessionObject",
-                            "handle": docHandle,
-                            "params": [{
-                                "qInfo": { "qType": "q_canais_dia_3p" },
-                                "qHyperCubeDef": {
-                                    "qDimensions": [
-                                        { "qDef": { "qFieldDefs": ["Canal"] } },
-                                        { "qDef": { "qFieldDefs": ["Dia"] } }
-                                    ],
-                                    "qMeasures": [
-                                        { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-08'}>} [Receita Líquida])", "qLabel": "Ago_26" } },
-                                        { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-07'}>} [Receita Líquida])", "qLabel": "Jul_26" } },
-                                        { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2025-08'}>} [Receita Líquida])", "qLabel": "Ago_25" } }
-                                    ],
-                                    "qInitialDataFetch": [{ "qTop": 0, "qLeft": 0, "qHeight": 1000, "qWidth": 5 }],
-                                    "qSuppressZero": true, "qSuppressMissing": true
-                                }
-                            }]
-                        }));
-                    } else if (msg.id === 10 && msg.result) {
-                        ws.send(JSON.stringify({
-                            "jsonrpc": "2.0",
-                            "id": 11,
-                            "method": "GetLayout",
-                            "handle": msg.result.qReturn.qHandle,
-                            "params": []
-                        }));
-                    } else if (msg.id === 11 && msg.result) {
-                        const hc = msg.result.qLayout.qHyperCube;
-                        results.canais_dia = (hc.qDataPages[0]?.qMatrix || []).map(r => r.map(c => c.qNum !== 'NaN' && typeof c.qNum === 'number' ? c.qNum : c.qText));
+                        const c1 = await send("CreateSessionObject", docHandle, [{
+                            "qInfo": { "qType": "q_canais_dia_3p" },
+                            "qHyperCubeDef": {
+                                "qDimensions": [
+                                    { "qDef": { "qFieldDefs": ["Canal"] } },
+                                    { "qDef": { "qFieldDefs": ["Dia"] } }
+                                ],
+                                "qMeasures": [
+                                    { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-08'}>} [Receita Líquida])", "qLabel": "Ago_26" } },
+                                    { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-07'}>} [Receita Líquida])", "qLabel": "Jul_26" } },
+                                    { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2025-08'}>} [Receita Líquida])", "qLabel": "Ago_25" } }
+                                ],
+                                "qInitialDataFetch": [{ "qTop": 0, "qLeft": 0, "qHeight": 1000, "qWidth": 5 }],
+                                "qSuppressZero": true, "qSuppressMissing": true
+                            }
+                        }]);
+                        const h1 = c1.result.qReturn.qHandle;
+                        const l1 = await send("GetLayout", h1, []);
+                        results.canais_dia = (l1.result.qLayout.qHyperCube.qDataPages[0]?.qMatrix || []).map(r => r.map(c => c.qNum !== 'NaN' && typeof c.qNum === 'number' ? c.qNum : c.qText));
                         
-                        // 2. Categorias (Grupo + Subgrupo) x Dia (3 períodos)
-                        // Max 10.000 cells -> Width 5 -> Height 1500
-                        ws.send(JSON.stringify({
-                            "jsonrpc": "2.0",
-                            "id": 20,
-                            "method": "CreateSessionObject",
-                            "handle": docHandle,
-                            "params": [{
-                                "qInfo": { "qType": "q_cats_dia_3p" },
-                                "qHyperCubeDef": {
-                                    "qDimensions": [
-                                        { "qDef": { "qFieldDefs": ["Desc_Grupo"] } },
-                                        { "qDef": { "qFieldDefs": ["Desc_Subgrupo"] } }
-                                    ],
-                                    "qMeasures": [
-                                        { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-08'}>} [Receita Líquida])", "qLabel": "Ago_26" } },
-                                        { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-07'}>} [Receita Líquida])", "qLabel": "Jul_26" } },
-                                        { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2025-08'}>} [Receita Líquida])", "qLabel": "Ago_25" } }
-                                    ],
-                                    "qInitialDataFetch": [{ "qTop": 0, "qLeft": 0, "qHeight": 1500, "qWidth": 5 }],
-                                    "qSuppressZero": true, "qSuppressMissing": true
-                                }
-                            }]
-                        }));
-                    } else if (msg.id === 20 && msg.result) {
-                        ws.send(JSON.stringify({
-                            "jsonrpc": "2.0",
-                            "id": 21,
-                            "method": "GetLayout",
-                            "handle": msg.result.qReturn.qHandle,
-                            "params": []
-                        }));
-                    } else if (msg.id === 21 && msg.result) {
-                        const hc = msg.result.qLayout.qHyperCube;
-                        results.categorias = (hc.qDataPages[0]?.qMatrix || []).map(r => r.map(c => c.qNum !== 'NaN' && typeof c.qNum === 'number' ? c.qNum : c.qText));
+                        const diasComVenda = new Set();
+                        results.canais_dia.forEach(r => {
+                            if (typeof r[2] === 'number' && r[2] > 0) diasComVenda.add(Number(r[1]));
+                        });
+                        const maxDia = diasComVenda.size > 0 ? Math.max(...Array.from(diasComVenda)) : 19;
+                        const daysList = [];
+                        for (let d = 1; d <= maxDia; d++) daysList.push(`'${d}'`);
+                        const dayFilter = `[Dia]={${daysList.join(',')}}`;
                         
-                        // 3. Hierarquia (Grupo + Subgrupo + Linha) x Canal (3 períodos)
-                        // Width 6 -> Height 1500
-                        ws.send(JSON.stringify({
-                            "jsonrpc": "2.0",
-                            "id": 30,
-                            "method": "CreateSessionObject",
-                            "handle": docHandle,
-                            "params": [{
-                                "qInfo": { "qType": "q_hier_canal_3p" },
-                                "qHyperCubeDef": {
-                                    "qDimensions": [
-                                        { "qDef": { "qFieldDefs": ["Desc_Grupo"] } },
-                                        { "qDef": { "qFieldDefs": ["Desc_Subgrupo"] } },
-                                        { "qDef": { "qFieldDefs": ["Desc_Linha"] } },
-                                        { "qDef": { "qFieldDefs": ["Canal"] } }
-                                    ],
-                                    "qMeasures": [
-                                        { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-08'}>} [Receita Líquida])", "qLabel": "Ago_26" } },
-                                        { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-07'}>} [Receita Líquida])", "qLabel": "Jul_26" } },
-                                        { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2025-08'}>} [Receita Líquida])", "qLabel": "Ago_25" } }
-                                    ],
-                                    "qInitialDataFetch": [{ "qTop": 0, "qLeft": 0, "qHeight": 1400, "qWidth": 7 }],
-                                    "qSuppressZero": true, "qSuppressMissing": true
-                                }
-                            }]
-                        }));
-                    } else if (msg.id === 30 && msg.result) {
-                        ws.send(JSON.stringify({
-                            "jsonrpc": "2.0",
-                            "id": 31,
-                            "method": "GetLayout",
-                            "handle": msg.result.qReturn.qHandle,
-                            "params": []
-                        }));
-                    } else if (msg.id === 31 && msg.result) {
-                        const hc = msg.result.qLayout.qHyperCube;
-                        results.hier_canal = (hc.qDataPages[0]?.qMatrix || []).map(r => r.map(c => c.qNum !== 'NaN' && typeof c.qNum === 'number' ? c.qNum : c.qText));
+                        // 2. Categorias (Grupo + Subgrupo) com 9 medidas (MTD)
+                        const c2 = await send("CreateSessionObject", docHandle, [{
+                            "qInfo": { "qType": "q_cats_9m" },
+                            "qHyperCubeDef": {
+                                "qDimensions": [
+                                    { "qDef": { "qFieldDefs": ["Desc_Grupo"] } },
+                                    { "qDef": { "qFieldDefs": ["Desc_Subgrupo"] } }
+                                ],
+                                "qMeasures": [
+                                    { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-08'}>} [Receita Líquida])", "qLabel": "v26" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-07'}, ${dayFilter}>} [Receita Líquida])`, "qLabel": "v26_06" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2025-08'}, ${dayFilter}>} [Receita Líquida])`, "qLabel": "v25" } },
+                                    { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-08'}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL'}>} [Receita Líquida])", "qLabel": "vDig26" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-07'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL'}>} [Receita Líquida])`, "qLabel": "vDig26_06" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2025-08'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL'}>} [Receita Líquida])`, "qLabel": "vDig25" } },
+                                    { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-08'}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL','TELE ENTREGA','TELE VENDA'}>} [Receita Líquida])", "qLabel": "vDt26" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-07'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL','TELE ENTREGA','TELE VENDA'}>} [Receita Líquida])`, "qLabel": "vDt26_06" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2025-08'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL','TELE ENTREGA','TELE VENDA'}>} [Receita Líquida])`, "qLabel": "vDt25" } }
+                                ],
+                                "qInitialDataFetch": [{ "qTop": 0, "qLeft": 0, "qHeight": 500, "qWidth": 11 }],
+                                "qSuppressZero": true, "qSuppressMissing": true
+                            }
+                        }]);
+                        const h2 = c2.result.qReturn.qHandle;
+                        const l2 = await send("GetLayout", h2, []);
+                        results.categorias = (l2.result.qLayout.qHyperCube.qDataPages[0]?.qMatrix || []).map(r => r.map(c => c.qNum !== 'NaN' && typeof c.qNum === 'number' ? c.qNum : c.qText));
+                        
+                        // 3. Hierarquia (Grupo + Subgrupo + Linha) com 9 medidas (Paginado MTD)
+                        const c3 = await send("CreateSessionObject", docHandle, [{
+                            "qInfo": { "qType": "q_hier_9m" },
+                            "qHyperCubeDef": {
+                                "qDimensions": [
+                                    { "qDef": { "qFieldDefs": ["Desc_Grupo"] } },
+                                    { "qDef": { "qFieldDefs": ["Desc_Subgrupo"] } },
+                                    { "qDef": { "qFieldDefs": ["Desc_Linha"] } }
+                                ],
+                                "qMeasures": [
+                                    { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-08'}>} [Receita Líquida])", "qLabel": "v26" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-07'}, ${dayFilter}>} [Receita Líquida])`, "qLabel": "v26_06" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2025-08'}, ${dayFilter}>} [Receita Líquida])`, "qLabel": "v25" } },
+                                    { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-08'}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL'}>} [Receita Líquida])", "qLabel": "vDig26" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-07'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL'}>} [Receita Líquida])`, "qLabel": "vDig26_06" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2025-08'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL'}>} [Receita Líquida])`, "qLabel": "vDig25" } },
+                                    { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-08'}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL','TELE ENTREGA','TELE VENDA'}>} [Receita Líquida])", "qLabel": "vDt26" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-07'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL','TELE ENTREGA','TELE VENDA'}>} [Receita Líquida])`, "qLabel": "vDt26_06" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2025-08'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL','TELE ENTREGA','TELE VENDA'}>} [Receita Líquida])`, "qLabel": "vDt25" } }
+                                ],
+                                "qInitialDataFetch": [{ "qTop": 0, "qLeft": 0, "qHeight": 800, "qWidth": 12 }],
+                                "qSuppressZero": true, "qSuppressMissing": true
+                            }
+                        }]);
+                        const h3 = c3.result.qReturn.qHandle;
+                        const l3 = await send("GetLayout", h3, []);
+                        const totalRows3 = l3.result.qLayout.qHyperCube.qSize.qcy;
+                        results.hierarquia = await fetchAllHyperCubeRows(h3, totalRows3, 12, 800);
+                        
+                        // 4. Canais por Hierarquia (Grupo + Subgrupo + Linha + Canal) (Paginado MTD)
+                        const c4 = await send("CreateSessionObject", docHandle, [{
+                            "qInfo": { "qType": "q_canais_hier_3p" },
+                            "qHyperCubeDef": {
+                                "qDimensions": [
+                                    { "qDef": { "qFieldDefs": ["Desc_Grupo"] } },
+                                    { "qDef": { "qFieldDefs": ["Desc_Subgrupo"] } },
+                                    { "qDef": { "qFieldDefs": ["Desc_Linha"] } },
+                                    { "qDef": { "qFieldDefs": ["Canal"] } }
+                                ],
+                                "qMeasures": [
+                                    { "qDef": { "qDef": "Sum({1<[Ano-Mes]={'2026-08'}>} [Receita Líquida])", "qLabel": "v26" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-07'}, ${dayFilter}>} [Receita Líquida])`, "qLabel": "v26_06" } },
+                                    { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2025-08'}, ${dayFilter}>} [Receita Líquida])`, "qLabel": "v25" } }
+                                ],
+                                "qInitialDataFetch": [{ "qTop": 0, "qLeft": 0, "qHeight": 1400, "qWidth": 7 }],
+                                "qSuppressZero": true, "qSuppressMissing": true
+                            }
+                        }]);
+                        const h4 = c4.result.qReturn.qHandle;
+                        const l4 = await send("GetLayout", h4, []);
+                        const totalRows4 = l4.result.qLayout.qHyperCube.qSize.qcy;
+                        results.canais_hier = await fetchAllHyperCubeRows(h4, totalRows4, 7, 1400);
                         
                         ws.close();
                         resolve(results);
+                    } catch (e) {
+                        ws.close();
+                        reject(e);
                     }
                 };
                 
-                ws.onerror = () => resolve({ error: 'ws error' });
-                setTimeout(() => resolve({ error: 'timeout', results }), 35000);
+                ws.onmessage = (event) => {
+                    const msg = JSON.parse(event.data);
+                    if (msg.id && pending[msg.id]) {
+                        const { res, rej } = pending[msg.id];
+                        delete pending[msg.id];
+                        if (msg.error) rej(msg.error);
+                        else res(msg);
+                    }
+                };
             });
-        }'''
+        };'''
         
-        raw_res = await page.evaluate(queries_js)
-        await browser.close()
-        
+        cube_results = await page.evaluate(queries_js)
         print(f"  ✅ Extração no Qlik Engine concluída em {time.time() - t0:.2f}s!")
-        return raw_res
+        await browser.close()
 
-def process_and_save_agosto_models(raw_res):
+    t_proc = time.time()
     print("\n  3/4 Processando matrizes e calculando modelos de dados...")
-    t1 = time.time()
-    
-    canais_raw = raw_res.get('canais_dia', [])
-    cats_raw = raw_res.get('categorias', [])
-    hier_raw = raw_res.get('hier_canal', [])
-    
-    print(f"  Registros obtidos -> Canais: {len(canais_raw)}, Categorias: {len(cats_raw)}, Hierarquia: {len(hier_raw)}")
-    
-    if not canais_raw:
-        print("  ❌ Erro: dados de Canais vazios.")
-        return
 
-    # 1. CANAIS SUMMARY
-    df_c = pd.DataFrame(canais_raw, columns=['canal', 'dia', 'ago_26', 'jul_26', 'ago_25'])
-    df_c['canal'] = df_c['canal'].apply(clean_str)
-    df_c['dia'] = pd.to_numeric(df_c['dia'], errors='coerce').fillna(1).astype(int)
-    df_c['ago_26'] = pd.to_numeric(df_c['ago_26'], errors='coerce').fillna(0.0)
-    df_c['jul_26'] = pd.to_numeric(df_c['jul_26'], errors='coerce').fillna(0.0)
-    df_c['ago_25'] = pd.to_numeric(df_c['ago_25'], errors='coerce').fillna(0.0)
-    df_c['grupo'] = df_c['canal'].apply(get_channel_group)
+    # 1. Processar Canais Summary
+    raw_canais_dia = cube_results.get('canais_dia', [])
+    canais_dict = {}
+    for r in raw_canais_dia:
+        canal = clean_str(r[0])
+        dia = int(r[1]) if str(r[1]).isdigit() else None
+        if not canal or not dia or dia < 1 or dia > 31: continue
+        
+        v26_d = float(r[2]) if isinstance(r[2], (int, float)) and not np.isnan(r[2]) else 0.0
+        v26_06_d = float(r[3]) if isinstance(r[3], (int, float)) and not np.isnan(r[3]) else 0.0
+        v25_d = float(r[4]) if isinstance(r[4], (int, float)) and not np.isnan(r[4]) else 0.0
+        
+        if canal not in canais_dict:
+            canais_dict[canal] = {
+                'canal': canal, 'grupo': get_channel_group(canal),
+                'venda_jul_26': 0.0, 'venda_jun_26': 0.0, 'venda_jul_25': 0.0,
+                'd26_07': [0.0]*31, 'd26_06': [0.0]*31, 'd25': [0.0]*31
+            }
+        
+        canais_dict[canal]['d26_07'][dia - 1] = round(v26_d, 2)
+        canais_dict[canal]['d26_06'][dia - 1] = round(v26_06_d, 2)
+        canais_dict[canal]['d25'][dia - 1] = round(v25_d, 2)
+
+    # Identificar último dia com dados de Agosto
+    dias_com_venda = [i+1 for i in range(31) if any(c['d26_07'][i] > 0 for c in canais_dict.values())]
+    max_dia = max(dias_com_venda) if dias_com_venda else 19
+
+    # Consolidar totais MTD dos canais (01 a max_dia)
+    for c in canais_dict.values():
+        c['venda_jul_26'] = round(sum(c['d26_07'][:max_dia]), 2)
+        c['venda_jun_26'] = round(sum(c['d26_06'][:max_dia]), 2)
+        c['venda_jul_25'] = round(sum(c['d25'][:max_dia]), 2)
+
+    total_v26 = sum(c['venda_jul_26'] for c in canais_dict.values())
+    total_v26_06 = sum(c['venda_jun_26'] for c in canais_dict.values())
+    total_v25 = sum(c['venda_jul_25'] for c in canais_dict.values())
+
+    canais_summary = []
+    for c in canais_dict.values():
+        m_pct, m_rs = calc_growth(c['venda_jul_26'], c['venda_jun_26'])
+        y_pct, y_rs = calc_growth(c['venda_jul_26'], c['venda_jul_25'])
+        c['mom_pct'] = m_pct
+        c['mom_rs'] = m_rs
+        c['yoy_pct'] = y_pct
+        c['yoy_rs'] = y_rs
+        
+        part_26 = round((c['venda_jul_26'] / total_v26 * 100.0), 2) if total_v26 > 0 else 0.0
+        part_jun = round((c['venda_jun_26'] / total_v26_06 * 100.0), 2) if total_v26_06 > 0 else 0.0
+        part_25 = round((c['venda_jul_25'] / total_v25 * 100.0), 2) if total_v25 > 0 else 0.0
+        c['part_jul_26'] = part_26
+        c['part_jun_26'] = part_jun
+        c['part_jul_25'] = part_25
+        c['var_pp'] = round(part_26 - part_25, 2)
+        canais_summary.append(c)
+
+    canais_summary.sort(key=lambda x: x['venda_jul_26'], reverse=True)
+
+    # Fatores MTD para alinhar categorias e linhas à janela exata D-1
+    raw_cats = cube_results.get('categorias', [])
+    raw_hier = cube_results.get('hierarquia', [])
     
-    d_max = int(df_c[df_c['ago_26'] > 0]['dia'].max()) if len(df_c[df_c['ago_26'] > 0]) > 0 else 19
-    print(f"  📅 Período identificado: 01 a {d_max:02d}/08/2026 (D-1)")
+    full_cats_jun = sum(float(r[3]) for r in raw_cats if isinstance(r[3], (int, float)) and not np.isnan(r[3]))
+    full_cats_jul25 = sum(float(r[4]) for r in raw_cats if isinstance(r[4], (int, float)) and not np.isnan(r[4]))
     
-    canais_list = []
-    tot_cur = float(df_c[df_c['dia'] <= d_max]['ago_26'].sum())
-    tot_mo = float(df_c[df_c['dia'] <= d_max]['jul_26'].sum())
-    tot_yr = float(df_c[df_c['dia'] <= d_max]['ago_25'].sum())
-    
-    for canal_name, c_df in df_c.groupby('canal'):
-        c_grp = get_channel_group(canal_name)
-        d_cur = [0.0] * 31
-        d_mo = [0.0] * 31
-        d_yr = [0.0] * 31
+    factor_mom = (total_v26_06 / full_cats_jun) if full_cats_jun > 0 else 1.0
+    factor_yoy = (total_v25 / full_cats_jul25) if full_cats_jul25 > 0 else 1.0
+
+    # 2. Processar Categorias Summary
+    categorias_summary = []
+    for r in raw_cats:
+        grp = clean_str(r[0])
+        subgrp = clean_str(r[1])
+        if not grp: continue
         
-        for _, r in c_df.iterrows():
-            d_idx = int(r['dia']) - 1
-            if 0 <= d_idx < 31:
-                d_cur[d_idx] += float(r['ago_26'])
-                d_mo[d_idx] += float(r['jul_26'])
-                d_yr[d_idx] += float(r['ago_25'])
-                
-        v_cur = round(sum(d_cur[:d_max]), 2)
-        v_mo = round(sum(d_mo[:d_max]), 2)
-        v_yr = round(sum(d_yr[:d_max]), 2)
+        v26 = float(r[2]) if isinstance(r[2], (int, float)) and not np.isnan(r[2]) else 0.0
+        v26_06 = float(r[3]) * factor_mom if isinstance(r[3], (int, float)) and not np.isnan(r[3]) else 0.0
+        v25 = float(r[4]) * factor_yoy if isinstance(r[4], (int, float)) and not np.isnan(r[4]) else 0.0
         
-        m_pct, m_rs = calc_growth(v_cur, v_mo)
-        y_pct, y_rs = calc_growth(v_cur, v_yr)
+        vDig26 = float(r[5]) if isinstance(r[5], (int, float)) and not np.isnan(r[5]) else 0.0
+        vDig26_06 = float(r[6]) * factor_mom if isinstance(r[6], (int, float)) and not np.isnan(r[6]) else 0.0
+        vDig25 = float(r[7]) * factor_yoy if isinstance(r[7], (int, float)) and not np.isnan(r[7]) else 0.0
         
-        sh_cur = round((v_cur / tot_cur * 100.0) if tot_cur > 0 else 0.0, 2)
-        sh_mo = round((v_mo / tot_mo * 100.0) if tot_mo > 0 else 0.0, 2)
-        sh_yr = round((v_yr / tot_yr * 100.0) if tot_yr > 0 else 0.0, 2)
+        vDt26 = float(r[8]) if isinstance(r[8], (int, float)) and not np.isnan(r[8]) else 0.0
+        vDt26_06 = float(r[9]) * factor_mom if isinstance(r[9], (int, float)) and not np.isnan(r[9]) else 0.0
+        vDt25 = float(r[10]) * factor_yoy if isinstance(r[10], (int, float)) and not np.isnan(r[10]) else 0.0
         
-        canais_list.append({
-            'canal': canal_name,
-            'grupo': c_grp,
-            'venda_jul_26': v_cur,
-            'venda_jun_26': v_mo,
-            'venda_jul_25': v_yr,
+        m_pct, m_rs = calc_growth(v26, v26_06)
+        y_pct, y_rs = calc_growth(v26, v25)
+        
+        part_26 = round((v26 / total_v26 * 100.0), 2) if total_v26 > 0 else 0.0
+        part_jun = round((v26_06 / total_v26_06 * 100.0), 2) if total_v26_06 > 0 else 0.0
+        part_25 = round((v25 / total_v25 * 100.0), 2) if total_v25 > 0 else 0.0
+        
+        categorias_summary.append({
+            'diretor': '', 'distrital': '',
+            'grupo': grp, 'subgrupo': subgrp,
+            'venda_jul_26': round(v26, 2),
+            'venda_jun_26': round(v26_06, 2),
+            'venda_jul_25': round(v25, 2),
+            'venda_digital_jul_26': round(vDig26, 2),
+            'venda_digital_jun_26': round(vDig26_06, 2),
+            'venda_digital_jul_25': round(vDig25, 2),
+            'venda_dt_jul_26': round(vDt26, 2),
+            'venda_dt_jun_26': round(vDt26_06, 2),
+            'venda_dt_jul_25': round(vDt25, 2),
             'mom_pct': m_pct, 'mom_rs': m_rs,
             'yoy_pct': y_pct, 'yoy_rs': y_rs,
-            'part_jul_26': sh_cur,
-            'part_jun_26': sh_mo,
-            'part_jul_25': sh_yr,
-            'var_pp': round(sh_cur - sh_yr, 2),
-            'd25': [round(x, 2) for x in d_yr],
-            'd26_06': [round(x, 2) for x in d_mo],
-            'd26_07': [round(x, 2) for x in d_cur]
+            'part_jul_26': part_26, 'part_jun_26': part_jun, 'part_jul_25': part_25,
+            'var_pp': round(part_26 - part_25, 2),
+            'd25': [0.0]*31, 'd26_06': [0.0]*31, 'd26_07': [0.0]*31
         })
-        
-    canais_list.sort(key=lambda x: x['venda_jul_26'], reverse=True)
-    
-    # 2. CATEGORIAS SUMMARY
-    cats_list = []
-    if cats_raw:
-        df_cat = pd.DataFrame(cats_raw, columns=['grupo', 'subgrupo', 'ago_26', 'jul_26', 'ago_25'])
-        df_cat['grupo'] = df_cat['grupo'].apply(clean_str)
-        df_cat['subgrupo'] = df_cat['subgrupo'].apply(clean_str)
-        df_cat['ago_26'] = pd.to_numeric(df_cat['ago_26'], errors='coerce').fillna(0.0)
-        df_cat['jul_26'] = pd.to_numeric(df_cat['jul_26'], errors='coerce').fillna(0.0)
-        df_cat['ago_25'] = pd.to_numeric(df_cat['ago_25'], errors='coerce').fillna(0.0)
-        
-        for (g, sg), cat_df in df_cat.groupby(['grupo', 'subgrupo']):
-            v_cur = round(float(cat_df['ago_26'].sum()), 2)
-            v_mo = round(float(cat_df['jul_26'].sum()), 2)
-            v_yr = round(float(cat_df['ago_25'].sum()), 2)
-            
-            m_pct, m_rs = calc_growth(v_cur, v_mo)
-            y_pct, y_rs = calc_growth(v_cur, v_yr)
-            
-            sh_cur = round((v_cur / tot_cur * 100.0) if tot_cur > 0 else 0.0, 2)
-            sh_mo = round((v_mo / tot_mo * 100.0) if tot_mo > 0 else 0.0, 2)
-            sh_yr = round((v_yr / tot_yr * 100.0) if tot_yr > 0 else 0.0, 2)
-            
-            cats_list.append({
-                'diretor': '',
-                'distrital': '',
-                'grupo': g,
-                'subgrupo': sg,
-                'venda_jul_26': v_cur,
-                'venda_jun_26': v_mo,
-                'venda_jul_25': v_yr,
-                'venda_digital_jul_26': 0.0,
-                'venda_digital_jun_26': 0.0,
-                'venda_digital_jul_25': 0.0,
-                'venda_dt_jul_26': 0.0,
-                'venda_dt_jun_26': 0.0,
-                'venda_dt_jul_25': 0.0,
-                'mom_pct': m_pct, 'mom_rs': m_rs,
-                'yoy_pct': y_pct, 'yoy_rs': y_rs,
-                'part_jul_26': sh_cur,
-                'part_jun_26': sh_mo,
-                'part_jul_25': sh_yr,
-                'var_pp': round(sh_cur - sh_yr, 2),
-                'd25': [0.0]*31, 'd26_06': [0.0]*31, 'd26_07': [0.0]*31,
-                'dig_d25': [0.0]*31, 'dig_d26_06': [0.0]*31, 'dig_d26_07': [0.0]*31,
-                'dt_d25': [0.0]*31, 'dt_d26_06': [0.0]*31, 'dt_d26_07': [0.0]*31
-            })
-            
-        cats_list.sort(key=lambda x: x['venda_jul_26'], reverse=True)
-        
-    # 3. CANAIS BY HIERARQUIA
-    canais_hier_list = []
-    if hier_raw:
-        df_h = pd.DataFrame(hier_raw, columns=['grupo', 'subgrupo', 'linha', 'canal', 'ago_26', 'jul_26', 'ago_25'])
-        df_h['grupo'] = df_h['grupo'].apply(clean_str)
-        df_h['subgrupo'] = df_h['subgrupo'].apply(clean_str)
-        df_h['linha'] = df_h['linha'].apply(clean_str)
-        df_h['canal'] = df_h['canal'].apply(clean_str)
-        df_h['ago_26'] = pd.to_numeric(df_h['ago_26'], errors='coerce').fillna(0.0)
-        df_h['jul_26'] = pd.to_numeric(df_h['jul_26'], errors='coerce').fillna(0.0)
-        df_h['ago_25'] = pd.to_numeric(df_h['ago_25'], errors='coerce').fillna(0.0)
-        df_h['canal_grupo'] = df_h['canal'].apply(get_channel_group)
-        
-        for (g, sg, l, c), h_df in df_h.groupby(['grupo', 'subgrupo', 'linha', 'canal']):
-            v_cur = float(h_df['ago_26'].sum())
-            v_mo = float(h_df['jul_26'].sum())
-            v_yr = float(h_df['ago_25'].sum())
-            c_grp = get_channel_group(c)
-            
-            canais_hier_list.append({
-                'grupo': g, 'subgrupo': sg, 'linha': l,
-                'canal': c, 'canal_grupo': c_grp,
-                'v26': round(v_cur, 2),
-                'v26_06': round(v_mo, 2),
-                'v25': round(v_yr, 2),
-                'd25': [0.0]*31, 'd26_06': [0.0]*31, 'd26_07': [0.0]*31
-            })
-            
-    # 4. HIERARQUIA DETALHADA
-    hier_detalhada_list = []
-    if hier_raw:
-        df_hd = pd.DataFrame(hier_raw, columns=['grupo', 'subgrupo', 'linha', 'canal', 'ago_26', 'jul_26', 'ago_25'])
-        df_hd['grupo'] = df_hd['grupo'].apply(clean_str)
-        df_hd['subgrupo'] = df_hd['subgrupo'].apply(clean_str)
-        df_hd['linha'] = df_hd['linha'].apply(clean_str)
-        df_hd['canal'] = df_hd['canal'].apply(clean_str)
-        df_hd['ago_26'] = pd.to_numeric(df_hd['ago_26'], errors='coerce').fillna(0.0)
-        df_hd['jul_26'] = pd.to_numeric(df_hd['jul_26'], errors='coerce').fillna(0.0)
-        df_hd['ago_25'] = pd.to_numeric(df_hd['ago_25'], errors='coerce').fillna(0.0)
-        df_hd['canal_grupo'] = df_hd['canal'].apply(get_channel_group)
-        
-        for (g, sg, l), h_df in df_hd.groupby(['grupo', 'subgrupo', 'linha']):
-            v_cur = float(h_df['ago_26'].sum())
-            v_mo = float(h_df['jul_26'].sum())
-            v_yr = float(h_df['ago_25'].sum())
-            
-            v_dig_cur = float(h_df[h_df['canal_grupo'] == 'digital']['ago_26'].sum())
-            v_dig_mo = float(h_df[h_df['canal_grupo'] == 'digital']['jul_26'].sum())
-            v_dig_yr = float(h_df[h_df['canal_grupo'] == 'digital']['ago_25'].sum())
-            
-            v_dt_cur = float(h_df[h_df['canal_grupo'].isin(['digital', 'tele'])]['ago_26'].sum())
-            v_dt_mo = float(h_df[h_df['canal_grupo'].isin(['digital', 'tele'])]['jul_26'].sum())
-            v_dt_yr = float(h_df[h_df['canal_grupo'].isin(['digital', 'tele'])]['ago_25'].sum())
-            
-            m_pct, m_rs = calc_growth(v_cur, v_mo)
-            y_pct, y_rs = calc_growth(v_cur, v_yr)
-            
-            hier_detalhada_list.append({
-                'grupo': g, 'subgrupo': sg, 'linha': l,
-                'venda_jul_26': round(v_cur, 2),
-                'venda_jun_26': round(v_mo, 2),
-                'venda_jul_25': round(v_yr, 2),
-                'venda_digital_jul_26': round(v_dig_cur, 2),
-                'venda_digital_jun_26': round(v_dig_mo, 2),
-                'venda_digital_jul_25': round(v_dig_yr, 2),
-                'venda_dt_jul_26': round(v_dt_cur, 2),
-                'venda_dt_jun_26': round(v_dt_mo, 2),
-                'venda_dt_jul_25': round(v_dt_yr, 2),
-                'mom_pct': m_pct, 'mom_rs': m_rs,
-                'yoy_pct': y_pct, 'yoy_rs': y_rs,
-                'd25': [0.0]*31, 'd26_06': [0.0]*31, 'd26_07': [0.0]*31,
-                'dig_d25': [0.0]*31, 'dig_d26_06': [0.0]*31, 'dig_d26_07': [0.0]*31,
-                'dt_d25': [0.0]*31, 'dt_d26_06': [0.0]*31, 'dt_d26_07': [0.0]*31
-            })
-            
-        hier_detalhada_list.sort(key=lambda x: x['venda_jul_26'], reverse=True)
 
-    # 5. EXECUTIVE KPIS
-    v_dig_tot_cur = sum(c['venda_jul_26'] for c in canais_list if c['grupo'] == 'digital')
-    v_dig_tot_mo = sum(c['venda_jun_26'] for c in canais_list if c['grupo'] == 'digital')
-    v_dig_tot_yr = sum(c['venda_jul_25'] for c in canais_list if c['grupo'] == 'digital')
-    
-    v_dt_tot_cur = sum(c['venda_jul_26'] for c in canais_list if c['grupo'] in ['digital', 'tele'])
-    v_dt_tot_mo = sum(c['venda_jun_26'] for c in canais_list if c['grupo'] in ['digital', 'tele'])
-    v_dt_tot_yr = sum(c['venda_jul_25'] for c in canais_list if c['grupo'] in ['digital', 'tele'])
-    
-    kpis = {
-        'venda_jul_26': round(tot_cur, 2),
-        'venda_jun_26': round(tot_mo, 2),
-        'venda_jul_25': round(tot_yr, 2),
-        'venda_digital_jul_26': round(v_dig_tot_cur, 2),
-        'venda_digital_jun_26': round(v_dig_tot_mo, 2),
-        'venda_digital_jul_25': round(v_dig_tot_yr, 2),
-        'venda_dt_jul_26': round(v_dt_tot_cur, 2),
-        'venda_dt_jun_26': round(v_dt_tot_mo, 2),
-        'venda_dt_jul_25': round(v_dt_tot_yr, 2),
-        'mom_pct': calc_growth(tot_cur, tot_mo)[0],
-        'mom_rs': calc_growth(tot_cur, tot_mo)[1],
-        'yoy_pct': calc_growth(tot_cur, tot_yr)[0],
-        'yoy_rs': calc_growth(tot_cur, tot_yr)[1],
-        'd_max': d_max
-    }
-    
-    # 6. FILTROS
-    filtro_hier = {}
-    for r in canais_hier_list:
-        g = r['grupo']
-        sg = r['subgrupo']
-        l = r['linha']
-        if g not in filtro_hier: filtro_hier[g] = {}
-        if sg not in filtro_hier[g]: filtro_hier[g][sg] = []
-        if l not in filtro_hier[g][sg]: filtro_hier[g][sg].append(l)
+    # 3. Processar Hierarquia Detalhada
+    hierarquia_detalhada = []
+    for r in raw_hier:
+        grp = clean_str(r[0])
+        subgrp = clean_str(r[1])
+        linha = clean_str(r[2])
+        if not grp: continue
         
-    filtros_produto = {
-        'diretores': sorted(list(set(c.get('diretor','') for c in cats_list if c.get('diretor')))),
-        'distritais': sorted(list(set(c.get('distrital','') for c in cats_list if c.get('distrital')))),
-        'grupos': sorted(list(filtro_hier.keys()))
-    }
-    
-    # Salvar JSONs em data/agosto/
-    with open(os.path.join(AGOSTO_DIR, 'canais_summary.json'), 'w', encoding='utf-8') as f:
-        json.dump(canais_list, f, ensure_ascii=False, indent=2)
+        v26 = float(r[3]) if isinstance(r[3], (int, float)) and not np.isnan(r[3]) else 0.0
+        v26_06 = float(r[4]) * factor_mom if isinstance(r[4], (int, float)) and not np.isnan(r[4]) else 0.0
+        v25 = float(r[5]) * factor_yoy if isinstance(r[5], (int, float)) and not np.isnan(r[5]) else 0.0
         
-    with open(os.path.join(AGOSTO_DIR, 'categorias_summary.json'), 'w', encoding='utf-8') as f:
-        json.dump(cats_list, f, ensure_ascii=False, indent=2)
+        vDig26 = float(r[6]) if isinstance(r[6], (int, float)) and not np.isnan(r[6]) else 0.0
+        vDig26_06 = float(r[7]) * factor_mom if isinstance(r[7], (int, float)) and not np.isnan(r[7]) else 0.0
+        vDig25 = float(r[8]) * factor_yoy if isinstance(r[8], (int, float)) and not np.isnan(r[8]) else 0.0
         
-    with open(os.path.join(AGOSTO_DIR, 'canais_by_hierarquia.json'), 'w', encoding='utf-8') as f:
-        json.dump(canais_hier_list, f, ensure_ascii=False, indent=2)
+        vDt26 = float(r[9]) if isinstance(r[9], (int, float)) and not np.isnan(r[9]) else 0.0
+        vDt26_06 = float(r[10]) * factor_mom if isinstance(r[10], (int, float)) and not np.isnan(r[10]) else 0.0
+        vDt25 = float(r[11]) * factor_yoy if isinstance(r[11], (int, float)) and not np.isnan(r[11]) else 0.0
         
-    with open(os.path.join(AGOSTO_DIR, 'hierarquia_detalhada.json'), 'w', encoding='utf-8') as f:
-        json.dump(hier_detalhada_list, f, ensure_ascii=False, indent=2)
+        m_pct, m_rs = calc_growth(v26, v26_06)
+        y_pct, y_rs = calc_growth(v26, v25)
         
-    with open(os.path.join(AGOSTO_DIR, 'filtro_hierarquia.json'), 'w', encoding='utf-8') as f:
-        json.dump(filtro_hier, f, ensure_ascii=False, indent=2)
-        
-    with open(os.path.join(AGOSTO_DIR, 'filtros_produto.json'), 'w', encoding='utf-8') as f:
-        json.dump(filtros_produto, f, ensure_ascii=False, indent=2)
-        
-    with open(os.path.join(AGOSTO_DIR, 'executive_kpis.json'), 'w', encoding='utf-8') as f:
-        json.dump(kpis, f, ensure_ascii=False, indent=2)
-        
-    print(f"  4/4 Todos os JSONs de Agosto salvos com sucesso em {time.time() - t1:.2f}s!")
-    print(f"  📊 Total Agosto D-1 (01 a {d_max}): R$ {tot_cur:,.2f} | YoY: {kpis['yoy_pct']:+.1f}% | MoM: {kpis['mom_pct']:+.1f}%")
+        hierarquia_detalhada.append({
+            'grupo': grp, 'subgrupo': subgrp, 'linha': linha,
+            'venda_jul_26': round(v26, 2),
+            'venda_jun_26': round(v26_06, 2),
+            'venda_jul_25': round(v25, 2),
+            'venda_digital_jul_26': round(vDig26, 2),
+            'venda_digital_jun_26': round(vDig26_06, 2),
+            'venda_digital_jul_25': round(vDig25, 2),
+            'venda_dt_jul_26': round(vDt26, 2),
+            'venda_dt_jun_26': round(vDt26_06, 2),
+            'venda_dt_jul_25': round(vDt25, 2),
+            'mom_pct': m_pct, 'mom_rs': m_rs,
+            'yoy_pct': y_pct, 'yoy_rs': y_rs,
+            'd25': [0.0]*31, 'd26_06': [0.0]*31, 'd26_07': [0.0]*31
+        })
 
-def main():
-    raw_res = asyncio.run(fetch_all_qlik_cubes())
-    if raw_res and not raw_res.get('error'):
-        process_and_save_agosto_models(raw_res)
-    else:
-        print("  ❌ Falha na extração de dados do Qlik Sense.")
+    # 4. Processar Canais por Hierarquia
+    raw_ch_hier = cube_results.get('canais_hier', [])
+    canais_by_hierarquia = []
+    for r in raw_ch_hier:
+        grp = clean_str(r[0])
+        subgrp = clean_str(r[1])
+        linha = clean_str(r[2])
+        canal = clean_str(r[3])
+        if not grp or not canal: continue
+        
+        v26 = float(r[4]) if isinstance(r[4], (int, float)) and not np.isnan(r[4]) else 0.0
+        v26_06 = float(r[5]) * factor_mom if isinstance(r[5], (int, float)) and not np.isnan(r[5]) else 0.0
+        v25 = float(r[6]) * factor_yoy if isinstance(r[6], (int, float)) and not np.isnan(r[6]) else 0.0
+        
+        canais_by_hierarquia.append({
+            'grupo': grp, 'subgrupo': subgrp, 'linha': linha,
+            'canal': canal, 'canal_grupo': get_channel_group(canal),
+            'v26': round(v26, 2), 'v26_06': round(v26_06, 2), 'v25': round(v25, 2),
+            'd25': [0.0]*31, 'd26_06': [0.0]*31, 'd26_07': [0.0]*31
+        })
+
+    # 5. Gerar Filtros de Hierarquia e Produto
+    grupos_set = sorted(list(set(c['grupo'] for c in categorias_summary if c['grupo'])))
+    subgrupos_set = sorted(list(set(c['subgrupo'] for c in categorias_summary if c['subgrupo'])))
+    linhas_set = sorted(list(set(h['linha'] for h in hierarquia_detalhada if h['linha'])))
+
+    filtro_hierarquia = {
+        'diretores': [],
+        'distritais': [],
+        'coordenadores': [],
+        'grupos': grupos_set,
+        'subgrupos': subgrupos_set,
+        'linhas': linhas_set,
+        'laboratorios': []
+    }
+
+    # Identificar último dia com dados
+    dias_com_venda = [i+1 for i in range(31) if any(c['d26_07'][i] > 0 for c in canais_summary)]
+    max_dia = max(dias_com_venda) if dias_com_venda else 19
+
+    # 6. Gerar Executive KPIs (MTD Comparativo: 01 a max_dia)
+    tot_mtd_26 = sum(sum(c['d26_07'][:max_dia]) for c in canais_summary)
+    tot_mtd_26_06 = sum(sum(c['d26_06'][:max_dia]) for c in canais_summary)
+    tot_mtd_25 = sum(sum(c['d25'][:max_dia]) for c in canais_summary)
+
+    tot_dig_26 = sum(sum(c['d26_07'][:max_dia]) for c in canais_summary if c['grupo'] == 'digital')
+    tot_dig_26_06 = sum(sum(c['d26_06'][:max_dia]) for c in canais_summary if c['grupo'] == 'digital')
+    tot_dig_25 = sum(sum(c['d25'][:max_dia]) for c in canais_summary if c['grupo'] == 'digital')
+
+    tot_dt_26 = sum(sum(c['d26_07'][:max_dia]) for c in canais_summary if c['grupo'] in ['digital', 'tele'])
+    tot_dt_26_06 = sum(sum(c['d26_06'][:max_dia]) for c in canais_summary if c['grupo'] in ['digital', 'tele'])
+    tot_dt_25 = sum(sum(c['d25'][:max_dia]) for c in canais_summary if c['grupo'] in ['digital', 'tele'])
+
+    mom_pct, mom_rs = calc_growth(tot_mtd_26, tot_mtd_26_06)
+    yoy_pct, yoy_rs = calc_growth(tot_mtd_26, tot_mtd_25)
+
+    dig_mom_pct, dig_mom_rs = calc_growth(tot_dig_26, tot_dig_26_06)
+    dig_yoy_pct, dig_yoy_rs = calc_growth(tot_dig_26, tot_dig_25)
+
+    dt_mom_pct, dt_mom_rs = calc_growth(tot_dt_26, tot_dt_26_06)
+    dt_yoy_pct, dt_yoy_rs = calc_growth(tot_dt_26, tot_dt_25)
+
+    executive_kpis = {
+        'total_empresa': {
+            'venda_jul_26': round(tot_mtd_26, 2),
+            'venda_jun_26': round(tot_mtd_26_06, 2),
+            'venda_jul_25': round(tot_mtd_25, 2),
+            'mom_pct': mom_pct, 'mom_rs': mom_rs,
+            'yoy_pct': yoy_pct, 'yoy_rs': yoy_rs
+        },
+        'digital': {
+            'venda_jul_26': round(tot_dig_26, 2),
+            'venda_jun_26': round(tot_dig_26_06, 2),
+            'venda_jul_25': round(tot_dig_25, 2),
+            'share_jul_26': round(tot_dig_26 / tot_mtd_26 * 100.0, 2) if tot_mtd_26 > 0 else 0.0,
+            'mom_pct': dig_mom_pct, 'yoy_pct': dig_yoy_pct
+        },
+        'digital_tele': {
+            'venda_jul_26': round(tot_dt_26, 2),
+            'venda_jun_26': round(tot_dt_26_06, 2),
+            'venda_jul_25': round(tot_dt_25, 2),
+            'share_jul_26': round(tot_dt_26 / tot_mtd_26 * 100.0, 2) if tot_mtd_26 > 0 else 0.0,
+            'mom_pct': dt_mom_pct, 'yoy_pct': dt_yoy_pct
+        },
+        'periodo_info': {
+            'mes': 'Agosto/2026',
+            'tipo': 'D-1 (Qlik Sense Enterprise)',
+            'dias_fechados': max_dia,
+            'periodo_str': f'01 a {max_dia:02d}/08/2026'
+        }
+    }
+
+    # Salvar todos os arquivos JSON
+    def save_json(data, name):
+        p = os.path.join(AGOSTO_DIR, name)
+        with open(p, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+    save_json(canais_summary, 'canais_summary.json')
+    save_json(categorias_summary, 'categorias_summary.json')
+    save_json(hierarquia_detalhada, 'hierarquia_detalhada.json')
+    save_json(canais_by_hierarquia, 'canais_by_hierarquia.json')
+    save_json(filtro_hierarquia, 'filtro_hierarquia.json')
+    save_json(executive_kpis, 'executive_kpis.json')
+
+    print(f"  4/4 Todos os JSONs de Agosto salvos com sucesso em {time.time() - t_proc:.2f}s!")
+    print(f"  📊 Total Agosto D-1 (01 a {max_dia:02d}): R$ {total_v26:,.2f} | YoY: {yoy_pct:+.1f}% | MoM: {mom_pct:+.1f}%")
+    print("=" * 70 + "\n")
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(fetch_all_qlik_cubes())
