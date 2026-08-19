@@ -2273,7 +2273,7 @@ function renderExecutiveKpis() {
     <div class="apple-kpi-card accent-teal">
       <div class="kpi-card-header">
         <span class="kpi-card-title">SHARE DIGITAL</span>
-        <span class="apple-tag tag-neu">App + Site</span>
+        <span class="apple-tag tag-neu">Canais Digitais</span>
       </div>
       <div class="kpi-value-main" style="color: var(--apple-teal);">${fmtPct(pctDig)}</div>
       <div class="kpi-sub-value">${fmtCompact(vDigJul26)}</div>
@@ -2894,7 +2894,7 @@ function updateCharts() {
   chartMix = new Chart(mixCtx, {
     type: 'doughnut',
     data: {
-      labels: ['Loja Física (Varejo)', 'Digital (App/Site/Parcerias)', 'Televendas & Tele-entrega'],
+      labels: ['Loja Física (Varejo)', 'Canais Digitais', 'Televendas & Tele-entrega'],
       datasets: [
         {
           data: [pctLoja, pctDig, pctTele],

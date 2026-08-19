@@ -142,7 +142,7 @@ function updateCharts() {
   chartMix = new Chart(mixCtx, {
     type: 'doughnut',
     data: {
-      labels: ['Loja Física (Varejo)', 'Digital (App/Site/Parcerias)', 'Televendas & Tele-entrega'],
+      labels: ['Loja Física (Varejo)', 'Canais Digitais', 'Televendas & Tele-entrega'],
       datasets: [
         {
           data: [pctLoja, pctDig, pctTele],

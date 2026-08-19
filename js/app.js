@@ -1086,7 +1086,7 @@ function renderExecutiveKpis() {
     <div class="apple-kpi-card accent-teal">
       <div class="kpi-card-header">
         <span class="kpi-card-title">SHARE DIGITAL</span>
-        <span class="apple-tag tag-neu">App + Site</span>
+        <span class="apple-tag tag-neu">Canais Digitais</span>
       </div>
       <div class="kpi-value-main" style="color: var(--apple-teal);">${fmtPct(pctDig)}</div>
       <div class="kpi-sub-value">${fmtCompact(vDigJul26)}</div>
