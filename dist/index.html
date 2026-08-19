@@ -678,36 +678,74 @@ body {
 }
 
 /* ── Apple Status Badges & Pills ─────────────────────────── */
-.apple-tag {
+.apple-tag,
+.badge,
+.tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   padding: 3px 8px;
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
 }
 
-.apple-tag.tag-pos {
-  background: var(--apple-green-soft);
-  color: var(--apple-green-text);
+.apple-tag.tag-pos,
+.badge.pos,
+.badge.tag-pos,
+.tag.pos,
+.tag.tag-pos {
+  background: rgba(52, 199, 89, 0.14);
+  color: #1a7f37;
+  border: 1px solid rgba(52, 199, 89, 0.25);
 }
 
-.apple-tag.tag-neg {
-  background: var(--apple-red-soft);
-  color: var(--apple-red-text);
+.apple-tag.tag-neg,
+.badge.neg,
+.badge.tag-neg,
+.tag.neg,
+.tag.tag-neg {
+  background: rgba(255, 59, 48, 0.14);
+  color: #cf222e;
+  border: 1px solid rgba(255, 59, 48, 0.25);
 }
 
-.apple-tag.tag-neu {
+.apple-tag.tag-neu,
+.badge.neu,
+.tag.neu {
   background: rgba(0, 0, 0, 0.05);
   color: var(--text-secondary);
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.apple-tag .sublabel {
+.apple-tag .sublabel,
+.badge .sublabel,
+.tag .sublabel {
   font-weight: 500;
   color: var(--text-tertiary);
   font-size: 10px;
   margin-left: 2px;
+}
+
+/* ── Nominal Currency Deltas (+R$ verde / -R$ vermelho) ──── */
+.delta-pos {
+  color: #1a7f37 !important;
+  font-weight: 700 !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.delta-neg {
+  color: #cf222e !important;
+  font-weight: 700 !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.delta-neu {
+  color: var(--text-secondary) !important;
+  font-weight: 500 !important;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── Content Card (Apple Glass Container) ─────────────────── */
@@ -2085,10 +2123,12 @@ function fmtPct(val) {
   return val.toFixed(2).replace('.', ',') + '%';
 }
 function badgePct(val) {
-  if (val == null || isNaN(val)) return '<span class="badge">-</span>';
-  const cls = val >= 0 ? 'pos' : 'neg';
-  const arrow = val >= 0 ? '▲' : '▼';
-  return `<span class="badge ${cls}">${arrow} ${Math.abs(val).toFixed(2).replace('.', ',')}%</span>`;
+  if (val == null || isNaN(val)) return '<span class="badge neu">-</span>';
+  if (Math.abs(val) < 0.001) return '<span class="badge neu">0,00%</span>';
+  const cls = val > 0 ? 'pos' : 'neg';
+  const arrow = val > 0 ? '▲' : '▼';
+  const sign = val > 0 ? '+' : '-';
+  return `<span class="badge ${cls}">${arrow} ${sign}${Math.abs(val).toFixed(2).replace('.', ',')}%</span>`;
 }
 function renderShareCell(pct) {
   if (pct == null || isNaN(pct)) return '-';
@@ -2103,22 +2143,26 @@ function renderShareCell(pct) {
 
 function badgePP(val) {
   if (val == null || isNaN(val)) return '<span class="apple-tag tag-neu">-</span>';
-  const cls = val > 0.001 ? 'tag-pos' : (val < -0.001 ? 'tag-neg' : 'tag-neu');
-  const arrow = val > 0.001 ? '▲' : (val < -0.001 ? '▼' : '');
-  const sign = val > 0 ? '+' : '';
-  return `<span class="apple-tag ${cls}">${arrow} ${sign}${val.toFixed(2).replace('.', ',')} p.p.</span>`;
+  if (Math.abs(val) < 0.001) return '<span class="apple-tag tag-neu">0,00 p.p.</span>';
+  const cls = val > 0.001 ? 'tag-pos' : 'tag-neg';
+  const arrow = val > 0.001 ? '▲' : '▼';
+  const sign = val > 0 ? '+' : '-';
+  return `<span class="apple-tag ${cls}">${arrow} ${sign}${Math.abs(val).toFixed(2).replace('.', ',')} p.p.</span>`;
 }
 function deltaRS(val) {
   if (val == null || isNaN(val)) return '-';
-  const cls = val >= 0 ? 'delta-pos' : 'delta-neg';
-  const sign = val >= 0 ? '+' : '';
-  return `<span class="${cls}">${sign}${fmtRS(val)}</span>`;
+  if (Math.abs(val) < 0.01) return '<span class="delta-neu">R$ 0</span>';
+  const cls = val > 0 ? 'delta-pos' : 'delta-neg';
+  const sign = val > 0 ? '+' : '-';
+  return `<span class="${cls}">${sign}${fmtRS(Math.abs(val))}</span>`;
 }
 function tagPct(val) {
   if (val == null || isNaN(val)) return '';
-  const cls = val >= 0 ? 'tag-pos' : 'tag-neg';
-  const arrow = val >= 0 ? '▲' : '▼';
-  return `<span class="tag ${cls}">${arrow} ${Math.abs(val).toFixed(2).replace('.', ',')}%</span>`;
+  if (Math.abs(val) < 0.001) return '<span class="apple-tag tag-neu">0,00%</span>';
+  const cls = val > 0 ? 'tag-pos' : 'tag-neg';
+  const arrow = val > 0 ? '▲' : '▼';
+  const sign = val > 0 ? '+' : '-';
+  return `<span class="apple-tag ${cls}">${arrow} ${sign}${Math.abs(val).toFixed(2).replace('.', ',')}%</span>`;
 }
 function esc(str) {
   if (!str) return '';

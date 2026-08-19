@@ -667,36 +667,74 @@ body {
 }
 
 /* ── Apple Status Badges & Pills ─────────────────────────── */
-.apple-tag {
+.apple-tag,
+.badge,
+.tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   padding: 3px 8px;
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
 }
 
-.apple-tag.tag-pos {
-  background: var(--apple-green-soft);
-  color: var(--apple-green-text);
+.apple-tag.tag-pos,
+.badge.pos,
+.badge.tag-pos,
+.tag.pos,
+.tag.tag-pos {
+  background: rgba(52, 199, 89, 0.14);
+  color: #1a7f37;
+  border: 1px solid rgba(52, 199, 89, 0.25);
 }
 
-.apple-tag.tag-neg {
-  background: var(--apple-red-soft);
-  color: var(--apple-red-text);
+.apple-tag.tag-neg,
+.badge.neg,
+.badge.tag-neg,
+.tag.neg,
+.tag.tag-neg {
+  background: rgba(255, 59, 48, 0.14);
+  color: #cf222e;
+  border: 1px solid rgba(255, 59, 48, 0.25);
 }
 
-.apple-tag.tag-neu {
+.apple-tag.tag-neu,
+.badge.neu,
+.tag.neu {
   background: rgba(0, 0, 0, 0.05);
   color: var(--text-secondary);
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.apple-tag .sublabel {
+.apple-tag .sublabel,
+.badge .sublabel,
+.tag .sublabel {
   font-weight: 500;
   color: var(--text-tertiary);
   font-size: 10px;
   margin-left: 2px;
+}
+
+/* ── Nominal Currency Deltas (+R$ verde / -R$ vermelho) ──── */
+.delta-pos {
+  color: #1a7f37 !important;
+  font-weight: 700 !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.delta-neg {
+  color: #cf222e !important;
+  font-weight: 700 !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.delta-neu {
+  color: var(--text-secondary) !important;
+  font-weight: 500 !important;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── Content Card (Apple Glass Container) ─────────────────── */

@@ -641,10 +641,12 @@ function fmtPct(val) {
   return val.toFixed(2).replace('.', ',') + '%';
 }
 function badgePct(val) {
-  if (val == null || isNaN(val)) return '<span class="badge">-</span>';
-  const cls = val >= 0 ? 'pos' : 'neg';
-  const arrow = val >= 0 ? '▲' : '▼';
-  return `<span class="badge ${cls}">${arrow} ${Math.abs(val).toFixed(2).replace('.', ',')}%</span>`;
+  if (val == null || isNaN(val)) return '<span class="badge neu">-</span>';
+  if (Math.abs(val) < 0.001) return '<span class="badge neu">0,00%</span>';
+  const cls = val > 0 ? 'pos' : 'neg';
+  const arrow = val > 0 ? '▲' : '▼';
+  const sign = val > 0 ? '+' : '-';
+  return `<span class="badge ${cls}">${arrow} ${sign}${Math.abs(val).toFixed(2).replace('.', ',')}%</span>`;
 }
 function renderShareCell(pct) {
   if (pct == null || isNaN(pct)) return '-';
@@ -659,22 +661,26 @@ function renderShareCell(pct) {
 
 function badgePP(val) {
   if (val == null || isNaN(val)) return '<span class="apple-tag tag-neu">-</span>';
-  const cls = val > 0.001 ? 'tag-pos' : (val < -0.001 ? 'tag-neg' : 'tag-neu');
-  const arrow = val > 0.001 ? '▲' : (val < -0.001 ? '▼' : '');
-  const sign = val > 0 ? '+' : '';
-  return `<span class="apple-tag ${cls}">${arrow} ${sign}${val.toFixed(2).replace('.', ',')} p.p.</span>`;
+  if (Math.abs(val) < 0.001) return '<span class="apple-tag tag-neu">0,00 p.p.</span>';
+  const cls = val > 0.001 ? 'tag-pos' : 'tag-neg';
+  const arrow = val > 0.001 ? '▲' : '▼';
+  const sign = val > 0 ? '+' : '-';
+  return `<span class="apple-tag ${cls}">${arrow} ${sign}${Math.abs(val).toFixed(2).replace('.', ',')} p.p.</span>`;
 }
 function deltaRS(val) {
   if (val == null || isNaN(val)) return '-';
-  const cls = val >= 0 ? 'delta-pos' : 'delta-neg';
-  const sign = val >= 0 ? '+' : '';
-  return `<span class="${cls}">${sign}${fmtRS(val)}</span>`;
+  if (Math.abs(val) < 0.01) return '<span class="delta-neu">R$ 0</span>';
+  const cls = val > 0 ? 'delta-pos' : 'delta-neg';
+  const sign = val > 0 ? '+' : '-';
+  return `<span class="${cls}">${sign}${fmtRS(Math.abs(val))}</span>`;
 }
 function tagPct(val) {
   if (val == null || isNaN(val)) return '';
-  const cls = val >= 0 ? 'tag-pos' : 'tag-neg';
-  const arrow = val >= 0 ? '▲' : '▼';
-  return `<span class="tag ${cls}">${arrow} ${Math.abs(val).toFixed(2).replace('.', ',')}%</span>`;
+  if (Math.abs(val) < 0.001) return '<span class="apple-tag tag-neu">0,00%</span>';
+  const cls = val > 0 ? 'tag-pos' : 'tag-neg';
+  const arrow = val > 0 ? '▲' : '▼';
+  const sign = val > 0 ? '+' : '-';
+  return `<span class="apple-tag ${cls}">${arrow} ${sign}${Math.abs(val).toFixed(2).replace('.', ',')}%</span>`;
 }
 function esc(str) {
   if (!str) return '';
