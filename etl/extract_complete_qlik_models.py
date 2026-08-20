@@ -648,6 +648,17 @@ async def fetch_all_qlik_cubes():
     # Salvar todos os arquivos JSON
     def save_json(data, name):
         p = os.path.join(AGOSTO_DIR, name)
+        if name == 'canais_by_hierarquia.json' and isinstance(data, list):
+            compact = []
+            for item in data:
+                o = dict(item)
+                if 'd25' in o and all(v == 0 for v in o['d25']): del o['d25']
+                if 'd26_06' in o and all(v == 0 for v in o['d26_06']): del o['d26_06']
+                if 'd26_07' in o and all(v == 0 for v in o['d26_07']): del o['d26_07']
+                compact.append(o)
+            with open(p, 'w', encoding='utf-8') as f:
+                json.dump(compact, f, ensure_ascii=False, separators=(',', ':'))
+            return
         with open(p, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 

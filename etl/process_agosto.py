@@ -13,7 +13,19 @@ import numpy as np
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, 'data', 'agosto')
-SRC_FILE = r"c:\Users\lucas.alves6\OneDrive - Farmácias São João\Documentos\ANTIGRAVITI\Acompanhamento Categorias\Base Parcial agosto de 01 a 17 .xlsx"
+import re
+
+SRC_DEFAULT = r"c:\Users\lucas.alves6\OneDrive - Farmácias São João\Documentos\ANTIGRAVITI\Acompanhamento Categorias\Base Parcial agosto de 01 a 17 .xlsx"
+
+def find_latest_source_file():
+    folder = r"c:\Users\lucas.alves6\OneDrive - Farmácias São João\Documentos\ANTIGRAVITI\Acompanhamento Categorias"
+    if not os.path.exists(folder):
+        return SRC_DEFAULT
+    files = [os.path.join(folder, f) for f in os.listdir(folder) if f.lower().endswith('.xlsx') and 'julho' not in f.lower()]
+    if not files:
+        return SRC_DEFAULT
+    files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+    return files[0]
 
 def clean_str(val):
     if pd.isna(val) or val is None or str(val).strip() == '-':
@@ -44,16 +56,22 @@ def get_channel_group(canal_name):
 
 def main():
     t0 = time.time()
+    src_file = find_latest_source_file()
+    fname = os.path.basename(src_file)
+    match = re.search(r'01\s+a\s+(\d+)', fname, re.IGNORECASE)
+    dias_max = int(match.group(1)) if match else 19
+
     print("=" * 70)
-    print("PROCESSANDO BASE PARCIAL AGOSTO")
+    print(f"PROCESSANDO BASE PARCIAL AGOSTO ({fname})")
+    print(f"Dias fechados detectados: {dias_max}")
     print("=" * 70)
 
     os.makedirs(DATA_DIR, exist_ok=True)
 
     # Copy to temp
     tmp = os.path.join(tempfile.gettempdir(), 'BASE_AGOSTO_proc.xlsx')
-    print(f"Copiando {SRC_FILE} para temp...")
-    shutil.copy2(SRC_FILE, tmp)
+    print(f"Copiando {src_file} para temp...")
+    shutil.copy2(src_file, tmp)
     print(f"Copiado: {os.path.getsize(tmp)/1e6:.1f} MB")
 
     # Read with multi-level header
@@ -381,8 +399,8 @@ def main():
         'mom_pct': mom_pct, 'mom_rs': mom_rs,
         'yoy_pct': yoy_pct, 'yoy_rs': yoy_rs,
         'periodo_info': {
-            'periodo_str': '01 a 17/08/2026',
-            'dias_fechados': 17
+            'periodo_str': f'01 a {dias_max:02d}/08/2026',
+            'dias_fechados': dias_max
         }
     }
     with open(os.path.join(DATA_DIR, 'executive_kpis.json'), 'w', encoding='utf-8') as f:

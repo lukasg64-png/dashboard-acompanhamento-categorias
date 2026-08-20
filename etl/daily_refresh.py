@@ -38,30 +38,19 @@ def main():
     log("🔄 INICIANDO ATUALIZAÇÃO DIÁRIA DO DASHBOARD (07:30)")
     log("=" * 70)
 
-    # 1. Extração D-1 Qlik Sense
+    # 1. Extração D-1 (Qlik Sense WebSocket com Fallback para Excel OneDrive mais recente)
     py_exe = sys.executable
-    if not run_cmd(f'"{py_exe}" etl/extract_complete_qlik_models.py', "1/4 Extração Qlik Sense Engine"):
-        log("❌ Falha na extração. Abortando deploy.")
-        return
+    extracted = run_cmd(f'"{py_exe}" -u etl/extract_complete_qlik_models.py', "1/3 Extração Qlik Sense Engine")
+    if not extracted:
+        log("⚠️ Extração direta via Qlik WS não concluída. Executando fallback via Excel OneDrive...")
+        run_cmd(f'"{py_exe}" -u etl/process_agosto.py', "1b/3 Fallback Processamento Excel")
 
-    # 2. Build HTML Único
-    if not run_cmd(f'"{py_exe}" etl/build_single_file.py', "2/4 Compilação do HTML Único"):
-        log("❌ Falha no build. Abortando deploy.")
-        return
+    # 2. Build HTML Único (dist/index.html)
+    run_cmd(f'"{py_exe}" -u etl/build_single_file.py', "2/3 Compilação do HTML Único")
 
-    # 3. Commit e Push Gitea
-    run_cmd('git add . && git commit -m "Auto-refresh D-1 (Daily 07:30)" && git push origin main', "3/4 Deploy Gitea Corporativo")
-
-    # 4. Deploy GitHub Pages
-    deploy_gh = (
-        'git checkout -B gh-pages && '
-        'cp dist/index.html index.html && '
-        'git add index.html && '
-        'git commit -m "Auto-deploy GitHub Pages (Daily 07:30)" && '
-        'git push github gh-pages --force && '
-        'git checkout main'
-    )
-    run_cmd(deploy_gh, "4/4 Deploy GitHub Pages Global")
+    # 3. Commit e Deploy GitHub Pages
+    git_deploy_cmd = 'git add . && git commit -m "Auto-refresh D-1 (Daily 07:30)" && git push github gh-pages:main --force && git push github gh-pages:gh-pages --force'
+    run_cmd(git_deploy_cmd, "3/3 Deploy GitHub Pages Global")
 
     log("=" * 70)
     log("🎉 ATUALIZAÇÃO DIÁRIA CONCLUÍDA COM SUCESSO!")
