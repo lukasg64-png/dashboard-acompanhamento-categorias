@@ -79,7 +79,8 @@ async function loadAllData(mes = 'agosto') {
       prefix + 'filtros_produto.json',
       prefix + 'clientes_summary.json'
     ];
-    const results = await Promise.all(urls.map(u => fetch(u).then(r => r.json()).catch(() => null)));
+    const ts = Date.now();
+    const results = await Promise.all(urls.map(u => fetch(`${u}?v=${ts}`).then(r => r.json()).catch(() => null)));
     updateLoadingProgress(45, 'Processando hierarquia mercadológica...');
     DATA.kpis = results[0];
     DATA.canais = results[1] || [];
@@ -103,33 +104,6 @@ function sumDays(arr, startDay, endDay) {
   return s;
 }
 
-function updateTableHeaders() {
-  const isAgo = STATE.mesReferencia === 'agosto';
-  const curLabel = isAgo ? 'Ago/26 (D-1)' : 'Jul/26';
-  const momLabel = isAgo ? 'Jul/26 (MoM)' : 'Jun/26 (MoM)';
-  const yoyLabel = isAgo ? 'Ago/25 (YoY)' : 'Jul/25 (YoY)';
-  
-  const thCanaisCur = document.getElementById('thCanaisCur');
-  const thCanaisMom = document.getElementById('thCanaisMom');
-  const thCanaisYoy = document.getElementById('thCanaisYoy');
-  if (thCanaisCur) thCanaisCur.textContent = curLabel;
-  if (thCanaisMom) thCanaisMom.textContent = momLabel;
-  if (thCanaisYoy) thCanaisYoy.textContent = yoyLabel;
-  
-  const thPartCanaisCur = document.getElementById('thPartCanaisCur');
-  const thPartCanaisMom = document.getElementById('thPartCanaisMom');
-  const thPartCanaisYoy = document.getElementById('thPartCanaisYoy');
-  if (thPartCanaisCur) thPartCanaisCur.textContent = 'Part. ' + (isAgo ? 'Ago/26' : 'Jul/26');
-  if (thPartCanaisMom) thPartCanaisMom.textContent = 'Part. ' + (isAgo ? 'Jul/26' : 'Jun/26');
-  if (thPartCanaisYoy) thPartCanaisYoy.textContent = 'Part. ' + (isAgo ? 'Ago/25' : 'Jul/25');
-  
-  const thCatCur = document.getElementById('thCatCur');
-  const thCatMom = document.getElementById('thCatMom');
-  const thCatYoy = document.getElementById('thCatYoy');
-  if (thCatCur) thCatCur.textContent = curLabel;
-  if (thCatMom) thCatMom.textContent = momLabel;
-  if (thCatYoy) thCatYoy.textContent = yoyLabel;
-}
 
 /* ── Events ───────────────────────────────────────── */
 function wireEvents() {
@@ -511,17 +485,20 @@ function initMultiSelects() {
 
 function populateAllMultiSelects() {
   const fh = DATA.filtroHierarquia || {};
-  const hier = DATA.hierarquia || [];
 
   // Diretores
   const diretores = (fh.diretores || []).sort();
   renderMultiSelect('msDiretor', diretores, STATE.diretores, 'Todos os Diretores', () => {
+    updateCascadingDistritais();
     STATE.expandedCat.clear(); render();
   });
 
-  // Distritais
-  const distritais = (fh.distritais || []).sort();
-  renderMultiSelect('msDistrital', distritais, STATE.distritais, 'Todas as Distritais', () => {
+  // Distritais com Cascata
+  updateCascadingDistritais();
+
+  // Coordenadores
+  const coordenadores = (fh.coordenadores || []).sort();
+  renderMultiSelect('msCoordenador', coordenadores, STATE.coordenadores, 'Todos os Coordenadores', () => {
     STATE.expandedCat.clear(); render();
   });
 
@@ -535,14 +512,64 @@ function populateAllMultiSelects() {
   updateCascadingSubgrupos();
 }
 
+function updateCascadingDistritais() {
+  const hier = DATA.hierarquia || [];
+  let availableDistritais = [];
+
+  if (STATE.diretores.size > 0) {
+    const filteredHier = hier.filter(h => h.diretor && STATE.diretores.has(h.diretor));
+    availableDistritais = [...new Set(filteredHier.map(h => h.distrital).filter(Boolean))].sort();
+  } else {
+    availableDistritais = (DATA.filtroHierarquia.distritais || []).sort();
+  }
+
+  // Clean obsolete selected distritais
+  Array.from(STATE.distritais).forEach(d => {
+    if (!availableDistritais.includes(d)) STATE.distritais.delete(d);
+  });
+
+  renderMultiSelect('msDistrital', availableDistritais, STATE.distritais, 'Todas as Distritais', () => {
+    updateCascadingGrupos();
+    STATE.expandedCat.clear(); render();
+  });
+}
+
+function updateCascadingGrupos() {
+  const hier = DATA.hierarquia || [];
+  let availableGrupos = [];
+
+  let filteredHier = hier;
+  if (STATE.diretores.size > 0) filteredHier = filteredHier.filter(h => h.diretor && STATE.diretores.has(h.diretor));
+  if (STATE.distritais.size > 0) filteredHier = filteredHier.filter(h => h.distrital && STATE.distritais.has(h.distrital));
+
+  if (STATE.diretores.size > 0 || STATE.distritais.size > 0) {
+    availableGrupos = [...new Set(filteredHier.map(h => h.grupo).filter(Boolean))].sort();
+  } else {
+    availableGrupos = (DATA.filtroHierarquia.grupos || []).sort();
+  }
+
+  Array.from(STATE.grupos).forEach(g => {
+    if (!availableGrupos.includes(g)) STATE.grupos.delete(g);
+  });
+
+  renderMultiSelect('msGrupo', availableGrupos, STATE.grupos, 'Todos os Grupos', () => {
+    updateCascadingSubgrupos();
+    STATE.expandedCat.clear(); render();
+  });
+
+  updateCascadingSubgrupos();
+}
+
 function updateCascadingSubgrupos() {
   const hier = DATA.hierarquia || [];
-  let availableSubgrupos = [];
-  let availableLinhas = [];
-  let availableLaboratorios = [];
+  let filteredHier = hier;
 
-  if (STATE.grupos.size > 0) {
-    const filteredHier = hier.filter(h => STATE.grupos.has(h.grupo));
+  if (STATE.diretores.size > 0) filteredHier = filteredHier.filter(h => h.diretor && STATE.diretores.has(h.diretor));
+  if (STATE.distritais.size > 0) filteredHier = filteredHier.filter(h => h.distrital && STATE.distritais.has(h.distrital));
+  if (STATE.grupos.size > 0) filteredHier = filteredHier.filter(h => STATE.grupos.has(h.grupo));
+
+  let availableSubgrupos = [];
+  if (STATE.grupos.size > 0 || STATE.diretores.size > 0 || STATE.distritais.size > 0) {
     availableSubgrupos = [...new Set(filteredHier.map(h => h.subgrupo).filter(Boolean))].sort();
   } else {
     availableSubgrupos = (DATA.filtroHierarquia.subgrupos || []).sort();
@@ -565,6 +592,8 @@ function updateCascadingLinhas() {
   const hier = DATA.hierarquia || [];
   let filteredHier = hier;
 
+  if (STATE.diretores.size > 0) filteredHier = filteredHier.filter(h => h.diretor && STATE.diretores.has(h.diretor));
+  if (STATE.distritais.size > 0) filteredHier = filteredHier.filter(h => h.distrital && STATE.distritais.has(h.distrital));
   if (STATE.grupos.size > 0) filteredHier = filteredHier.filter(h => STATE.grupos.has(h.grupo));
   if (STATE.subgrupos.size > 0) filteredHier = filteredHier.filter(h => STATE.subgrupos.has(h.subgrupo));
 
@@ -589,6 +618,8 @@ function updateCascadingLaboratorios() {
   const hier = DATA.hierarquia || [];
   let filteredHier = hier;
 
+  if (STATE.diretores.size > 0) filteredHier = filteredHier.filter(h => h.diretor && STATE.diretores.has(h.diretor));
+  if (STATE.distritais.size > 0) filteredHier = filteredHier.filter(h => h.distrital && STATE.distritais.has(h.distrital));
   if (STATE.grupos.size > 0) filteredHier = filteredHier.filter(h => STATE.grupos.has(h.grupo));
   if (STATE.subgrupos.size > 0) filteredHier = filteredHier.filter(h => STATE.subgrupos.has(h.subgrupo));
   if (STATE.linhas.size > 0) filteredHier = filteredHier.filter(h => STATE.linhas.has(h.linha));
@@ -971,8 +1002,8 @@ function updateTableHeaders() {
 
   // Canais table headers
   if (sel('thCanalCol1')) sel('thCanalCol1').textContent = curLabel;
-  if (sel('thCanalCol2')) sel('thCanalCol2').textContent = momLabel;
-  if (sel('thCanalCol3')) sel('thCanalCol3').textContent = yoyLabel;
+  if (sel('thCanalCol2')) sel('thCanalCol2').textContent = `${momLabel} (MoM)`;
+  if (sel('thCanalCol3')) sel('thCanalCol3').textContent = `${yoyLabel} (YoY)`;
   if (sel('thCanalPartCol1')) sel('thCanalPartCol1').textContent = `Share ${curLabel}`;
   if (sel('thCanalPartCol2')) sel('thCanalPartCol2').textContent = `Share ${momLabel}`;
   if (sel('thCanalPartCol3')) sel('thCanalPartCol3').textContent = `Share ${yoyLabel}`;
@@ -984,8 +1015,6 @@ function updateTableHeaders() {
   if (sel('thPartJul26')) sel('thPartJul26').textContent = `Share ${curLabel}`;
   if (sel('thPartJun26')) sel('thPartJun26').textContent = `Share ${momLabel}`;
   if (sel('thPartJul25')) sel('thPartJul25').textContent = `Share ${yoyLabel}`;
-  if (sel('thPartJun26')) sel('thPartJun26').textContent = `Part. ${momLabel}`;
-  if (sel('thPartJul25')) sel('thPartJul25').textContent = `Part. ${yoyLabel}`;
 }
 
 /* ── Main render ──────────────────────────────────── */
@@ -1043,7 +1072,7 @@ function renderExecutiveKpis() {
     if (useDays) {
       const daysField = field === 'venda_jul_26' ? 'd26_07' :
                         field === 'venda_jun_26' ? 'd26_06' : 'd25';
-      if (c[daysField]) {
+      if (c[daysField] && c[daysField].length && c[daysField].some(x => x > 0)) {
         val = sumDays(c[daysField], STATE.startDay, STATE.endDay);
       }
     }
@@ -1097,21 +1126,20 @@ function renderExecutiveKpis() {
       : (STATE.startDay === 1 && STATE.endDay === 31) ? 'FATURAMENTO TOTAL (JUL/26)' : `FATURAMENTO (DIAS ${STATE.startDay}-${STATE.endDay}/07)`;
 
   strip.innerHTML = `
-    <!-- Card 1: Faturamento Líquido -->
+    <!-- Card 1: Faturamento Líquido (Consolidado) -->
     <div class="apple-kpi-card accent-blue">
       <div class="kpi-card-header">
         <span class="kpi-card-title">${esc(label1)}</span>
-        <span class="apple-tag tag-neu">Total</span>
+        <span class="apple-tag tag-neu">Total Rede</span>
       </div>
       <div class="kpi-value-main">${fmtCompact(vJul26)}</div>
       <div class="kpi-sub-value">${fmtRS(vJul26)}</div>
       <div class="kpi-footer-deltas">
-        ${tagPct(momPctTotal)} <span class="sublabel">MoM</span>
-        ${tagPct(yoyPctTotal)} <span class="sublabel">YoY</span>
+        <span class="sublabel" style="font-size: 11px; color: var(--text-secondary);">Faturamento líquido consolidado</span>
       </div>
     </div>
 
-    <!-- Card 2: Crescimento MoM -->
+    <!-- Card 2: Crescimento MoM (Mês Anterior) -->
     <div class="apple-kpi-card ${momPctTotal >= 0 ? 'accent-green' : 'accent-red'}">
       <div class="kpi-card-header">
         <span class="kpi-card-title">CRESCIMENTO MoM</span>
@@ -1124,7 +1152,7 @@ function renderExecutiveKpis() {
       </div>
     </div>
 
-    <!-- Card 3: Evolução YoY -->
+    <!-- Card 3: Evolução YoY (Ano Anterior) -->
     <div class="apple-kpi-card ${yoyPctTotal >= 0 ? 'accent-green' : 'accent-red'}">
       <div class="kpi-card-header">
         <span class="kpi-card-title">EVOLUÇÃO YoY</span>
@@ -1141,13 +1169,13 @@ function renderExecutiveKpis() {
     <div class="apple-kpi-card accent-teal">
       <div class="kpi-card-header">
         <span class="kpi-card-title">SHARE DIGITAL</span>
-        <span class="apple-tag tag-neu">Canais Digitais</span>
+        <span class="apple-tag tag-neu">App + Site + Parcerias</span>
       </div>
       <div class="kpi-value-main" style="color: var(--apple-teal);">${fmtPct(pctDig)}</div>
       <div class="kpi-sub-value">${fmtCompact(vDigJul26)}</div>
       <div class="kpi-footer-deltas">
-        ${tagPct(digMom)} <span class="sublabel">Cresc.</span>
-        ${tagPct(digYoy)} <span class="sublabel">Evol.</span>
+        ${tagPct(digMom)} <span class="sublabel">MoM</span>
+        ${tagPct(digYoy)} <span class="sublabel">YoY</span>
       </div>
     </div>
 
@@ -1155,13 +1183,13 @@ function renderExecutiveKpis() {
     <div class="apple-kpi-card accent-indigo">
       <div class="kpi-card-header">
         <span class="kpi-card-title">SHARE DIGITAL + TELE</span>
-        <span class="apple-tag tag-neu">Remoto</span>
+        <span class="apple-tag tag-neu">Vendas Remotas</span>
       </div>
       <div class="kpi-value-main" style="color: var(--apple-indigo);">${fmtPct(pctDt)}</div>
       <div class="kpi-sub-value">${fmtCompact(vDtJul26)}</div>
       <div class="kpi-footer-deltas">
-        ${tagPct(dtMom)} <span class="sublabel">Cresc.</span>
-        ${tagPct(dtYoy)} <span class="sublabel">Evol.</span>
+        ${tagPct(dtMom)} <span class="sublabel">MoM</span>
+        ${tagPct(dtYoy)} <span class="sublabel">YoY</span>
       </div>
     </div>
 
@@ -1174,8 +1202,8 @@ function renderExecutiveKpis() {
       <div class="kpi-value-main" style="color: var(--apple-orange);">${fmtPct(pctLoja)}</div>
       <div class="kpi-sub-value">${fmtCompact(vLojaJul26)}</div>
       <div class="kpi-footer-deltas">
-        ${tagPct(lojaMom)} <span class="sublabel">Cresc.</span>
-        ${tagPct(lojaYoy)} <span class="sublabel">Evol.</span>
+        ${tagPct(lojaMom)} <span class="sublabel">MoM</span>
+        ${tagPct(lojaYoy)} <span class="sublabel">YoY</span>
       </div>
     </div>
   `;

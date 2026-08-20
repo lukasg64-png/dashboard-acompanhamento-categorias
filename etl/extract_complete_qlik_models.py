@@ -161,11 +161,13 @@ async def fetch_all_qlik_cubes():
                         const l2 = await send("GetLayout", h2, []);
                         results.categorias = (l2.result.qLayout.qHyperCube.qDataPages[0]?.qMatrix || []).map(r => r.map(c => c.qNum !== 'NaN' && typeof c.qNum === 'number' ? c.qNum : c.qText));
                         
-                        // 3. Hierarquia (Grupo + Subgrupo + Linha) com 9 medidas (Paginado MTD)
+                        // 3. Hierarquia (Diretor + Distrital + Grupo + Subgrupo + Linha) com 9 medidas (Paginado MTD)
                         const c3 = await send("CreateSessionObject", docHandle, [{
                             "qInfo": { "qType": "q_hier_9m" },
                             "qHyperCubeDef": {
                                 "qDimensions": [
+                                    { "qDef": { "qFieldDefs": ["Diretor"] } },
+                                    { "qDef": { "qFieldDefs": ["Distrital"] } },
                                     { "qDef": { "qFieldDefs": ["Desc_Grupo"] } },
                                     { "qDef": { "qFieldDefs": ["Desc_Subgrupo"] } },
                                     { "qDef": { "qFieldDefs": ["Desc_Linha"] } }
@@ -181,20 +183,22 @@ async def fetch_all_qlik_cubes():
                                     { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-07'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL','TELE ENTREGA','TELE VENDA'}>} [Receita Líquida])`, "qLabel": "vDt26_06" } },
                                     { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2025-08'}, ${dayFilter}, [Canal]={'APP','SITE','IFOOD','MERCADO LIVRE','RAPPI','PARCEIROS','IFOOD ULTRA','SUPERFACIL','TELE ENTREGA','TELE VENDA'}>} [Receita Líquida])`, "qLabel": "vDt25" } }
                                 ],
-                                "qInitialDataFetch": [{ "qTop": 0, "qLeft": 0, "qHeight": 800, "qWidth": 12 }],
+                                "qInitialDataFetch": [{ "qTop": 0, "qLeft": 0, "qHeight": 800, "qWidth": 14 }],
                                 "qSuppressZero": true, "qSuppressMissing": true
                             }
                         }]);
                         const h3 = c3.result.qReturn.qHandle;
                         const l3 = await send("GetLayout", h3, []);
                         const totalRows3 = l3.result.qLayout.qHyperCube.qSize.qcy;
-                        results.hierarquia = await fetchAllHyperCubeRows(h3, totalRows3, 12, 800);
+                        results.hierarquia = await fetchAllHyperCubeRows(h3, totalRows3, 14, 500);
                         
-                        // 4. Canais por Hierarquia (Grupo + Subgrupo + Linha + Canal) (Paginado MTD)
+                        // 4. Canais por Hierarquia (Diretor + Distrital + Grupo + Subgrupo + Linha + Canal) (Paginado MTD)
                         const c4 = await send("CreateSessionObject", docHandle, [{
                             "qInfo": { "qType": "q_canais_hier_3p" },
                             "qHyperCubeDef": {
                                 "qDimensions": [
+                                    { "qDef": { "qFieldDefs": ["Diretor"] } },
+                                    { "qDef": { "qFieldDefs": ["Distrital"] } },
                                     { "qDef": { "qFieldDefs": ["Desc_Grupo"] } },
                                     { "qDef": { "qFieldDefs": ["Desc_Subgrupo"] } },
                                     { "qDef": { "qFieldDefs": ["Desc_Linha"] } },
@@ -205,14 +209,14 @@ async def fetch_all_qlik_cubes():
                                     { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2026-07'}, ${dayFilter}>} [Receita Líquida])`, "qLabel": "v26_06" } },
                                     { "qDef": { "qDef": `Sum({1<[Ano-Mes]={'2025-08'}, ${dayFilter}>} [Receita Líquida])`, "qLabel": "v25" } }
                                 ],
-                                "qInitialDataFetch": [{ "qTop": 0, "qLeft": 0, "qHeight": 1400, "qWidth": 7 }],
+                                "qInitialDataFetch": [{ "qTop": 0, "qLeft": 0, "qHeight": 1000, "qWidth": 9 }],
                                 "qSuppressZero": true, "qSuppressMissing": true
                             }
                         }]);
                         const h4 = c4.result.qReturn.qHandle;
                         const l4 = await send("GetLayout", h4, []);
                         const totalRows4 = l4.result.qLayout.qHyperCube.qSize.qcy;
-                        results.canais_hier = await fetchAllHyperCubeRows(h4, totalRows4, 7, 1400);
+                        results.canais_hier = await fetchAllHyperCubeRows(h4, totalRows4, 9, 1000);
 
                         // 5. Clientes Únicos e Cupons por Canal
                         const c5 = await send("CreateSessionObject", docHandle, [{
@@ -282,7 +286,7 @@ async def fetch_all_qlik_cubes():
                         resolve(results);
                     } catch (e) {
                         ws.close();
-                        reject(e);
+                        reject(new Error(e.message || String(e)));
                     }
                 };
                 
@@ -291,7 +295,7 @@ async def fetch_all_qlik_cubes():
                     if (msg.id && pending[msg.id]) {
                         const { res, rej } = pending[msg.id];
                         delete pending[msg.id];
-                        if (msg.error) rej(msg.error);
+                        if (msg.error) rej(new Error(JSON.stringify(msg.error)));
                         else res(msg);
                     }
                 };
@@ -413,30 +417,33 @@ async def fetch_all_qlik_cubes():
             'd25': [0.0]*31, 'd26_06': [0.0]*31, 'd26_07': [0.0]*31
         })
 
-    # 3. Processar Hierarquia Detalhada
+    # 3. Processar Hierarquia Detalhada (com Diretor e Distrital)
     hierarquia_detalhada = []
     for r in raw_hier:
-        grp = clean_str(r[0])
-        subgrp = clean_str(r[1])
-        linha = clean_str(r[2])
+        diretor = clean_str(r[0])
+        distrital = clean_str(r[1])
+        grp = clean_str(r[2])
+        subgrp = clean_str(r[3])
+        linha = clean_str(r[4])
         if not grp: continue
         
-        v26 = float(r[3]) if isinstance(r[3], (int, float)) and not np.isnan(r[3]) else 0.0
-        v26_06 = float(r[4]) if isinstance(r[4], (int, float)) and not np.isnan(r[4]) else 0.0
-        v25 = float(r[5]) if isinstance(r[5], (int, float)) and not np.isnan(r[5]) else 0.0
+        v26 = float(r[5]) if isinstance(r[5], (int, float)) and not np.isnan(r[5]) else 0.0
+        v26_06 = float(r[6]) if isinstance(r[6], (int, float)) and not np.isnan(r[6]) else 0.0
+        v25 = float(r[7]) if isinstance(r[7], (int, float)) and not np.isnan(r[7]) else 0.0
         
-        vDig26 = float(r[6]) if isinstance(r[6], (int, float)) and not np.isnan(r[6]) else 0.0
-        vDig26_06 = float(r[7]) if isinstance(r[7], (int, float)) and not np.isnan(r[7]) else 0.0
-        vDig25 = float(r[8]) if isinstance(r[8], (int, float)) and not np.isnan(r[8]) else 0.0
+        vDig26 = float(r[8]) if isinstance(r[8], (int, float)) and not np.isnan(r[8]) else 0.0
+        vDig26_06 = float(r[9]) if isinstance(r[9], (int, float)) and not np.isnan(r[9]) else 0.0
+        vDig25 = float(r[10]) if isinstance(r[10], (int, float)) and not np.isnan(r[10]) else 0.0
         
-        vDt26 = float(r[9]) if isinstance(r[9], (int, float)) and not np.isnan(r[9]) else 0.0
-        vDt26_06 = float(r[10]) if isinstance(r[10], (int, float)) and not np.isnan(r[10]) else 0.0
-        vDt25 = float(r[11]) if isinstance(r[11], (int, float)) and not np.isnan(r[11]) else 0.0
+        vDt26 = float(r[11]) if isinstance(r[11], (int, float)) and not np.isnan(r[11]) else 0.0
+        vDt26_06 = float(r[12]) if isinstance(r[12], (int, float)) and not np.isnan(r[12]) else 0.0
+        vDt25 = float(r[13]) if isinstance(r[13], (int, float)) and not np.isnan(r[13]) else 0.0
         
         m_pct, m_rs = calc_growth(v26, v26_06)
         y_pct, y_rs = calc_growth(v26, v25)
         
         hierarquia_detalhada.append({
+            'diretor': diretor, 'distrital': distrital,
             'grupo': grp, 'subgrupo': subgrp, 'linha': linha,
             'venda_jul_26': round(v26, 2),
             'venda_jun_26': round(v26_06, 2),
@@ -452,21 +459,24 @@ async def fetch_all_qlik_cubes():
             'd25': [0.0]*31, 'd26_06': [0.0]*31, 'd26_07': [0.0]*31
         })
 
-    # 4. Processar Canais por Hierarquia
+    # 4. Processar Canais por Hierarquia (com Diretor e Distrital)
     raw_ch_hier = cube_results.get('canais_hier', [])
     canais_by_hierarquia = []
     for r in raw_ch_hier:
-        grp = clean_str(r[0])
-        subgrp = clean_str(r[1])
-        linha = clean_str(r[2])
-        canal = clean_str(r[3])
+        diretor = clean_str(r[0])
+        distrital = clean_str(r[1])
+        grp = clean_str(r[2])
+        subgrp = clean_str(r[3])
+        linha = clean_str(r[4])
+        canal = clean_str(r[5])
         if not grp or not canal: continue
         
-        v26 = float(r[4]) if isinstance(r[4], (int, float)) and not np.isnan(r[4]) else 0.0
-        v26_06 = float(r[5]) if isinstance(r[5], (int, float)) and not np.isnan(r[5]) else 0.0
-        v25 = float(r[6]) if isinstance(r[6], (int, float)) and not np.isnan(r[6]) else 0.0
+        v26 = float(r[6]) if isinstance(r[6], (int, float)) and not np.isnan(r[6]) else 0.0
+        v26_06 = float(r[7]) if isinstance(r[7], (int, float)) and not np.isnan(r[7]) else 0.0
+        v25 = float(r[8]) if isinstance(r[8], (int, float)) and not np.isnan(r[8]) else 0.0
         
         canais_by_hierarquia.append({
+            'diretor': diretor, 'distrital': distrital,
             'grupo': grp, 'subgrupo': subgrp, 'linha': linha,
             'canal': canal, 'canal_grupo': get_channel_group(canal),
             'v26': round(v26, 2), 'v26_06': round(v26_06, 2), 'v25': round(v25, 2),
@@ -474,13 +484,15 @@ async def fetch_all_qlik_cubes():
         })
 
     # 5. Gerar Filtros de Hierarquia e Produto
-    grupos_set = sorted(list(set(c['grupo'] for c in categorias_summary if c['grupo'])))
-    subgrupos_set = sorted(list(set(c['subgrupo'] for c in categorias_summary if c['subgrupo'])))
-    linhas_set = sorted(list(set(h['linha'] for h in hierarquia_detalhada if h['linha'])))
+    diretores_set = sorted(list(set(h['diretor'] for h in hierarquia_detalhada if h.get('diretor'))))
+    distritais_set = sorted(list(set(h['distrital'] for h in hierarquia_detalhada if h.get('distrital'))))
+    grupos_set = sorted(list(set(c['grupo'] for c in categorias_summary if c.get('grupo'))))
+    subgrupos_set = sorted(list(set(c['subgrupo'] for c in categorias_summary if c.get('subgrupo'))))
+    linhas_set = sorted(list(set(h['linha'] for h in hierarquia_detalhada if h.get('linha'))))
 
     filtro_hierarquia = {
-        'diretores': [],
-        'distritais': [],
+        'diretores': diretores_set,
+        'distritais': distritais_set,
         'coordenadores': [],
         'grupos': grupos_set,
         'subgrupos': subgrupos_set,

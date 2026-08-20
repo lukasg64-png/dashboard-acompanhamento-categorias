@@ -379,7 +379,11 @@ def main():
         'venda_digital_jul_26': tot_digital_cur, 'venda_digital_jun_26': tot_digital_mom, 'venda_digital_jul_25': tot_digital_yoy,
         'venda_dt_jul_26': tot_dt_cur, 'venda_dt_jun_26': tot_dt_mom, 'venda_dt_jul_25': tot_dt_yoy,
         'mom_pct': mom_pct, 'mom_rs': mom_rs,
-        'yoy_pct': yoy_pct, 'yoy_rs': yoy_rs
+        'yoy_pct': yoy_pct, 'yoy_rs': yoy_rs,
+        'periodo_info': {
+            'periodo_str': '01 a 17/08/2026',
+            'dias_fechados': 17
+        }
     }
     with open(os.path.join(DATA_DIR, 'executive_kpis.json'), 'w', encoding='utf-8') as f:
         json.dump(executive_kpis, f, ensure_ascii=False, indent=2)
