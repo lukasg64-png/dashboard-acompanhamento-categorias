@@ -37,23 +37,6 @@
       "penetr_base": 82.69
     },
     {
-      "canal": "e_Commerce",
-      "cli_26": 65,
-      "cli_26_06": 173,
-      "cli_25": 0,
-      "cli_mom_pct": -62.43,
-      "cli_mom_diff": -108,
-      "cli_yoy_pct": 0.0,
-      "cli_yoy_diff": 65,
-      "cup_26": 221,
-      "cup_26_06": 569,
-      "cup_25": 0,
-      "venda_26": 24955.56,
-      "ticket_medio": 112.92,
-      "gasto_medio": 383.93,
-      "penetr_base": 0.0
-    },
-    {
       "canal": "Venda Caixa",
       "cli_26": 654047,
       "cli_26_06": 661372,
@@ -69,6 +52,23 @@
       "ticket_medio": 33.06,
       "gasto_medio": 70.59,
       "penetr_base": 19.65
+    },
+    {
+      "canal": "e_Commerce",
+      "cli_26": 65,
+      "cli_26_06": 173,
+      "cli_25": 0,
+      "cli_mom_pct": -62.43,
+      "cli_mom_diff": -108,
+      "cli_yoy_pct": 0.0,
+      "cli_yoy_diff": 65,
+      "cup_26": 221,
+      "cup_26_06": 569,
+      "cup_25": 0,
+      "venda_26": 24955.56,
+      "ticket_medio": 112.92,
+      "gasto_medio": 383.93,
+      "penetr_base": 0.0
     },
     {
       "canal": "Recarga",
@@ -103,6 +103,23 @@
       "ticket_medio": 135.5,
       "gasto_medio": 180.61,
       "penetr_base": 2.15
+    },
+    {
+      "canal": "Tele Encaminhada Lojas",
+      "cli_26": 4964,
+      "cli_26_06": 5413,
+      "cli_25": 5558,
+      "cli_mom_pct": -8.29,
+      "cli_mom_diff": -449,
+      "cli_yoy_pct": -10.69,
+      "cli_yoy_diff": -594,
+      "cup_26": 6323,
+      "cup_26_06": 7052,
+      "cup_25": 7112,
+      "venda_26": 1094691.89,
+      "ticket_medio": 173.13,
+      "gasto_medio": 220.53,
+      "penetr_base": 0.15
     },
     {
       "canal": "iFood",
@@ -173,23 +190,6 @@
       "penetr_base": 0.2
     },
     {
-      "canal": "Tele Encaminhada Lojas",
-      "cli_26": 4964,
-      "cli_26_06": 5413,
-      "cli_25": 5558,
-      "cli_mom_pct": -8.29,
-      "cli_mom_diff": -449,
-      "cli_yoy_pct": -10.69,
-      "cli_yoy_diff": -594,
-      "cup_26": 6323,
-      "cup_26_06": 7052,
-      "cup_25": 7112,
-      "venda_26": 1094691.89,
-      "ticket_medio": 173.13,
-      "gasto_medio": 220.53,
-      "penetr_base": 0.15
-    },
-    {
       "canal": "Tele Vizinhança",
       "cli_26": 559,
       "cli_26_06": 678,
@@ -205,6 +205,23 @@
       "ticket_medio": 188.45,
       "gasto_medio": 251.15,
       "penetr_base": 0.02
+    },
+    {
+      "canal": "Venda Tele Entrega Central",
+      "cli_26": 2342,
+      "cli_26_06": 2504,
+      "cli_25": 2353,
+      "cli_mom_pct": -6.47,
+      "cli_mom_diff": -162,
+      "cli_yoy_pct": -0.47,
+      "cli_yoy_diff": -11,
+      "cup_26": 2716,
+      "cup_26_06": 2943,
+      "cup_25": 2597,
+      "venda_26": 993030.18,
+      "ticket_medio": 365.62,
+      "gasto_medio": 424.01,
+      "penetr_base": 0.07
     },
     {
       "canal": "Credito Facil",
@@ -256,23 +273,6 @@
       "ticket_medio": 142.29,
       "gasto_medio": 175.35,
       "penetr_base": 0.8
-    },
-    {
-      "canal": "Venda Tele Entrega Central",
-      "cli_26": 2342,
-      "cli_26_06": 2504,
-      "cli_25": 2353,
-      "cli_mom_pct": -6.47,
-      "cli_mom_diff": -162,
-      "cli_yoy_pct": -0.47,
-      "cli_yoy_diff": -11,
-      "cup_26": 2716,
-      "cup_26_06": 2943,
-      "cup_25": 2597,
-      "venda_26": 993030.18,
-      "ticket_medio": 365.62,
-      "gasto_medio": 424.01,
-      "penetr_base": 0.07
     }
   ],
   "grupos": [

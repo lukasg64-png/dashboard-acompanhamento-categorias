@@ -247,7 +247,7 @@ def main():
 
     # 2. CANAIS BY HIERARQUIA
     print("Processing canais_by_hierarquia.json...")
-    grp_c_hier = df.groupby(['grupo', 'subgrupo', 'linha', 'laboratorio', 'canal', 'canal_grupo'], as_index=False).agg({
+    grp_c_hier = df.groupby(['diretor', 'distrital', 'grupo', 'subgrupo', 'linha', 'laboratorio', 'canal', 'canal_grupo'], as_index=False).agg({
         'venda_ago_26': 'sum', 'venda_jul_26': 'sum', 'venda_ago_25': 'sum'
     })
 
@@ -258,7 +258,7 @@ def main():
         v25 = round(float(r['venda_ago_25']), 2)
 
         canais_hier_list.append({
-            'diretor': '', 'distrital': '',
+            'diretor': r['diretor'], 'distrital': r['distrital'],
             'grupo': r['grupo'], 'subgrupo': r['subgrupo'], 'linha': r['linha'], 'laboratorio': r['laboratorio'],
             'canal': r['canal'], 'canal_grupo': r['canal_grupo'],
             'v26': v26, 'v26_06': v26_06, 'v25': v25
@@ -314,22 +314,22 @@ def main():
 
     # 4. HIERARQUIA DETALHADA
     print("Processing hierarquia_detalhada.json...")
-    grp_hier = df.groupby(['grupo', 'subgrupo', 'linha', 'laboratorio'], as_index=False).agg({
+    grp_hier = df.groupby(['diretor', 'distrital', 'grupo', 'subgrupo', 'linha', 'laboratorio'], as_index=False).agg({
         'venda_ago_26': 'sum', 'venda_jul_26': 'sum', 'venda_ago_25': 'sum'
     })
-    df_hier_dig = df[df['is_digital']].groupby(['grupo', 'subgrupo', 'linha', 'laboratorio'], as_index=False).agg({
+    df_hier_dig = df[df['is_digital']].groupby(['diretor', 'distrital', 'grupo', 'subgrupo', 'linha', 'laboratorio'], as_index=False).agg({
         'venda_ago_26': 'sum', 'venda_jul_26': 'sum', 'venda_ago_25': 'sum'
     })
-    df_hier_dt = df[df['is_dt']].groupby(['grupo', 'subgrupo', 'linha', 'laboratorio'], as_index=False).agg({
+    df_hier_dt = df[df['is_dt']].groupby(['diretor', 'distrital', 'grupo', 'subgrupo', 'linha', 'laboratorio'], as_index=False).agg({
         'venda_ago_26': 'sum', 'venda_jul_26': 'sum', 'venda_ago_25': 'sum'
     })
 
-    h_dig_map = {(r['grupo'], r['subgrupo'], r['linha'], r['laboratorio']): r for _, r in df_hier_dig.iterrows()}
-    h_dt_map = {(r['grupo'], r['subgrupo'], r['linha'], r['laboratorio']): r for _, r in df_hier_dt.iterrows()}
+    h_dig_map = {(r['diretor'], r['distrital'], r['grupo'], r['subgrupo'], r['linha'], r['laboratorio']): r for _, r in df_hier_dig.iterrows()}
+    h_dt_map = {(r['diretor'], r['distrital'], r['grupo'], r['subgrupo'], r['linha'], r['laboratorio']): r for _, r in df_hier_dt.iterrows()}
 
     hier_records = []
     for _, r in grp_hier.iterrows():
-        hk = (r['grupo'], r['subgrupo'], r['linha'], r['laboratorio'])
+        hk = (r['diretor'], r['distrital'], r['grupo'], r['subgrupo'], r['linha'], r['laboratorio'])
         v26 = round(float(r['venda_ago_26']), 2)
         v26_06 = round(float(r['venda_jul_26']), 2)
         v25 = round(float(r['venda_ago_25']), 2)
@@ -347,7 +347,7 @@ def main():
         v_dt25 = round(float(r_dt['venda_ago_25']), 2) if r_dt is not None else 0.0
 
         hier_records.append({
-            'diretor': '', 'distrital': '', 'grupo': r['grupo'],
+            'diretor': r['diretor'], 'distrital': r['distrital'], 'grupo': r['grupo'],
             'subgrupo': r['subgrupo'], 'linha': r['linha'], 'laboratorio': r['laboratorio'],
             'venda_jul_26': v26, 'venda_jun_26': v26_06, 'venda_jul_25': v25,
             'venda_digital_jul_26': v_dig26, 'venda_digital_jun_26': v_dig26_06, 'venda_digital_jul_25': v_dig25,

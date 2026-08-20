@@ -1809,5 +1809,17 @@ function renderClientesTab() {
       </tr>
     `;
   });
+  gruposHtml += `
+    <tr style="font-weight: 700; background: rgba(0, 113, 227, 0.06); border-top: 2px solid var(--border);">
+      <td>TOTAL GERAL DA REDE (CPFs ÚNICOS) *</td>
+      <td class="num font-weight-600">${fmtInt(tot.cli_26)}</td>
+      <td class="num">${fmtInt(tot.cli_26_06)}</td>
+      <td class="num">${fmtInt(tot.cli_25)}</td>
+      <td class="num">${badgePct(tot.cli_yoy_pct)}</td>
+      <td class="num">-</td>
+      <td class="num">${fmtRS(tot.gasto_medio)}</td>
+      <td class="num">${renderShareCell(100)}</td>
+    </tr>
+  `;
   tbodyGrupos.innerHTML = gruposHtml;
 }
