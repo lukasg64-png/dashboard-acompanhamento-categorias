@@ -1143,7 +1143,7 @@ function renderExecutiveKpis() {
     <div class="apple-kpi-card accent-blue">
       <div class="kpi-card-header">
         <span class="kpi-card-title">${esc(label1)}</span>
-        <span class="apple-tag tag-neu">Total Rede</span>
+        <span class="apple-tag tag-neu">${esc(card1Tag)}</span>
       </div>
       <div class="kpi-value-main">${fmtCompact(vJul26)}</div>
       <div class="kpi-sub-value">${fmtRS(vJul26)}</div>
@@ -1659,6 +1659,40 @@ function renderCategorias() {
       });
     }
   });
+
+  const tot_mom_rs = totEmp26 - totEmp26_06;
+  const tot_mom_pct = totEmp26_06 > 0 ? (tot_mom_rs / totEmp26_06) * 100 : 0;
+  const tot_yoy_rs = totEmp26 - totEmp25;
+  const tot_yoy_pct = totEmp25 > 0 ? (tot_yoy_rs / totEmp25) * 100 : 0;
+
+  let tot_sh26 = 100, tot_sh26_06 = 100, tot_sh25 = 100, tot_var_pp = 0;
+  if (isChannelFiltered) {
+    const totUnfiltered26 = Object.values(categoryTotalMap).reduce((s, c) => s + (c.v26 || 0), 0);
+    const totUnfiltered26_06 = Object.values(categoryTotalMap).reduce((s, c) => s + (c.v26_06 || 0), 0);
+    const totUnfiltered25 = Object.values(categoryTotalMap).reduce((s, c) => s + (c.v25 || 0), 0);
+
+    tot_sh26 = totUnfiltered26 > 0 ? (totEmp26 / totUnfiltered26 * 100) : 0;
+    tot_sh26_06 = totUnfiltered26_06 > 0 ? (totEmp26_06 / totUnfiltered26_06 * 100) : 0;
+    tot_sh25 = totUnfiltered25 > 0 ? (totEmp25 / totUnfiltered25 * 100) : 0;
+    tot_var_pp = tot_sh26 - tot_sh25;
+  }
+
+  html += `
+    <tr style="font-weight: 700; background: rgba(0, 113, 227, 0.06); border-top: 2px solid var(--border);">
+      <td>TOTAL CONSOLIDADO</td>
+      <td class="num">${fmtRS(totEmp26)}</td>
+      <td class="num">${fmtRS(totEmp26_06)}</td>
+      <td class="num">${fmtRS(totEmp25)}</td>
+      <td class="num">${badgePct(tot_mom_pct)}</td>
+      <td class="num">${deltaRS(tot_mom_rs)}</td>
+      <td class="num">${badgePct(tot_yoy_pct)}</td>
+      <td class="num">${deltaRS(tot_yoy_rs)}</td>
+      <td class="num">${renderShareCell(tot_sh26)}</td>
+      <td class="num">${renderShareCell(tot_sh26_06)}</td>
+      <td class="num">${renderShareCell(tot_sh25)}</td>
+      <td class="num">${badgePP(tot_var_pp)}</td>
+    </tr>
+  `;
 
   tbody.innerHTML = html;
 }
