@@ -48,9 +48,17 @@ def main():
     # 2. Build HTML Único (dist/index.html)
     run_cmd(f'"{py_exe}" -u etl/build_single_file.py', "2/3 Compilação do HTML Único")
 
-    # 3. Commit e Deploy GitHub Pages
-    git_deploy_cmd = 'git add . && git commit -m "Auto-refresh D-1 (Daily 07:30)" && git push github gh-pages:main --force && git push github gh-pages:gh-pages --force'
-    run_cmd(git_deploy_cmd, "3/3 Deploy GitHub Pages Global")
+    # 3. Commit e Deploy GitHub Pages (cada passo separado para evitar falha em cadeia)
+    run_cmd('git add .', "3a/3 Git Add")
+
+    # git commit pode falhar se não houver mudanças — isso é OK
+    commit_ok = run_cmd('git commit -m "Auto-refresh D-1 (Daily 07:30)"', "3b/3 Git Commit")
+    if not commit_ok:
+        log("ℹ️ Nenhuma mudança detectada no commit — dados iguais ao último deploy. Fazendo push mesmo assim.")
+
+    # Push sempre executa (garante que commits anteriores pendentes também subam)
+    run_cmd('git push github gh-pages:main --force', "3c/3 Git Push -> main")
+    run_cmd('git push github gh-pages:gh-pages --force', "3d/3 Git Push -> gh-pages")
 
     log("=" * 70)
     log("🎉 ATUALIZAÇÃO DIÁRIA CONCLUÍDA COM SUCESSO!")
