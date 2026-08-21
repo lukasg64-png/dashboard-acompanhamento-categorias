@@ -1796,7 +1796,7 @@ function renderClientesTab() {
       <div class="kpi-value-main" style="color: var(--apple-orange);">${fmtRS(tot.gasto_medio)}</div>
       <div class="kpi-sub-value">Faturamento / Clientes Ativos</div>
       <div class="kpi-footer-deltas">
-        <span class="sublabel">No período de 01 a 18/08</span>
+        <span class="sublabel">No período de ${esc(DATA.kpis?.periodo_info?.periodo_str || '01 a 20/08/2026')}</span>
       </div>
     </div>
 
