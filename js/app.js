@@ -249,13 +249,7 @@ function wireEvents() {
         canalDetSel.value = 'ALL';
         STATE.canalDetalhado = 'ALL';
       }
-      if (STATE.grupoCanal === 'digital') {
-        STATE.partMode = 'digital_empresa';
-      } else if (STATE.grupoCanal === 'digital_tele' || STATE.grupoCanal === 'tele') {
-        STATE.partMode = 'dt_empresa';
-      } else {
-        STATE.partMode = 'total_empresa';
-      }
+      STATE.partMode = 'total_empresa';
       updatePartTabsUI();
       STATE.expandedCat.clear(); render();
     });
@@ -269,18 +263,16 @@ function wireEvents() {
         if (ch) {
           if (ch.grupo === 'digital') {
             STATE.grupoCanal = 'digital';
-            STATE.partMode = 'digital_empresa';
           } else if (ch.grupo === 'tele') {
             STATE.grupoCanal = 'tele';
-            STATE.partMode = 'dt_empresa';
           } else if (ch.grupo === 'loja') {
             STATE.grupoCanal = 'loja';
-            STATE.partMode = 'total_empresa';
           }
           if (grpCanalSel) grpCanalSel.value = STATE.grupoCanal;
-          updatePartTabsUI();
         }
       }
+      STATE.partMode = 'total_empresa';
+      updatePartTabsUI();
       STATE.expandedCat.clear(); render();
     });
   }
@@ -1009,12 +1001,15 @@ function updateTableHeaders() {
   if (sel('thCanalPartCol3')) sel('thCanalPartCol3').textContent = `Share ${yoyLabel}`;
 
   // Categorias table headers
+  const isChannelFiltered = (STATE.grupoCanal && STATE.grupoCanal !== 'ALL') || (STATE.canalDetalhado && STATE.canalDetalhado !== 'ALL');
+  const partPrefix = isChannelFiltered ? 'Penetração' : 'Share';
+
   if (sel('thCatCol1')) sel('thCatCol1').textContent = curLabel;
   if (sel('thCatCol2')) sel('thCatCol2').textContent = momLabel;
   if (sel('thCatCol3')) sel('thCatCol3').textContent = yoyLabel;
-  if (sel('thPartJul26')) sel('thPartJul26').textContent = `Share ${curLabel}`;
-  if (sel('thPartJun26')) sel('thPartJun26').textContent = `Share ${momLabel}`;
-  if (sel('thPartJul25')) sel('thPartJul25').textContent = `Share ${yoyLabel}`;
+  if (sel('thPartJul26')) sel('thPartJul26').textContent = `${partPrefix} ${curLabel}`;
+  if (sel('thPartJun26')) sel('thPartJun26').textContent = `${partPrefix} ${momLabel}`;
+  if (sel('thPartJul25')) sel('thPartJul25').textContent = `${partPrefix} ${yoyLabel}`;
 }
 
 /* ── Main render ──────────────────────────────────── */
@@ -1063,6 +1058,14 @@ function renderExecutiveKpis() {
   if (!strip) return;
 
   const canais = getFilteredCanaisList();
+  const allCanaisList = (() => {
+    const gCh = STATE.grupoCanal, cDet = STATE.canalDetalhado;
+    STATE.grupoCanal = 'ALL'; STATE.canalDetalhado = 'ALL';
+    const list = getFilteredCanaisList();
+    STATE.grupoCanal = gCh; STATE.canalDetalhado = cDet;
+    return list;
+  })();
+
   const maxDiaAgo = (DATA.kpis?.periodo_info?.dias_fechados) || 18;
   const defaultEnd = STATE.mesReferencia === 'agosto' ? maxDiaAgo : 31;
   const useDays = (STATE.startDay !== 1 || STATE.endDay < defaultEnd);
@@ -1079,6 +1082,7 @@ function renderExecutiveKpis() {
     return s + val;
   }, 0);
 
+  const vTotalRedeJul26 = sumVal(allCanaisList, 'venda_jul_26');
   const vJul26 = sumVal(canais, 'venda_jul_26');
   const vJun26 = sumVal(canais, 'venda_jun_26');
   const vJul25 = sumVal(canais, 'venda_jul_25');
@@ -1103,15 +1107,16 @@ function renderExecutiveKpis() {
   const yoyPctTotal = vJul25 > 0 ? ((vJul26 / vJul25) - 1) * 100 : 0;
   const yoyRsTotal = vJul26 - vJul25;
 
-  const pctDig = vJul26 > 0 ? (vDigJul26 / vJul26 * 100) : 0;
+  const denomShare = (vTotalRedeJul26 > 0) ? vTotalRedeJul26 : vJul26;
+  const pctDig = denomShare > 0 ? (vDigJul26 / denomShare * 100) : 0;
   const digMom = vDigJun26 > 0 ? ((vDigJul26 / vDigJun26) - 1) * 100 : 0;
   const digYoy = vDigJul25 > 0 ? ((vDigJul26 / vDigJul25) - 1) * 100 : 0;
 
-  const pctDt = vJul26 > 0 ? (vDtJul26 / vJul26 * 100) : 0;
+  const pctDt = denomShare > 0 ? (vDtJul26 / denomShare * 100) : 0;
   const dtMom = vDtJun26 > 0 ? ((vDtJul26 / vDtJun26) - 1) * 100 : 0;
-  const dtYoy = vDtJul25 > 0 ? ((vDtJul26 / vDtJul25) - 1) * 100 : 0;
+  const dtYoy = vDtJul25 > 0 ? ((vDtJul25 / vDtJul25) - 1) * 100 : 0;
 
-  const pctLoja = vJul26 > 0 ? (vLojaJul26 / vJul26 * 100) : 0;
+  const pctLoja = denomShare > 0 ? (vLojaJul26 / denomShare * 100) : 0;
   const lojaMom = vLojaJun26 > 0 ? ((vLojaJul26 / vLojaJun26) - 1) * 100 : 0;
   const lojaYoy = vLojaJul25 > 0 ? ((vLojaJul26 / vLojaJul25) - 1) * 100 : 0;
 
@@ -1124,6 +1129,14 @@ function renderExecutiveKpis() {
           return `FATURAMENTO (DIAS ${STATE.startDay}-${Math.min(STATE.endDay, maxDia)}/08)`;
         })()
       : (STATE.startDay === 1 && STATE.endDay === 31) ? 'FATURAMENTO TOTAL (JUL/26)' : `FATURAMENTO (DIAS ${STATE.startDay}-${STATE.endDay}/07)`;
+
+  const card1Tag = STATE.canalDetalhado && STATE.canalDetalhado !== 'ALL'
+    ? STATE.canalDetalhado
+    : STATE.grupoCanal === 'digital' ? 'Canais Digitais'
+    : STATE.grupoCanal === 'tele' ? 'Televendas'
+    : STATE.grupoCanal === 'digital_tele' ? 'Digital + Tele'
+    : STATE.grupoCanal === 'loja' ? 'Loja Física'
+    : 'Total Rede';
 
   strip.innerHTML = `
     <!-- Card 1: Faturamento Líquido (Consolidado) -->
@@ -1419,6 +1432,42 @@ function renderCategorias() {
   const defaultEnd2 = STATE.mesReferencia === 'agosto' ? maxDiaAgo2 : 31;
   const useDays = (STATE.startDay !== 1 || STATE.endDay < defaultEnd2);
 
+  const isChannelFiltered = (STATE.grupoCanal && STATE.grupoCanal !== 'ALL') || (STATE.canalDetalhado && STATE.canalDetalhado !== 'ALL');
+
+  // Mapa de venda total da categoria e linha em TODOS OS CANAIS (respeitando filtros regionais/hierárquicos)
+  const unfilteredHier = applyHierarchyFilter(DATA.hierarquia || []);
+  const categoryTotalMap = {};
+  const linhaTotalMap = {};
+
+  unfilteredHier.forEach(h => {
+    const gKey = h.grupo || 'Outros';
+    const lKey = `${gKey}||${h.linha || h.subgrupo || 'Outros'}`;
+
+    let v26 = h.venda_jul_26 || 0;
+    let v26_06 = h.venda_jun_26 || 0;
+    let v25 = h.venda_jul_25 || 0;
+
+    if (useDays) {
+      if (h.d26_07) v26 = sumDays(h.d26_07, STATE.startDay, STATE.endDay);
+      if (h.d26_06) v26_06 = sumDays(h.d26_06, STATE.startDay, STATE.endDay);
+      if (h.d25) v25 = sumDays(h.d25, STATE.startDay, STATE.endDay);
+    }
+
+    if (!categoryTotalMap[gKey]) {
+      categoryTotalMap[gKey] = { v26: 0, v26_06: 0, v25: 0 };
+    }
+    categoryTotalMap[gKey].v26 += v26;
+    categoryTotalMap[gKey].v26_06 += v26_06;
+    categoryTotalMap[gKey].v25 += v25;
+
+    if (!linhaTotalMap[lKey]) {
+      linhaTotalMap[lKey] = { v26: 0, v26_06: 0, v25: 0 };
+    }
+    linhaTotalMap[lKey].v26 += v26;
+    linhaTotalMap[lKey].v26_06 += v26_06;
+    linhaTotalMap[lKey].v25 += v25;
+  });
+
   let totEmp26 = 0, totEmp26_06 = 0, totEmp25 = 0;
   totEmp26 = grupos.reduce((s, g) => s + (g.venda_jul_26 || 0), 0);
   totEmp26_06 = grupos.reduce((s, g) => s + (g.venda_jun_26 || 0), 0);
@@ -1427,11 +1476,6 @@ function renderCategorias() {
   let html = '';
   grupos.forEach(g => {
     let v26 = g.venda_jul_26, v26_06 = g.venda_jun_26, v25 = g.venda_jul_25;
-    if (STATE.partMode === 'digital_empresa') {
-      v26 = g.venda_digital_jul_26; v26_06 = g.venda_digital_jun_26; v25 = g.venda_digital_jul_25;
-    } else if (STATE.partMode === 'dt_empresa') {
-      v26 = g.venda_dt_jul_26; v26_06 = g.venda_dt_jun_26; v25 = g.venda_dt_jul_25;
-    }
 
     const mom_rs = v26 - v26_06;
     const mom_pct = v26_06 > 0 ? (mom_rs / v26_06) * 100 : 0;
@@ -1439,16 +1483,12 @@ function renderCategorias() {
     const yoy_pct = v25 > 0 ? (yoy_rs / v25) * 100 : 0;
 
     let sh26 = 0, sh26_06 = 0, sh25 = 0;
-    if (STATE.partMode === 'digital_empresa') {
-      // Penetração Digital da Categoria: Venda Digital do Grupo / Venda Total do Grupo
-      sh26 = g.venda_jul_26 > 0 ? (g.venda_digital_jul_26 / g.venda_jul_26 * 100) : 0;
-      sh26_06 = g.venda_jun_26 > 0 ? (g.venda_digital_jun_26 / g.venda_jun_26 * 100) : 0;
-      sh25 = g.venda_jul_25 > 0 ? (g.venda_digital_jul_25 / g.venda_jul_25 * 100) : 0;
-    } else if (STATE.partMode === 'dt_empresa') {
-      // Penetração Digital+Tele da Categoria: Venda Digital+Tele do Grupo / Venda Total do Grupo
-      sh26 = g.venda_jul_26 > 0 ? (g.venda_dt_jul_26 / g.venda_jul_26 * 100) : 0;
-      sh26_06 = g.venda_jun_26 > 0 ? (g.venda_dt_jun_26 / g.venda_jun_26 * 100) : 0;
-      sh25 = g.venda_jul_25 > 0 ? (g.venda_dt_jul_25 / g.venda_jul_25 * 100) : 0;
+    if (isChannelFiltered) {
+      // Penetração do Canal Filtrado no Total da Categoria (Venda no Canal / Venda TOTAL da Categoria * 100)
+      const catTot = categoryTotalMap[g.grupo] || { v26: 0, v26_06: 0, v25: 0 };
+      sh26 = catTot.v26 > 0 ? (g.venda_jul_26 / catTot.v26 * 100) : 0;
+      sh26_06 = catTot.v26_06 > 0 ? (g.venda_jun_26 / catTot.v26_06 * 100) : 0;
+      sh25 = catTot.v25 > 0 ? (g.venda_jul_25 / catTot.v25 * 100) : 0;
     } else {
       // Participação da Venda Total do Grupo no Total da Empresa
       sh26 = totEmp26 > 0 ? (g.venda_jul_26 / totEmp26 * 100) : 0;
@@ -1539,16 +1579,13 @@ function renderCategorias() {
         let h_v26 = item.tot_v26, h_v26_06 = item.tot_v26_06, h_v25 = item.tot_v25;
         let h_sh26 = 0, h_sh26_06 = 0, h_sh25 = 0;
 
-        if (STATE.partMode === 'digital_empresa') {
-          h_v26 = item.dig_v26; h_v26_06 = item.dig_v26_06; h_v25 = item.dig_v25;
-          h_sh26 = item.tot_v26 > 0 ? (item.dig_v26 / item.tot_v26 * 100) : 0;
-          h_sh26_06 = item.tot_v26_06 > 0 ? (item.dig_v26_06 / item.tot_v26_06 * 100) : 0;
-          h_sh25 = item.tot_v25 > 0 ? (item.dig_v25 / item.tot_v25 * 100) : 0;
-        } else if (STATE.partMode === 'dt_empresa') {
-          h_v26 = item.dt_v26; h_v26_06 = item.dt_v26_06; h_v25 = item.dt_v25;
-          h_sh26 = item.tot_v26 > 0 ? (item.dt_v26 / item.tot_v26 * 100) : 0;
-          h_sh26_06 = item.tot_v26_06 > 0 ? (item.dt_v26_06 / item.tot_v26_06 * 100) : 0;
-          h_sh25 = item.tot_v25 > 0 ? (item.dt_v25 / item.tot_v25 * 100) : 0;
+        if (isChannelFiltered) {
+          // Penetração do Canal Filtrado no Total da Linha
+          const lKey = `${g.grupo}||${item.linha}`;
+          const linTot = linhaTotalMap[lKey] || { v26: 0, v26_06: 0, v25: 0 };
+          h_sh26 = linTot.v26 > 0 ? (item.tot_v26 / linTot.v26 * 100) : 0;
+          h_sh26_06 = linTot.v26_06 > 0 ? (item.tot_v26_06 / linTot.v26_06 * 100) : 0;
+          h_sh25 = linTot.v25 > 0 ? (item.tot_v25 / linTot.v25 * 100) : 0;
         } else {
           h_sh26 = totEmp26 > 0 ? (item.tot_v26 / totEmp26 * 100) : 0;
           h_sh26_06 = totEmp26_06 > 0 ? (item.tot_v26_06 / totEmp26_06 * 100) : 0;
