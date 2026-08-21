@@ -1894,3 +1894,99 @@ function renderClientesTab() {
   `;
   tbodyGrupos.innerHTML = gruposHtml;
 }
+
+/* ── Exportação da Hierarquia Mercadológica para Excel (.xlsx) ─────────────── */
+function exportCategoriasToExcel() {
+  if (typeof XLSX === 'undefined') {
+    alert('A biblioteca de exportação Excel ainda está sendo carregada. Por favor, tente novamente em alguns instantes.');
+    return;
+  }
+
+  const grupos = getFilteredGrupos();
+  const hier = getFilteredHier();
+
+  if (!grupos || grupos.length === 0) {
+    alert('Nenhum dado de hierarquia disponível para exportar com os filtros atuais.');
+    return;
+  }
+
+  const rows = [];
+
+  // Cabeçalho da planilha Excel
+  rows.push([
+    "Tipo",
+    "Grupo Mercadológico",
+    "Linha / Subgrupo",
+    "Venda Ago/26 (R$)",
+    "Venda Jul/26 (R$)",
+    "Venda Ago/25 (R$)",
+    "Variação MoM (R$)",
+    "Crescimento MoM (%)",
+    "Variação YoY (R$)",
+    "Evolução YoY (%)"
+  ]);
+
+  // Agrupar linhas por Grupo
+  const hierMap = {};
+  (hier || []).forEach(h => {
+    const gKey = h.grupo || 'Outros';
+    if (!hierMap[gKey]) hierMap[gKey] = [];
+    hierMap[gKey].push(h);
+  });
+
+  grupos.forEach(g => {
+    const v26 = g.venda_jul_26 || 0;
+    const v26_06 = g.venda_jun_26 || 0;
+    const v25 = g.venda_jul_25 || 0;
+    const mom_rs = v26 - v26_06;
+    const mom_pct = v26_06 > 0 ? (mom_rs / v26_06) * 100 : 0;
+    const yoy_rs = v26 - v25;
+    const yoy_pct = v25 > 0 ? (yoy_rs / v25) * 100 : 0;
+
+    rows.push([
+      "GRUPO",
+      g.grupo,
+      "-",
+      v26,
+      v26_06,
+      v25,
+      mom_rs,
+      parseFloat(mom_pct.toFixed(2)),
+      yoy_rs,
+      parseFloat(yoy_pct.toFixed(2))
+    ]);
+
+    const subLinhas = hierMap[g.grupo] || [];
+    subLinhas.forEach(l => {
+      const lv26 = l.venda_jul_26 || 0;
+      const lv26_06 = l.venda_jun_26 || 0;
+      const lv25 = l.venda_jul_25 || 0;
+      const lmom_rs = lv26 - lv26_06;
+      const lmom_pct = lv26_06 > 0 ? (lmom_rs / lv26_06) * 100 : 0;
+      const lyoy_rs = lv26 - lv25;
+      const lyoy_pct = lv25 > 0 ? (lyoy_rs / lv25) * 100 : 0;
+
+      rows.push([
+        "LINHA",
+        g.grupo,
+        l.linha || l.subgrupo || "Outros",
+        lv26,
+        lv26_06,
+        lv25,
+        lmom_rs,
+        parseFloat(lmom_pct.toFixed(2)),
+        lyoy_rs,
+        parseFloat(lyoy_pct.toFixed(2))
+      ]);
+    });
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Hierarquia Categorias");
+
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10);
+  const fileName = `Categorias_Hierarquia_Sao_Joao_${dateStr}.xlsx`;
+  XLSX.writeFile(wb, fileName);
+}
