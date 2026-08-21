@@ -441,6 +441,7 @@ body {
   width: 100%;
 }
 
+.ms-btn,
 .ms-button {
   width: 100%;
   border: 1px solid var(--border);
@@ -454,17 +455,52 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
+  box-sizing: border-box;
 }
 
+.ms-btn:hover,
 .ms-button:hover {
   border-color: var(--border-hover);
+  background: var(--surface-hover);
 }
 
+.ms-container.open .ms-btn,
+.ms-container.open .ms-button,
+.ms-btn.active,
 .ms-button.active {
   border-color: var(--apple-blue);
   box-shadow: 0 0 0 3px var(--apple-blue-soft);
+}
+
+.ms-btn-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.ms-badge {
+  background: var(--apple-blue);
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  line-height: 1.3;
+}
+
+.ms-arrow {
+  font-size: 9px;
+  color: var(--text-tertiary);
+  transition: transform 0.2s ease;
+}
+
+.ms-container.open .ms-arrow {
+  transform: rotate(180deg);
 }
 
 .ms-dropdown {
@@ -472,35 +508,77 @@ body {
   top: calc(100% + 4px);
   left: 0;
   width: 100%;
-  max-height: 240px;
-  background: var(--surface);
+  max-height: 280px;
+  background: #FFFFFF;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
-  z-index: 150;
-  overflow-y: auto;
-  padding: 6px;
-  display: none;
+  z-index: 9999;
+  display: none !important;
+  flex-direction: column;
+  padding: 8px;
   backdrop-filter: blur(20px);
+  box-sizing: border-box;
 }
 
+.ms-container.open .ms-dropdown,
 .ms-dropdown.open {
-  display: block;
+  display: flex !important;
   animation: appleFadeIn 0.15s ease;
 }
 
+.ms-search,
 .ms-search-input {
   width: 100%;
   border: 1px solid var(--border);
   border-radius: var(--radius-xs);
   padding: 6px 8px;
-  font-size: 11px;
+  font-size: 11.5px;
+  color: var(--text-primary);
+  background: var(--surface-subtle);
   margin-bottom: 6px;
   outline: none;
+  box-sizing: border-box;
 }
 
+.ms-search:focus,
 .ms-search-input:focus {
   border-color: var(--apple-blue);
+  background: #FFFFFF;
+  box-shadow: 0 0 0 2px var(--apple-blue-soft);
+}
+
+.ms-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.ms-action-btn {
+  background: transparent;
+  border: none;
+  color: var(--apple-blue);
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: var(--radius-xs);
+  transition: background 0.1s ease;
+}
+
+.ms-action-btn:hover {
+  background: var(--apple-blue-soft);
+}
+
+.ms-list {
+  max-height: 180px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .ms-item {
@@ -513,6 +591,7 @@ body {
   border-radius: var(--radius-xs);
   cursor: pointer;
   transition: background 0.1s ease;
+  user-select: none;
 }
 
 .ms-item:hover {
@@ -522,6 +601,9 @@ body {
 .ms-item input[type="checkbox"] {
   accent-color: var(--apple-blue);
   cursor: pointer;
+  width: 14px;
+  height: 14px;
+  margin: 0;
 }
 
 /* ── Main Content Area ───────────────────────────────────── */
