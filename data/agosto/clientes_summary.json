@@ -139,23 +139,6 @@
       "penetr_base": 0.83
     },
     {
-      "canal": "Auto Atendimento",
-      "cli_26": 7673,
-      "cli_26_06": 8169,
-      "cli_25": 3598,
-      "cli_mom_pct": -6.07,
-      "cli_mom_diff": -496,
-      "cli_yoy_pct": 113.26,
-      "cli_yoy_diff": 4075,
-      "cup_26": 19847,
-      "cup_26_06": 21734,
-      "cup_25": 10471,
-      "venda_26": 510339.42,
-      "ticket_medio": 25.71,
-      "gasto_medio": 66.51,
-      "penetr_base": 0.21
-    },
-    {
       "canal": "iFood",
       "cli_26": 125690,
       "cli_26_06": 124262,
@@ -171,6 +154,23 @@
       "ticket_medio": 83.76,
       "gasto_medio": 105.37,
       "penetr_base": 3.39
+    },
+    {
+      "canal": "Auto Atendimento",
+      "cli_26": 7673,
+      "cli_26_06": 8169,
+      "cli_25": 3598,
+      "cli_mom_pct": -6.07,
+      "cli_mom_diff": -496,
+      "cli_yoy_pct": 113.26,
+      "cli_yoy_diff": 4075,
+      "cup_26": 19847,
+      "cup_26_06": 21734,
+      "cup_25": 10471,
+      "venda_26": 510339.42,
+      "ticket_medio": 25.71,
+      "gasto_medio": 66.51,
+      "penetr_base": 0.21
     },
     {
       "canal": "Venda Tele Entrega",
