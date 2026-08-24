@@ -2,7 +2,7 @@
 daily_refresh.py — Rotina diária de extração D-1 do Qlik Sense, compilação e deploy.
 Executado automaticamente todos os dias às 07:30 via Windows Task Scheduler.
 """
-import os, sys, subprocess, time
+import os, sys, subprocess, time, json
 from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -29,8 +29,10 @@ def run_cmd(cmd, step_name):
         return True
     else:
         log(f"❌ ERRO em {step_name} (code {res.returncode}):")
-        log(f"   Stderr: {res.stderr.strip()}")
-        log(f"   Stdout: {res.stdout.strip()}")
+        if res.stderr.strip():
+            log(f"   Stderr: {res.stderr.strip()}")
+        if res.stdout.strip():
+            log(f"   Stdout: {res.stdout.strip()}")
         return False
 
 def main():
@@ -38,30 +40,56 @@ def main():
     log("🔄 INICIANDO ATUALIZAÇÃO DIÁRIA DO DASHBOARD (07:30)")
     log("=" * 70)
 
-    # 1. Extração D-1 (Qlik Sense WebSocket com Fallback para Excel OneDrive mais recente)
+    # 1. Extração D-1 (Qlik Sense WebSocket com retentativas e Fallback para Excel)
     py_exe = sys.executable
-    extracted = run_cmd(f'"{py_exe}" -u etl/extract_complete_qlik_models.py', "1/3 Extração Qlik Sense Engine")
+    extracted = False
+    max_retries = 3
+    for attempt in range(1, max_retries + 1):
+        log(f"Tentativa {attempt}/{max_retries} de extração direta Qlik Sense...")
+        extracted = run_cmd(f'"{py_exe}" -u etl/extract_complete_qlik_models.py', f"1/3 Extração Qlik Sense Engine (Tentativa {attempt})")
+        if extracted:
+            break
+        if attempt < max_retries:
+            log("Aguardando 15s antes da próxima tentativa...")
+            time.sleep(15)
+
     if not extracted:
-        log("⚠️ Extração direta via Qlik WS não concluída. Executando fallback via Excel OneDrive...")
+        log("⚠️ Extração direta via Qlik WS não concluída após tentativas. Executando fallback via Excel OneDrive...")
         run_cmd(f'"{py_exe}" -u etl/process_agosto.py', "1b/3 Fallback Processamento Excel")
 
     # 2. Build HTML Único (dist/index.html)
     run_cmd(f'"{py_exe}" -u etl/build_single_file.py', "2/3 Compilação do HTML Único")
 
-    # 3. Commit e Deploy GitHub Pages (cada passo separado para evitar falha em cadeia)
-    run_cmd('git add .', "3a/3 Git Add")
+    # 3. Identificar período atualizado para o commit
+    periodo_str = datetime.now().strftime('%d/%m/%Y %H:%M')
+    kpis_file = os.path.join(BASE_DIR, 'data', 'agosto', 'executive_kpis.json')
+    if os.path.exists(kpis_file):
+        try:
+            with open(kpis_file, 'r', encoding='utf-8') as f:
+                kpis_data = json.load(f)
+                periodo_str = kpis_data.get('periodo_info', {}).get('periodo_str', periodo_str)
+        except Exception:
+            pass
 
-    # git commit pode falhar se não houver mudanças — isso é OK
-    commit_ok = run_cmd('git commit -m "Auto-refresh D-1 (Daily 07:30)"', "3b/3 Git Commit")
+    # 4. Commit e Deploy GitHub Pages
+    run_cmd('git add .', "3a/4 Git Add")
+
+    commit_msg = f"Auto-refresh D-1 Qlik Sense ({periodo_str})"
+    commit_ok = run_cmd(f'git commit -m "{commit_msg}"', "3b/4 Git Commit")
     if not commit_ok:
-        log("ℹ️ Nenhuma mudança detectada no commit — dados iguais ao último deploy. Fazendo push mesmo assim.")
+        log("ℹ️ Nenhuma mudança pendente para commit. Forçando push para garantir sincronia.")
 
-    # Push sempre executa (garante que commits anteriores pendentes também subam)
-    run_cmd('git push github gh-pages:main --force', "3c/3 Git Push -> main")
-    run_cmd('git push github gh-pages:gh-pages --force', "3d/3 Git Push -> gh-pages")
+    run_cmd('git push github gh-pages:main --force', "3c/4 Git Push -> GitHub main")
+    run_cmd('git push github gh-pages:gh-pages --force', "3d/4 Git Push -> GitHub gh-pages")
+
+    # 5. Sincronizar com Gitea corporativo se disponível
+    try:
+        run_cmd('git push origin gh-pages:main --force', "4/4 Git Push -> Gitea Corporativo")
+    except Exception:
+        pass
 
     log("=" * 70)
-    log("🎉 ATUALIZAÇÃO DIÁRIA CONCLUÍDA COM SUCESSO!")
+    log(f"🎉 ATUALIZAÇÃO DIÁRIA CONCLUÍDA COM SUCESSO ({periodo_str})!")
     log("🌐 Link Público: https://lukasg64-png.github.io/dashboard-acompanhamento-categorias/")
     log("=" * 70)
 
