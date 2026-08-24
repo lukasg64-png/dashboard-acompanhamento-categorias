@@ -2,7 +2,7 @@
 daily_refresh.py — Rotina diária de extração D-1 do Qlik Sense, compilação e deploy.
 Executado automaticamente todos os dias às 07:30 via Windows Task Scheduler.
 """
-import os, sys, subprocess, time, json
+import os, sys, subprocess, time, json, socket
 from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -14,53 +14,99 @@ def log(msg):
     ts = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     entry = f"[{ts}] {msg}"
     print(entry)
-    with open(LOG_FILE, 'a', encoding='utf-8') as f:
-        f.write(entry + '\n')
+    try:
+        with open(LOG_FILE, 'a', encoding='utf-8') as f:
+            f.write(entry + '\n')
+    except Exception:
+        pass
 
-def run_cmd(cmd, step_name):
+def run_cmd(cmd, step_name, timeout=300):
     log(f"Iniciando: {step_name} -> {cmd}")
     t0 = time.time()
-    res = subprocess.run(cmd, shell=True, cwd=BASE_DIR, capture_output=True, text=True, encoding='utf-8', errors='replace')
-    elapsed = time.time() - t0
-    if res.returncode == 0:
-        log(f"✅ {step_name} concluído com sucesso em {elapsed:.2f}s!")
-        if res.stdout.strip():
-            log(f"   Output: {res.stdout.strip().splitlines()[-1]}")
-        return True
-    else:
-        log(f"❌ ERRO em {step_name} (code {res.returncode}):")
-        if res.stderr.strip():
-            log(f"   Stderr: {res.stderr.strip()}")
-        if res.stdout.strip():
-            log(f"   Stdout: {res.stdout.strip()}")
+    try:
+        res = subprocess.run(
+            cmd, shell=True, cwd=BASE_DIR,
+            capture_output=True, text=True,
+            encoding='utf-8', errors='replace',
+            timeout=timeout
+        )
+        elapsed = time.time() - t0
+        if res.returncode == 0:
+            log(f"✅ {step_name} concluído com sucesso em {elapsed:.2f}s!")
+            if res.stdout.strip():
+                log(f"   Output: {res.stdout.strip().splitlines()[-1]}")
+            return True
+        else:
+            log(f"❌ ERRO em {step_name} (code {res.returncode}):")
+            if res.stderr.strip():
+                log(f"   Stderr: {res.stderr.strip()}")
+            if res.stdout.strip():
+                log(f"   Stdout: {res.stdout.strip()}")
+            return False
+    except subprocess.TimeoutExpired:
+        log(f"⏱️ TIMEOUT ({timeout}s) em {step_name}")
         return False
+    except Exception as e:
+        log(f"❌ Exceção em {step_name}: {e}")
+        return False
+
+def wait_for_qlik_network(host="sense.farmaciassaojoao.com.br", port=443, max_wait_seconds=300):
+    """Aguarda até 5 minutos pela conectividade com o Qlik Sense (VPN/Rede Corporativa)."""
+    log(f"Verificando conectividade com o Qlik Sense ({host}:{port})...")
+    start = time.time()
+    attempt = 1
+    while time.time() - start < max_wait_seconds:
+        try:
+            with socket.create_connection((host, port), timeout=4):
+                elapsed = time.time() - start
+                if elapsed > 2:
+                    log(f"🌐 Conexão com Qlik Sense estabelecida após {elapsed:.1f}s!")
+                else:
+                    log(f"🌐 Conexão com Qlik Sense OK!")
+                return True
+        except Exception:
+            remaining = int(max_wait_seconds - (time.time() - start))
+            if attempt % 3 == 0 or attempt == 1:
+                log(f"⏳ Aguardando conexão de rede/VPN com {host} (restam ~{remaining}s)...")
+            time.sleep(10)
+            attempt += 1
+    log(f"⚠️ Não foi possível conectar ao Qlik Sense ({host}) dentro do tempo limite ({max_wait_seconds}s).")
+    return False
 
 def main():
     log("=" * 70)
     log("🔄 INICIANDO ATUALIZAÇÃO DIÁRIA DO DASHBOARD (07:30)")
     log("=" * 70)
 
-    # 1. Extração D-1 (Qlik Sense WebSocket com retentativas e Fallback para Excel)
     py_exe = sys.executable
+    extract_script = os.path.join(BASE_DIR, 'etl', 'extract_complete_qlik_models.py')
+    fallback_script = os.path.join(BASE_DIR, 'etl', 'process_agosto.py')
+    build_script = os.path.join(BASE_DIR, 'etl', 'build_single_file.py')
+
+    # 1. Verificar conexão de rede com Qlik Sense
+    qlik_online = wait_for_qlik_network(max_wait_seconds=180)
+
+    # 2. Extração D-1 (Qlik Sense WebSocket com retentativas e Fallback para Excel)
     extracted = False
-    max_retries = 3
-    for attempt in range(1, max_retries + 1):
-        log(f"Tentativa {attempt}/{max_retries} de extração direta Qlik Sense...")
-        extracted = run_cmd(f'"{py_exe}" -u etl/extract_complete_qlik_models.py', f"1/3 Extração Qlik Sense Engine (Tentativa {attempt})")
-        if extracted:
-            break
-        if attempt < max_retries:
-            log("Aguardando 15s antes da próxima tentativa...")
-            time.sleep(15)
+    if qlik_online:
+        max_retries = 3
+        for attempt in range(1, max_retries + 1):
+            log(f"Tentativa {attempt}/{max_retries} de extração direta Qlik Sense...")
+            extracted = run_cmd(f'"{py_exe}" -u "{extract_script}"', f"1/3 Extração Qlik Sense Engine (Tentativa {attempt})", timeout=600)
+            if extracted:
+                break
+            if attempt < max_retries:
+                log("Aguardando 15s antes da próxima tentativa...")
+                time.sleep(15)
 
     if not extracted:
-        log("⚠️ Extração direta via Qlik WS não concluída após tentativas. Executando fallback via Excel OneDrive...")
-        run_cmd(f'"{py_exe}" -u etl/process_agosto.py', "1b/3 Fallback Processamento Excel")
+        log("⚠️ Extração direta via Qlik WS não concluída. Executando fallback via Excel OneDrive...")
+        run_cmd(f'"{py_exe}" -u "{fallback_script}"', "1b/3 Fallback Processamento Excel", timeout=600)
 
-    # 2. Build HTML Único (dist/index.html)
-    run_cmd(f'"{py_exe}" -u etl/build_single_file.py', "2/3 Compilação do HTML Único")
+    # 3. Build HTML Único (dist/index.html e index.html raiz)
+    run_cmd(f'"{py_exe}" -u "{build_script}"', "2/3 Compilação do HTML Único", timeout=300)
 
-    # 3. Identificar período atualizado para o commit
+    # 4. Identificar período atualizado para o commit
     periodo_str = datetime.now().strftime('%d/%m/%Y %H:%M')
     kpis_file = os.path.join(BASE_DIR, 'data', 'agosto', 'executive_kpis.json')
     if os.path.exists(kpis_file):
@@ -71,20 +117,20 @@ def main():
         except Exception:
             pass
 
-    # 4. Commit e Deploy GitHub Pages
-    run_cmd('git add .', "3a/4 Git Add")
+    # 5. Commit e Deploy GitHub Pages
+    run_cmd('git add .', "3a/4 Git Add", timeout=60)
 
     commit_msg = f"Auto-refresh D-1 Qlik Sense ({periodo_str})"
-    commit_ok = run_cmd(f'git commit -m "{commit_msg}"', "3b/4 Git Commit")
+    commit_ok = run_cmd(f'git commit -m "{commit_msg}"', "3b/4 Git Commit", timeout=60)
     if not commit_ok:
         log("ℹ️ Nenhuma mudança pendente para commit. Forçando push para garantir sincronia.")
 
-    run_cmd('git push github gh-pages:main --force', "3c/4 Git Push -> GitHub main")
-    run_cmd('git push github gh-pages:gh-pages --force', "3d/4 Git Push -> GitHub gh-pages")
+    run_cmd('git push github HEAD:main --force', "3c/4 Git Push -> GitHub main", timeout=180)
+    run_cmd('git push github HEAD:gh-pages --force', "3d/4 Git Push -> GitHub gh-pages", timeout=180)
 
-    # 5. Sincronizar com Gitea corporativo se disponível
+    # 6. Sincronizar com Gitea corporativo se disponível
     try:
-        run_cmd('git push origin gh-pages:main --force', "4/4 Git Push -> Gitea Corporativo")
+        run_cmd('git push origin HEAD:main --force', "4/4 Git Push -> Gitea Corporativo", timeout=120)
     except Exception:
         pass
 
@@ -95,3 +141,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
