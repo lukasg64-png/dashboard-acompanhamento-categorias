@@ -13,8 +13,9 @@ CSS_FILE = os.path.join(BASE, 'css', 'style.css')
 JS_APP = os.path.join(BASE, 'js', 'app.js')
 JS_CHARTS = os.path.join(BASE, 'js', 'charts.js')
 JS_WATERFALL = os.path.join(BASE, 'js', 'waterfall.js')
-HTML_TEMPLATE = os.path.join(BASE, 'index.html')
-OUTPUT = os.path.join(BASE, 'dist', 'index.html')
+TEMPLATE_FILE = os.path.join(BASE, 'template.html') if os.path.exists(os.path.join(BASE, 'template.html')) else os.path.join(BASE, 'index.html')
+OUTPUT_DIST = os.path.join(BASE, 'dist', 'index.html')
+OUTPUT_ROOT = os.path.join(BASE, 'index.html')
 
 def read(path):
     with open(path, 'r', encoding='utf-8') as f: return f.read()
@@ -92,7 +93,7 @@ def pack_month_dataset(folder):
     }
 
 def build():
-    os.makedirs(os.path.dirname(OUTPUT), exist_ok=True)
+    os.makedirs(os.path.dirname(OUTPUT_DIST), exist_ok=True)
 
     print("Empacotando dataset de Julho (fechado)...")
     packed_julho = pack_month_dataset(DATA_DIR)
@@ -128,7 +129,7 @@ const _PACKED = {{
         "async function loadAllData(mes = 'agosto') {\n  if (typeof _PACKED !== 'undefined') {\n    const pkg = _PACKED[mes] || _PACKED['agosto'] || _PACKED['julho'];\n    if (typeof updateLoadingProgress === 'function') updateLoadingProgress(20, 'Carregando KPIs e Canais...');\n    DATA.kpis = pkg.kpis;\n    DATA.canais = pkg.canais;\n    if (typeof updateLoadingProgress === 'function') updateLoadingProgress(40, 'Descompactando Canais e Hierarquia...');\n    DATA.canaisHier = _decompress(pkg.canais_hier_packed);\n    if (typeof updateLoadingProgress === 'function') updateLoadingProgress(60, 'Descompactando Categorias...');\n    DATA.categorias = _decompress(pkg.categorias_packed);\n    if (typeof updateLoadingProgress === 'function') updateLoadingProgress(75, 'Estruturando Hierarquia...');\n    DATA.hierarquia = _decompress(pkg.hierarquia_packed);\n    DATA.filtroHierarquia = pkg.filtroHierarquia;\n    DATA.filtrosProduto = pkg.filtrosProduto;\n    DATA.clientes = pkg.clientes || null;\n    if (typeof updateLoadingProgress === 'function') updateLoadingProgress(85, 'Concluindo base de dados...');\n    return;\n  }"
     )
 
-    html_template = read(HTML_TEMPLATE)
+    html_template = read(TEMPLATE_FILE)
 
     html_out = html_template.replace(
         '<link rel="stylesheet" href="css/style.css">',
@@ -138,12 +139,19 @@ const _PACKED = {{
         f'<script>\n{inline_block}\n{patched_app}\n</script>\n<script>\n{js_charts}\n</script>\n<script>\n{js_waterfall}\n</script>'
     )
 
-    with open(OUTPUT, 'w', encoding='utf-8') as f:
+    # Gravar tanto no dist/index.html quanto na raiz index.html (servido diretamente pelo GitHub Pages)
+    os.makedirs(os.path.dirname(OUTPUT_DIST), exist_ok=True)
+    with open(OUTPUT_DIST, 'w', encoding='utf-8') as f:
         f.write(html_out)
 
-    size_mb = os.path.getsize(OUTPUT) / (1024 * 1024)
-    print(f"[OK] HTML autocontido gerado: {OUTPUT} ({size_mb:.1f} MB)")
-    return OUTPUT
+    with open(OUTPUT_ROOT, 'w', encoding='utf-8') as f:
+        f.write(html_out)
+
+    size_mb = os.path.getsize(OUTPUT_ROOT) / (1024 * 1024)
+    print(f"[OK] HTML autocontido gerado com sucesso em:")
+    print(f"     -> {OUTPUT_DIST} ({size_mb:.1f} MB)")
+    print(f"     -> {OUTPUT_ROOT} ({size_mb:.1f} MB)")
+    return OUTPUT_ROOT
 
 if __name__ == '__main__':
     build()
