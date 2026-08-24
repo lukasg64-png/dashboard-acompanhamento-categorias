@@ -1,5 +1,10 @@
 import sys, os, subprocess
 
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8')
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 python_exe = sys.executable
 script_rel = "etl/daily_refresh.py"
