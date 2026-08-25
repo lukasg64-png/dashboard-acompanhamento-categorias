@@ -20,35 +20,68 @@ def log(msg):
     except Exception:
         pass
 
-def run_cmd(cmd, step_name, timeout=300):
-    log(f"Iniciando: {step_name} -> {cmd}")
-    t0 = time.time()
+def acquire_single_instance_lock():
+    """Garante que apenas uma instância da rotina seja executada por vez."""
+    lock_file_path = os.path.join(LOG_DIR, '.daily_refresh.lock')
     try:
-        res = subprocess.run(
-            cmd, shell=True, cwd=BASE_DIR,
-            capture_output=True, text=True,
-            encoding='utf-8', errors='replace',
-            timeout=timeout
-        )
-        elapsed = time.time() - t0
-        if res.returncode == 0:
-            log(f"✅ {step_name} concluído com sucesso em {elapsed:.2f}s!")
-            if res.stdout.strip():
-                log(f"   Output: {res.stdout.strip().splitlines()[-1]}")
-            return True
-        else:
-            log(f"❌ ERRO em {step_name} (code {res.returncode}):")
-            if res.stderr.strip():
-                log(f"   Stderr: {res.stderr.strip()}")
-            if res.stdout.strip():
-                log(f"   Stdout: {res.stdout.strip()}")
+        f = open(lock_file_path, 'a+')
+        import msvcrt
+        msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+        return f
+    except Exception:
+        log("⚠️ Outra instância do daily_refresh.py já está em execução. Encerrando esta para evitar concorrência.")
+        sys.exit(0)
+
+def clean_stale_git_lock():
+    """Remove trava residual do Git caso tenha sobrado de processos anteriores."""
+    lock_path = os.path.join(BASE_DIR, '.git', 'index.lock')
+    if os.path.exists(lock_path):
+        try:
+            os.remove(lock_path)
+            log("🧹 Arquivo de trava residual '.git/index.lock' removido com sucesso.")
+        except Exception as e:
+            log(f"⚠️ Aviso ao limpar .git/index.lock: {e}")
+
+def run_cmd(cmd, step_name, timeout=300, retries=1, retry_delay=3):
+    for attempt in range(1, retries + 1):
+        log(f"Iniciando: {step_name} -> {cmd}")
+        t0 = time.time()
+        try:
+            res = subprocess.run(
+                cmd, shell=True, cwd=BASE_DIR,
+                capture_output=True, text=True,
+                encoding='utf-8', errors='replace',
+                timeout=timeout
+            )
+            elapsed = time.time() - t0
+            if res.returncode == 0:
+                log(f"✅ {step_name} concluído com sucesso em {elapsed:.2f}s!")
+                if res.stdout.strip():
+                    log(f"   Output: {res.stdout.strip().splitlines()[-1]}")
+                return True
+            else:
+                log(f"❌ ERRO em {step_name} (code {res.returncode}):")
+                if res.stderr.strip():
+                    log(f"   Stderr: {res.stderr.strip()}")
+                if res.stdout.strip():
+                    log(f"   Stdout: {res.stdout.strip()}")
+                
+                # Se for erro 128 (possível index.lock), limpa trava e tenta novamente
+                if res.returncode == 128 and attempt < retries:
+                    clean_stale_git_lock()
+                    time.sleep(retry_delay)
+                    continue
+                if attempt < retries:
+                    time.sleep(retry_delay)
+                    continue
+                return False
+        except subprocess.TimeoutExpired:
+            log(f"⏱️ TIMEOUT ({timeout}s) em {step_name}")
             return False
-    except subprocess.TimeoutExpired:
-        log(f"⏱️ TIMEOUT ({timeout}s) em {step_name}")
-        return False
-    except Exception as e:
-        log(f"❌ Exceção em {step_name}: {e}")
-        return False
+        except Exception as e:
+            log(f"❌ Exceção em {step_name}: {e}")
+            return False
+    return False
 
 def wait_for_qlik_network(host="sense.farmaciassaojoao.com.br", port=443, max_wait_seconds=300):
     """Aguarda até 5 minutos pela conectividade com o Qlik Sense (VPN/Rede Corporativa)."""
@@ -74,6 +107,8 @@ def wait_for_qlik_network(host="sense.farmaciassaojoao.com.br", port=443, max_wa
     return False
 
 def main():
+    _lock_handle = acquire_single_instance_lock()
+
     log("=" * 70)
     log("🔄 INICIANDO ATUALIZAÇÃO DIÁRIA DO DASHBOARD (07:30)")
     log("=" * 70)
@@ -118,19 +153,20 @@ def main():
             pass
 
     # 5. Commit e Deploy GitHub Pages
-    run_cmd('git add .', "3a/4 Git Add", timeout=60)
+    clean_stale_git_lock()
+    run_cmd('git add .', "3a/4 Git Add", timeout=60, retries=3, retry_delay=2)
 
     commit_msg = f"Auto-refresh D-1 Qlik Sense ({periodo_str})"
-    commit_ok = run_cmd(f'git commit -m "{commit_msg}"', "3b/4 Git Commit", timeout=60)
+    commit_ok = run_cmd(f'git commit -m "{commit_msg}"', "3b/4 Git Commit", timeout=60, retries=2, retry_delay=2)
     if not commit_ok:
         log("ℹ️ Nenhuma mudança pendente para commit. Forçando push para garantir sincronia.")
 
-    run_cmd('git push github HEAD:main --force', "3c/4 Git Push -> GitHub main", timeout=180)
-    run_cmd('git push github HEAD:gh-pages --force', "3d/4 Git Push -> GitHub gh-pages", timeout=180)
+    run_cmd('git push github HEAD:main --force', "3c/4 Git Push -> GitHub main", timeout=180, retries=2, retry_delay=3)
+    run_cmd('git push github HEAD:gh-pages --force', "3d/4 Git Push -> GitHub gh-pages", timeout=180, retries=2, retry_delay=3)
 
     # 6. Sincronizar com Gitea corporativo se disponível
     try:
-        run_cmd('git push origin HEAD:main --force', "4/4 Git Push -> Gitea Corporativo", timeout=120)
+        run_cmd('git push origin HEAD:main --force', "4/4 Git Push -> Gitea Corporativo", timeout=120, retries=2, retry_delay=3)
     except Exception:
         pass
 
