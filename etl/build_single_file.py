@@ -13,6 +13,8 @@ CSS_FILE = os.path.join(BASE, 'css', 'style.css')
 JS_APP = os.path.join(BASE, 'js', 'app.js')
 JS_CHARTS = os.path.join(BASE, 'js', 'charts.js')
 JS_WATERFALL = os.path.join(BASE, 'js', 'waterfall.js')
+JS_METAS = os.path.join(BASE, 'js', 'metas_setembro.js')
+SETEMBRO_DIR = os.path.join(DATA_DIR, 'setembro')
 TEMPLATE_FILE = os.path.join(BASE, 'template.html') if os.path.exists(os.path.join(BASE, 'template.html')) else os.path.join(BASE, 'index.html')
 OUTPUT_DIST = os.path.join(BASE, 'dist', 'index.html')
 OUTPUT_ROOT = os.path.join(BASE, 'index.html')
@@ -105,6 +107,15 @@ def build():
     js_app = read(JS_APP)
     js_charts = read(JS_CHARTS)
     js_waterfall = read(JS_WATERFALL) if os.path.exists(JS_WATERFALL) else ''
+    js_metas = read(JS_METAS) if os.path.exists(JS_METAS) else ''
+
+    # Load setembro dashboard data (metas vs realizado)
+    setembro_dashboard_path = os.path.join(SETEMBRO_DIR, 'dashboard_setembro.json')
+    setembro_data = None
+    if os.path.exists(setembro_dashboard_path):
+        print("Empacotando dataset de Metas Setembro...")
+        with open(setembro_dashboard_path, 'r', encoding='utf-8') as f:
+            setembro_data = json.load(f)
 
     inline_block = f"""
 /* ── Inline Compressed Data (auto-generated) ── */
@@ -122,6 +133,8 @@ const _PACKED = {{
   "julho": {json.dumps(packed_julho, ensure_ascii=False, separators=(',',':'))},
   "agosto": {json.dumps(packed_agosto, ensure_ascii=False, separators=(',',':'))}
 }};
+
+{('const _METAS_SETEMBRO = ' + json.dumps(setembro_data, ensure_ascii=False, separators=(',',':')) + ';') if setembro_data else '/* Sem dados de metas setembro */'}
 """
 
     patched_app = js_app.replace(
@@ -135,8 +148,8 @@ const _PACKED = {{
         '<link rel="stylesheet" href="css/style.css">',
         f'<style>\n{css}\n</style>'
     ).replace(
-        '<script src="js/app.js"></script>\n  <script src="js/charts.js"></script>\n  <script src="js/waterfall.js"></script>',
-        f'<script>\n{inline_block}\n{patched_app}\n</script>\n<script>\n{js_charts}\n</script>\n<script>\n{js_waterfall}\n</script>'
+        '<script src="js/app.js"></script>\n  <script src="js/charts.js"></script>\n  <script src="js/waterfall.js"></script>\n  <script src="js/metas_setembro.js"></script>',
+        f'<script>\n{inline_block}\n{patched_app}\n</script>\n<script>\n{js_charts}\n</script>\n<script>\n{js_waterfall}\n</script>\n<script>\n{js_metas}\n</script>'
     )
 
     # Gravar tanto no dist/index.html quanto na raiz index.html (servido diretamente pelo GitHub Pages)

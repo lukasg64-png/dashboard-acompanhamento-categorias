@@ -138,8 +138,28 @@ def main():
         log("⚠️ Extração direta via Qlik WS não concluída. Executando fallback via Excel OneDrive...")
         run_cmd(f'"{py_exe}" -u "{fallback_script}"', "1b/3 Fallback Processamento Excel", timeout=600)
 
+    # 2b. Pipeline Metas Setembro (Excel + Qlik + Dashboard)
+    metas_script = os.path.join(BASE_DIR, 'etl', 'load_metas_setembro.py')
+    qlik_set_script = os.path.join(BASE_DIR, 'etl', 'extract_qlik_setembro.py')
+    build_set_script = os.path.join(BASE_DIR, 'etl', 'build_setembro_dashboard.py')
+
+    log("📊 Processando metas Setembro...")
+    run_cmd(f'"{py_exe}" -u "{metas_script}"', "2a/4 Metas Setembro (Excel)", timeout=120)
+
+    # Extração Qlik Setembro: só executa a partir de 01/09/2026
+    from datetime import date
+    if date.today() >= date(2026, 9, 1):
+        if qlik_online:
+            run_cmd(f'"{py_exe}" -u "{qlik_set_script}"', "2b/4 Extração Qlik Setembro D-1", timeout=600)
+        else:
+            log("⚠️ Qlik offline — pulando extração de setembro")
+    else:
+        log("ℹ️ Setembro ainda não iniciou — usando dados de metas sem realizado")
+
+    run_cmd(f'"{py_exe}" -u "{build_set_script}"', "2c/4 Dashboard Setembro (compilação)", timeout=120)
+
     # 3. Build HTML Único (dist/index.html e index.html raiz)
-    run_cmd(f'"{py_exe}" -u "{build_script}"', "2/3 Compilação do HTML Único", timeout=300)
+    run_cmd(f'"{py_exe}" -u "{build_script}"', "3/4 Compilação do HTML Único", timeout=300)
 
     # 4. Identificar período atualizado para o commit
     periodo_str = datetime.now().strftime('%d/%m/%Y %H:%M')

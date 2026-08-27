@@ -1,0 +1,53 @@
+{
+  "mes": "Setembro/2026",
+  "dias_totais": 30,
+  "total_linhas": 598,
+  "meta_empresa_mensal": 898281702.7,
+  "meta_empresa_curva": 898281702.71,
+  "categorias": {
+    "Medicamento": 167,
+    "Não-Medicamento": 431
+  },
+  "top10_linhas": [
+    {
+      "linha": "ANTIDIABETICOS",
+      "meta": 64558031.01
+    },
+    {
+      "linha": "FRALDAS INFANTIS",
+      "meta": 45297762.22
+    },
+    {
+      "linha": "VITAMINAS E SUPLEMENTOS MINERAIS",
+      "meta": 41904160.91
+    },
+    {
+      "linha": "ANTIDEPRESSIVOS / ESTABIL HUMOR",
+      "meta": 39462636.63
+    },
+    {
+      "linha": "MEDICAMENTOS FARMACIA POPULAR",
+      "meta": 24558273.5
+    },
+    {
+      "linha": "ANTIBIOTICOS SISTEMICOS",
+      "meta": 18861524.63
+    },
+    {
+      "linha": "ANTI-HIPERTENSIVOS",
+      "meta": 17621060.06
+    },
+    {
+      "linha": "CONTRACEPTIVOS",
+      "meta": 16407763.16
+    },
+    {
+      "linha": "OTC- ANALGESICOS/ANTITERMICOS",
+      "meta": 16205003.71
+    },
+    {
+      "linha": "ANTILIPEMICOS / REDUTORES COLESTEROL",
+      "meta": 14657694.22
+    }
+  ]
+}
