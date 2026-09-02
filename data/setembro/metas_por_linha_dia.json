@@ -69,7 +69,7 @@
       64558030.94
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIDIABETICOS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "ANTIDEPRESSIVOS / ESTABIL HUMOR",
@@ -141,7 +141,7 @@
       39462636.6
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIDEPRESSIVOS / ESTABIL HUMOR"
+    "subgrupo": "Referencia Oneroso Controlado"
   },
   {
     "linha": "FRALDAS INFANTIS",
@@ -212,8 +212,8 @@
       43669681.83,
       45297762.17
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "FRALDAS INFANTIS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Fraldas"
   },
   {
     "linha": "VITAMINAS E SUPLEMENTOS MINERAIS",
@@ -285,7 +285,7 @@
       41904160.84
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "VITAMINAS E SUPLEMENTOS MINERAIS"
+    "subgrupo": "Referencia Avulso"
   },
   {
     "linha": "MEDICAMENTOS FARMACIA POPULAR",
@@ -357,7 +357,7 @@
       24558273.43
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "MEDICAMENTOS FARMACIA POPULAR"
+    "subgrupo": "Referencia"
   },
   {
     "linha": "ANTIBIOTICOS SISTEMICOS",
@@ -429,7 +429,7 @@
       18861524.55
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIBIOTICOS SISTEMICOS"
+    "subgrupo": "Referencia Oneroso Controlado"
   },
   {
     "linha": "ANTI-HIPERTENSIVOS",
@@ -501,7 +501,7 @@
       17621060.02
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTI-HIPERTENSIVOS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "CONTRACEPTIVOS",
@@ -573,7 +573,7 @@
       16407763.1
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "CONTRACEPTIVOS"
+    "subgrupo": "Referencia"
   },
   {
     "linha": "OTC- ANALGESICOS/ANTITERMICOS",
@@ -644,8 +644,8 @@
       15622567.74,
       16205003.75
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "OTC- ANALGESICOS/ANTITERMICOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ANTILIPEMICOS / REDUTORES COLESTEROL",
@@ -717,7 +717,7 @@
       14657694.28
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTILIPEMICOS / REDUTORES COLESTEROL"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "ANTI-INFLAMATORIOS / ANTI-REUMAT",
@@ -789,7 +789,7 @@
       13570683.33
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTI-INFLAMATORIOS / ANTI-REUMAT"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "PROMOCIONAL GENERICOS",
@@ -861,7 +861,7 @@
       13499027.17
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "PROMOCIONAL GENERICOS"
+    "subgrupo": "Genericos Onerosos Controlados"
   },
   {
     "linha": "FORMULAS INFANTIS",
@@ -932,8 +932,8 @@
       13456507.65,
       13958189.24
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "FORMULAS INFANTIS"
+    "grupo": "Nutricao",
+    "subgrupo": "Nutricao Formula"
   },
   {
     "linha": "OTC- ANTIGRIPAIS/ANTITUSSIGENOS",
@@ -1005,7 +1005,7 @@
       11926852.71
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- ANTIGRIPAIS/ANTITUSSIGENOS"
+    "subgrupo": "Referencia Avulso"
   },
   {
     "linha": "OTC- VITAMINAS E SUPLEMENTOS MINERAIS",
@@ -1077,7 +1077,7 @@
       10070504.47
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- VITAMINAS E SUPLEMENTOS MINERAIS"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "ANTICONVULSIVANTES / ANTIEPILETICOS",
@@ -1149,7 +1149,7 @@
       9884649.8
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTICONVULSIVANTES / ANTIEPILETICOS"
+    "subgrupo": "Referencia Oneroso Controlado"
   },
   {
     "linha": "ANTIPSICOTICOS",
@@ -1221,7 +1221,7 @@
       8701581.67
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIPSICOTICOS"
+    "subgrupo": "Referencia Oneroso Controlado"
   },
   {
     "linha": "KIT - CAPILAR",
@@ -1292,8 +1292,8 @@
       9337892.92,
       9686025.52
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "KIT"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ANTIULCEROSOS",
@@ -1365,7 +1365,7 @@
       8355107.53
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIULCEROSOS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "TOALHAS UMEDECIDAS - INFANTIL",
@@ -1436,8 +1436,8 @@
       8045085.51,
       8345020.04
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "TOALHAS UMEDECIDAS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "HORMONIOS DIVERSOS",
@@ -1509,7 +1509,7 @@
       7814351.79
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "HORMONIOS DIVERSOS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "DESODORANTE - AERO MASCULINO",
@@ -1580,8 +1580,8 @@
       7437792.15,
       7715085.75
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DESODORANTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CORTCOESTEROIDES SISTEMICOS",
@@ -1653,7 +1653,7 @@
       7564958.36
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "CORTCOESTEROIDES SISTEMICOS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "ANTIASMATICOS E BRONCODILATADORES",
@@ -1725,7 +1725,7 @@
       7476595.99
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIASMATICOS E BRONCODILATADORES"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "CHOCOLATES",
@@ -1796,8 +1796,8 @@
       6501023.54,
       6743392.81
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CHOCOLATES"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Pereciveis"
   },
   {
     "linha": "LANCAMENTOS",
@@ -1869,7 +1869,7 @@
       6462827.27
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "LANCAMENTOS"
+    "subgrupo": "Referencia Avulso"
   },
   {
     "linha": "TROMBOLITICOS",
@@ -1941,7 +1941,7 @@
       6273146.41
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "TROMBOLITICOS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "CURATIVOS - PRIMEIROS CUIDADOS",
@@ -2012,8 +2012,8 @@
       5677705.69,
       5889380.26
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CURATIVOS - PRIMEIROS CUIDADOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DESODORANTE - AERO FEMININO",
@@ -2084,8 +2084,8 @@
       6367430.23,
       6604818.91
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DESODORANTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OFTALMOLOGICOS",
@@ -2157,7 +2157,7 @@
       5705571.16
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OFTALMOLOGICOS"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "COLORACAO - FEMININA",
@@ -2228,8 +2228,8 @@
       6161547.83,
       6391260.86
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "COLORACAO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC- ANTIALERGICOS/ANTI-HISTAMINICO SIST",
@@ -2301,7 +2301,7 @@
       5510566.56
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- ANTIALERGICOS/ANTI-HISTAMINICO"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "HIGIENE ORAL - CREME E GEL DENTAL",
@@ -2372,8 +2372,8 @@
       5227033.8,
       5421906.55
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HIGIENE ORAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CAPILAR - SHAMPOO",
@@ -2444,8 +2444,8 @@
       5997338.93,
       6220929.97
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CIRURGICOS",
@@ -2517,7 +2517,7 @@
       5208990.76
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "CIRURGICOS"
+    "subgrupo": "Hospitalares"
   },
   {
     "linha": "TESTES DIAGNOSTICOS E APARELHOS",
@@ -2589,7 +2589,7 @@
       4659074.2
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "TESTES DIAGNOSTICOS E APARELHOS"
+    "subgrupo": "Referencia Liberado"
   },
   {
     "linha": "RELAXANTES MUSCULARES",
@@ -2661,7 +2661,7 @@
       4608420.4
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "RELAXANTES MUSCULARES"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "ANALGESICOS / ANTITERMICOS",
@@ -2733,7 +2733,7 @@
       4554457.1
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANALGESICOS / ANTITERMICOS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "NUTRICAO ESPORTIVA",
@@ -2805,7 +2805,7 @@
       5204976.16
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "NUTRICAO ESPORTIVA"
+    "subgrupo": "Referencia Liberado"
   },
   {
     "linha": "NUTRICAO INFANTIL",
@@ -2876,8 +2876,8 @@
       4978950.0,
       5164573.76
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "NUTRICAO INFANTIL"
+    "grupo": "Nutricao",
+    "subgrupo": "Nutricao PBMs"
   },
   {
     "linha": "FRALDAS GERIATRICAS – FARMACIA POPULAR",
@@ -2948,8 +2948,8 @@
       4283726.29,
       4443430.92
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "FRALDAS GERIATRICAS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Fraldas"
   },
   {
     "linha": "OTC- OFTALMOLOGICOS",
@@ -3021,7 +3021,7 @@
       4430205.34
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- OFTALMOLOGICOS"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "HIPERPLASIA PROSTATICA BENIGNA",
@@ -3093,7 +3093,7 @@
       4328573.22
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "HIPERPLASIA PROSTATICA BENIGNA"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "ANALGESICOS OPIOIDES/NARCOTICOS",
@@ -3165,7 +3165,7 @@
       4300671.2
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANALGESICOS OPIOIDES/NARCOTICOS"
+    "subgrupo": "Referencia Oneroso Controlado"
   },
   {
     "linha": "OTC- EXPECTORANTES",
@@ -3237,7 +3237,7 @@
       4284389.23
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- EXPECTORANTES"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "OTC- ANTIACIDOS",
@@ -3309,7 +3309,7 @@
       4279807.04
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- ANTIACIDOS"
+    "subgrupo": "Referencia Avulso"
   },
   {
     "linha": "ANTIALERGICOS/ANTI-HISTAMINICO",
@@ -3381,7 +3381,7 @@
       4238367.83
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIALERGICOS/ANTI-HISTAMINICO"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "CUIDADO FACIAL",
@@ -3452,8 +3452,8 @@
       4659236.38,
       4832940.67
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO FACIAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BOMBONIERE",
@@ -3524,8 +3524,8 @@
       3803880.12,
       3945695.27
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BOMBONIERE"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Pereciveis"
   },
   {
     "linha": "CORTCOESTEROIDES TOP",
@@ -3597,7 +3597,7 @@
       3929167.51
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "CORTCOESTEROIDES TOP"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "CAPILAR - CONDICIONADOR",
@@ -3668,8 +3668,8 @@
       3563179.27,
       3696020.68
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DISFUNCAO ERETIL",
@@ -3741,7 +3741,7 @@
       3667941.97
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "DISFUNCAO ERETIL"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "OTC- AFECCOES BUCAIS/GARGANTA",
@@ -3813,7 +3813,7 @@
       3665274.51
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- AFECCOES"
+    "subgrupo": "Referencia Avulso"
   },
   {
     "linha": "ENERGETICOS",
@@ -3884,8 +3884,8 @@
       3509880.27,
       3640734.6
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ENERGETICOS"
+    "grupo": "Conveniencia",
+    "subgrupo": "Bebidas"
   },
   {
     "linha": "OTC- OBSTIPACAO/CATARTICOS/LAXANTES",
@@ -3957,7 +3957,7 @@
       3638870.42
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- OBSTIPACAO/CATARTICOS/LAXANTES"
+    "subgrupo": "Referencia Avulso"
   },
   {
     "linha": "FRALDAS GERIATRICAS - ROUPA INT UNISSEX",
@@ -4028,8 +4028,8 @@
       3505165.17,
       3635843.72
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "FRALDAS GERIATRICAS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Fraldas"
   },
   {
     "linha": "TIREOIDOTERAPIA",
@@ -4101,7 +4101,7 @@
       3615091.89
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "TIREOIDOTERAPIA"
+    "subgrupo": "Referencia Super Onerosos"
   },
   {
     "linha": "HIGIENE PESSOAL – PAPEL HIGIENICO",
@@ -4172,8 +4172,8 @@
       3923160.41,
       4069422.53
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HIGIENE PESSOAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Higiene Pessoal"
   },
   {
     "linha": "ANTIVARICOSOS / ANTIHEMORROIDARIOS",
@@ -4245,7 +4245,7 @@
       3536154.89
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIVARICOSOS / ANTIHEMORROIDARIOS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "ANTIEMETICOS/ NAUSEA/ ENJOO/ VOMITO",
@@ -4317,7 +4317,7 @@
       3523748.29
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIEMETICOS/ NAUSEA/ ENJOO/ VOMITO"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "CARDIOTERAPIA",
@@ -4389,7 +4389,7 @@
       3443093.94
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "CARDIOTERAPIA"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "CORTICOIDES NASAIS",
@@ -4461,7 +4461,7 @@
       3436559.68
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "CORTICOIDES NASAIS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "HIGIENE ORAL - ESCOVA DENTAL",
@@ -4532,8 +4532,8 @@
       3740162.25,
       3879601.89
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HIGIENE ORAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DERMO - HIDRATANTE FACIAL",
@@ -4605,7 +4605,7 @@
       3317220.53
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "DERMO"
+    "subgrupo": "Referencia Liberado"
   },
   {
     "linha": "KIT - SABONETE BARRAS",
@@ -4676,8 +4676,8 @@
       3173451.76,
       3291763.46
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "KIT"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC- ANTI-INFLAMAT/ANTI-REUMAT TOP",
@@ -4749,7 +4749,7 @@
       3233424.91
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- ANTI-INFLAMAT/ANTI-REUMAT"
+    "subgrupo": "Referencia Avulso"
   },
   {
     "linha": "ANTIPARASITARIO",
@@ -4821,7 +4821,7 @@
       3097278.28
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIPARASITARIO"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "OTC- RELAXANTES MUSCULARES",
@@ -4893,7 +4893,7 @@
       2833879.26
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- RELAXANTES MUSCULARES"
+    "subgrupo": "Referencia Avulso"
   },
   {
     "linha": "DERMO - SOLAR FACIAL",
@@ -4965,7 +4965,7 @@
       3233050.79
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "DERMO"
+    "subgrupo": "PBMs Combo"
   },
   {
     "linha": "ANTIANEMICOS",
@@ -5037,7 +5037,7 @@
       2752629.78
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIANEMICOS"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "ANTI-NEOPLASICOS/ONCOLOGICOS",
@@ -5109,7 +5109,7 @@
       2736218.44
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTI-NEOPLASICOS/ONCOLOGICOS"
+    "subgrupo": "Referencia"
   },
   {
     "linha": "OTC- REPOSITOR FLORA INTESTINAL",
@@ -5181,7 +5181,7 @@
       2708038.33
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- REPOSITOR FLORA INTESTINAL"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "CUIDADO - CORPO LOCAO",
@@ -5252,8 +5252,8 @@
       2575672.42,
       2671697.89
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "PRESERVATIVOS",
@@ -5324,8 +5324,8 @@
       2904946.18,
       3013247.54
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "PRESERVATIVOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BAZAR - BRINQUEDOS",
@@ -5396,8 +5396,8 @@
       2887972.4,
       2995640.94
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "HOME CARE - LIMPEZA ROUPAS",
@@ -5468,8 +5468,8 @@
       2481820.17,
       2574346.67
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HOME CARE"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "DESCONGESTIONANTE/ANTISSEPTICO NASAL",
@@ -5541,7 +5541,7 @@
       2530945.01
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "DESCONGESTIONANTE/ANTISSEPTICO NASAL"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "ANTIVIRAIS SISTEMICOS",
@@ -5613,7 +5613,7 @@
       2496849.9
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIVIRAIS SISTEMICOS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "REFRIGERANTES",
@@ -5684,8 +5684,8 @@
       2400955.1,
       2490466.81
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "REFRIGERANTES"
+    "grupo": "Conveniencia",
+    "subgrupo": "Bebidas"
   },
   {
     "linha": "DERMATOLOGICA",
@@ -5757,7 +5757,7 @@
       2469504.9
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "DERMATOLOGICA"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "GINECOLOGICOS",
@@ -5828,8 +5828,8 @@
       2372669.2,
       2461126.36
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "GINECOLOGICOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "TRANQUILIZANTES / ANSIOLITICOS",
@@ -5901,7 +5901,7 @@
       2401673.99
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "TRANQUILIZANTES / ANSIOLITICOS"
+    "subgrupo": "Referencia Oneroso Controlado"
   },
   {
     "linha": "ANTI-HIPERT/BETABLOQUEADORES",
@@ -5973,7 +5973,7 @@
       2368813.55
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTI-HIPERT/BETABLOQUEADORES"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "CAPILAR - ANTICASPA",
@@ -6044,8 +6044,8 @@
       2233102.02,
       2316355.88
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ABSORVENTE",
@@ -6116,8 +6116,8 @@
       2515435.8,
       2609215.55
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ABSORVENTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Absorventes e Lenços Substituido"
   },
   {
     "linha": "ANTIVIRAIS / ANTIBIOTICOS TOP",
@@ -6189,7 +6189,7 @@
       2211291.21
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIVIRAIS / ANTIBIOTICOS TOP"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "FRALDAS INFANTIS ROUPA",
@@ -6260,8 +6260,8 @@
       2105855.79,
       2184365.69
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "FRALDAS INFANTIS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Fraldas"
   },
   {
     "linha": "VACINAS",
@@ -6333,7 +6333,7 @@
       2118881.08
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "VACINAS"
+    "subgrupo": "Vacinas Especiais"
   },
   {
     "linha": "SABONETE - BARRAS",
@@ -6404,8 +6404,8 @@
       2347570.24,
       2435091.67
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SABONETE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC- DESCONGESTIONANTE/ANTISSEPT NASAL",
@@ -6477,7 +6477,7 @@
       2110708.02
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- DESCONGESTIONANTE/ANTISSEPT NASAL"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "CAPILAR - MASCARA",
@@ -6548,8 +6548,8 @@
       2015188.48,
       2090318.15
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC- HEPATOPROTETORES/COLAGOGOS",
@@ -6621,7 +6621,7 @@
       2084767.25
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- HEPATOPROTETORES/COLAGOGOS"
+    "subgrupo": "Referencia Avulso"
   },
   {
     "linha": "CUIDADO – LABIAL",
@@ -6692,8 +6692,8 @@
       2310367.34,
       2396501.78
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BARBA - APARELHO",
@@ -6764,8 +6764,8 @@
       2298012.34,
       2383686.17
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BARBA"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ELETRODOMESTICOS",
@@ -6836,8 +6836,8 @@
       1991938.62,
       2066201.5
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ELETRODOMESTICOS"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "HIGIENE ORAL - ENXAGUANTE",
@@ -6908,8 +6908,8 @@
       2247326.78,
       2331110.96
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HIGIENE ORAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ANTI-ALZHEIMER",
@@ -6981,7 +6981,7 @@
       1996671.7
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTI-ALZHEIMER"
+    "subgrupo": "Referencia Oneroso Controlado"
   },
   {
     "linha": "DESODORANTE - CREME / GEL FEMININO",
@@ -7052,8 +7052,8 @@
       2203191.41,
       2285330.15
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DESODORANTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "SERVICOS/PROGRAMAS SAUDE",
@@ -7125,7 +7125,7 @@
       1956125.57
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "SERVICOS/PROGRAMAS SAUDE"
+    "subgrupo": "Teste Covid19"
   },
   {
     "linha": "OTC- ANTIESPASMODICOS",
@@ -7197,7 +7197,7 @@
       1948281.5
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- ANTIESPASMODICOS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "HIGIENE INTIMA",
@@ -7268,8 +7268,8 @@
       1837994.05,
       1906517.61
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HIGIENE INTIMA"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "SALGADINHOS",
@@ -7340,8 +7340,8 @@
       1810096.5,
       1877579.99
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SALGADINHOS"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Pereciveis"
   },
   {
     "linha": "FRALDAS GERIATRICAS - INCONTINENCIA",
@@ -7412,8 +7412,8 @@
       1806465.02,
       1873813.12
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "FRALDAS GERIATRICAS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Fraldas"
   },
   {
     "linha": "MAOS E PES - ESMALTES",
@@ -7484,8 +7484,8 @@
       2067779.1,
       2144869.44
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAOS E PES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "NEUROLOGICOS / SISTEMA NERVOSO",
@@ -7557,7 +7557,7 @@
       1860453.87
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "NEUROLOGICOS / SISTEMA NERVOSO"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "PSICOESTIMULANTES",
@@ -7629,7 +7629,7 @@
       1832721.96
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "PSICOESTIMULANTES"
+    "subgrupo": "Referencia Oneroso Controlado"
   },
   {
     "linha": "DIURETICOS",
@@ -7701,7 +7701,7 @@
       1822530.92
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "DIURETICOS"
+    "subgrupo": "Liberados"
   },
   {
     "linha": "UROLOGICOS",
@@ -7773,7 +7773,7 @@
       1808572.15
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "UROLOGICOS"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "DEPILACAO - LAMINA",
@@ -7844,8 +7844,8 @@
       1742650.92,
       1807619.92
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DEPILACAO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ORTOPEDICOS",
@@ -7916,8 +7916,8 @@
       2001836.09,
       2076467.96
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ORTOPEDICOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DERMO - HIDRATANTE CORPO",
@@ -7989,7 +7989,7 @@
       2071576.65
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "DERMO"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "CAPILAR - OLEO",
@@ -8060,8 +8060,8 @@
       1995258.24,
       2069644.88
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC- DERMATOLOGICA",
@@ -8133,7 +8133,7 @@
       1749886.92
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- DERMATOLOGICA"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "MERCEARIA",
@@ -8205,7 +8205,7 @@
       1992435.85
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "MERCEARIA"
+    "subgrupo": "Similar Avulso"
   },
   {
     "linha": "ABSORVENTE - PROTETORES DIARIOS",
@@ -8276,8 +8276,8 @@
       1897999.52,
       1968760.18
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ABSORVENTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OSTEOPOROSE",
@@ -8349,7 +8349,7 @@
       1707279.68
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OSTEOPOROSE"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "ABSORVENTE - NOTURNO",
@@ -8420,8 +8420,8 @@
       1639871.71,
       1701008.93
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ABSORVENTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Absorventes e Lenços Substituido"
   },
   {
     "linha": "ANTI-PARKINSONIANOS",
@@ -8493,7 +8493,7 @@
       1694032.46
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTI-PARKINSONIANOS"
+    "subgrupo": "Referencia Oneroso Controlado"
   },
   {
     "linha": "DERMO - LIMPEZA FACIAL",
@@ -8564,8 +8564,8 @@
       1605928.78,
       1665800.55
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DERMO"
+    "grupo": "Dermo-Cosmeticos",
+    "subgrupo": "Dermo-Cosmeticos"
   },
   {
     "linha": "CAPILAR - INFANTIL",
@@ -8636,8 +8636,8 @@
       1839320.51,
       1907893.52
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ANTIFUNGICOS / ANTIMICOTICOS TOP",
@@ -8709,7 +8709,7 @@
       1616682.97
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIFUNGICOS /"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "BAZAR - ELETRONICOS E GERAL",
@@ -8780,8 +8780,8 @@
       1481975.2,
       1537225.77
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "HIPNOTICOS/SEDATIVOS",
@@ -8853,7 +8853,7 @@
       1523186.94
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "HIPNOTICOS/SEDATIVOS"
+    "subgrupo": "Referencia Oneroso Controlado"
   },
   {
     "linha": "CUIDADO - INFANTIL",
@@ -8924,8 +8924,8 @@
       1682890.95,
       1745632.0
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CUIDADO - PES",
@@ -8996,8 +8996,8 @@
       1645506.67,
       1706853.97
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "SORVETES/PICOLES",
@@ -9068,8 +9068,8 @@
       1629495.39,
       1690245.76
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SORVETES/PICOLES"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Pereciveis"
   },
   {
     "linha": "SABONETE - LIQUIDO INFANTIL",
@@ -9140,8 +9140,8 @@
       1628346.37,
       1689053.9
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SABONETE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ACESSORIOS - INFANTIL CHUPETAS",
@@ -9212,8 +9212,8 @@
       1584689.38,
       1643769.31
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ACESSORIOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "COLORACAO S/ AMONIA",
@@ -9284,8 +9284,8 @@
       1563814.6,
       1622116.28
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "COLORACAO S/ AMONIA"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ANTIACNEICOS",
@@ -9356,8 +9356,8 @@
       1317563.52,
       1366684.54
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ANTIACNEICOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "AGUA",
@@ -9428,8 +9428,8 @@
       1478585.7,
       1533709.9
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "AGUA"
+    "grupo": "Conveniencia",
+    "subgrupo": "Bebidas"
   },
   {
     "linha": "ANTIGRIPAIS / ANTITUSSIGENOS",
@@ -9501,7 +9501,7 @@
       1315890.95
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIGRIPAIS / ANTITUSSIGENOS"
+    "subgrupo": "Referencia Avulso"
   },
   {
     "linha": "ANTIVERTIGINOSOS",
@@ -9573,7 +9573,7 @@
       1313503.57
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIVERTIGINOSOS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "OTC- ANTIVARICOSOS/ANTIHEMORROIDARIOS",
@@ -9645,7 +9645,7 @@
       1298859.19
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- ANTIVARICOSOS/ANTIHEMORROIDARIOS"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "DISTURBIOS OSSEOS/MUSCULAR/ARTICUL",
@@ -9717,7 +9717,7 @@
       1297756.6
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "DISTURBIOS OSSEOS/MUSCULAR/ARTICUL"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "HIGIENE ORAL - FIO E FITA DENTAL",
@@ -9788,8 +9788,8 @@
       1438702.13,
       1492339.4
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HIGIENE ORAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "HIGIENE ORAL - PROTESES",
@@ -9860,8 +9860,8 @@
       1432778.28,
       1486194.7
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HIGIENE ORAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BARBA - CARGA",
@@ -9932,8 +9932,8 @@
       1427335.93,
       1480549.45
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BARBA"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "LUBRIFICANTES",
@@ -10004,8 +10004,8 @@
       1200412.76,
       1245166.2
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "LUBRIFICANTES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CAPILAR - CREME TRATAMENTO",
@@ -10076,8 +10076,8 @@
       1197999.53,
       1242663.0
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "EXPECTORANTES",
@@ -10149,7 +10149,7 @@
       1177012.02
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "EXPECTORANTES"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "CAPILAR - CREME",
@@ -10220,8 +10220,8 @@
       1111288.59,
       1152719.33
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CAPILAR - SPRAY/GEL/MOUSSE",
@@ -10292,8 +10292,8 @@
       1262119.81,
       1309173.79
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "SUPLEMENTOS ALIMENTARES",
@@ -10365,7 +10365,7 @@
       1131616.17
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "SUPLEMENTOS ALIMENTARES"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "ABSORVENTE - INTERNO",
@@ -10436,8 +10436,8 @@
       1228921.39,
       1274737.68
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ABSORVENTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Absorventes e Lenços Substituido"
   },
   {
     "linha": "HIGIENE PESSOAL",
@@ -10508,8 +10508,8 @@
       1061214.56,
       1100778.45
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HIGIENE PESSOAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CUIDADO - CORPO OLEO",
@@ -10580,8 +10580,8 @@
       1054476.36,
       1093789.04
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "NEBULIZADORES/INALAD/UMIDIF E ACESSORIOS",
@@ -10652,8 +10652,8 @@
       1207646.73,
       1252669.86
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "NEBULIZADORES/INALAD/UMIDIF E ACESSORIOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ACESSORIOS - INFANTIL MAMADEIRAS",
@@ -10724,8 +10724,8 @@
       1194616.95,
       1239154.31
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ACESSORIOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CAPILAR - TRATAMENTO",
@@ -10796,8 +10796,8 @@
       1176495.14,
       1220356.89
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DIGESTIVOS/INTOLERANCIA ENZIMAS",
@@ -10869,7 +10869,7 @@
       1052534.79
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "DIGESTIVOS/INTOLERANCIA ENZIMAS"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "ANTIFUNGICOS / ANTIMICOTICOS SIST",
@@ -10941,7 +10941,7 @@
       1047114.16
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIFUNGICOS /"
+    "subgrupo": "Referencia Liberado"
   },
   {
     "linha": "ACESSORIO CAPILAR",
@@ -11012,8 +11012,8 @@
       1156355.32,
       1199466.22
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ACESSORIO CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC - TESTES DIAGNOSTICOS E APARELHOS",
@@ -11085,7 +11085,7 @@
       1034680.46
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC"
+    "subgrupo": "Referencia Liberado"
   },
   {
     "linha": "ANTIESPASMODICOS",
@@ -11157,7 +11157,7 @@
       1033225.99
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIESPASMODICOS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "OTC- ANTIFISETICOS/ANTIGASES",
@@ -11229,7 +11229,7 @@
       1022136.41
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- ANTIFISETICOS/ANTIGASES"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "ABSORVENTE - INCONTINENCIA GERIATRICO",
@@ -11300,8 +11300,8 @@
       1124155.28,
       1166065.71
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ABSORVENTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Fraldas"
   },
   {
     "linha": "OTC- ANTITABAGISMO",
@@ -11373,7 +11373,7 @@
       1010448.26
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- ANTITABAGISMO"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "NUTRICAO ADULTO",
@@ -11444,8 +11444,8 @@
       1109360.18,
       1150719.02
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "NUTRICAO ADULTO"
+    "grupo": "Nutricao",
+    "subgrupo": "Nutricao PBMs"
   },
   {
     "linha": "NUTRICOSMETICOS",
@@ -11517,7 +11517,7 @@
       989121.22
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "NUTRICOSMETICOS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "FITOTERAPICOS",
@@ -11588,8 +11588,8 @@
       945594.32,
       980847.69
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "FITOTERAPICOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "INSULINA",
@@ -11661,7 +11661,7 @@
       967224.68
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "INSULINA"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "CUIDADO FACIAL - LIMPEZA",
@@ -11732,8 +11732,8 @@
       1055949.73,
       1095317.34
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO FACIAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "SOLAR - FACIAL",
@@ -11804,8 +11804,8 @@
       1035941.6,
       1074563.27
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SOLAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "SABONETE - LIQUIDO",
@@ -11876,8 +11876,8 @@
       900796.9,
       934380.15
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SABONETE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAOS E PES - CUTELARIA",
@@ -11948,8 +11948,8 @@
       1016921.69,
       1054834.27
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAOS E PES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CAPILAR - FINALIZADORES MASCULINOS",
@@ -12020,8 +12020,8 @@
       876244.1,
       908911.98
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DESODORANTE - ROLL-ON FEMININO",
@@ -12092,8 +12092,8 @@
       1004024.06,
       1041455.79
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DESODORANTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ANTI-INFLAMATORIO INTESTINAL",
@@ -12165,7 +12165,7 @@
       899548.18
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTI-INFLAMATORIO INTESTINAL"
+    "subgrupo": "Referencia"
   },
   {
     "linha": "ELETROS DE BELEZA E CUIDADO PESSOAL",
@@ -12236,8 +12236,8 @@
       863957.67,
       896167.49
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ELETROS DE BELEZA E CUIDADO PESSOAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CAPILAR - FINALIZADORES FEMININOS",
@@ -12308,8 +12308,8 @@
       992833.1,
       1029847.61
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "HOME CARE – AROMATIZADORES",
@@ -12380,8 +12380,8 @@
       829009.35,
       859916.23
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HOME CARE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BISCOITOS/BOLACHAS",
@@ -12452,8 +12452,8 @@
       945604.78,
       980858.54
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BISCOITOS/BOLACHAS"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Pereciveis"
   },
   {
     "linha": "OTC- REPOSITORES ELETROLT/REHIDRATANTE",
@@ -12525,7 +12525,7 @@
       841828.39
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- REPOSITORES ELETROLT/REHIDRATANTE"
+    "subgrupo": "Referencia Avulso"
   },
   {
     "linha": "BAZAR - CALCADOS",
@@ -12596,8 +12596,8 @@
       801461.07,
       831340.91
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia Exclusiva"
   },
   {
     "linha": "LIVROS - ALBUM",
@@ -12668,8 +12668,8 @@
       798717.02,
       828494.55
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "LIVROS"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "OTC- GINECOLOGICOS",
@@ -12741,7 +12741,7 @@
       824794.03
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- GINECOLOGICOS"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "ABSORVENTES FARMACIA POPULAR",
@@ -12812,8 +12812,8 @@
       791315.57,
       820817.17
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ABSORVENTES FARMACIA POPULAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Absorventes e Lenços Substituido"
   },
   {
     "linha": "ANTIDIARREICO",
@@ -12885,7 +12885,7 @@
       810668.51
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIDIARREICO"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "OBSTIPACAO / CATARTICOS / LAXANTES",
@@ -12957,7 +12957,7 @@
       791118.69
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OBSTIPACAO / CATARTICOS / LAXANTES"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "CUIDADO - CORPO BODY SPLASH",
@@ -13028,8 +13028,8 @@
       759414.04,
       787726.29
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - BASE",
@@ -13100,8 +13100,8 @@
       872810.3,
       905350.16
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "HOME CARE - LIMPEZA CASA",
@@ -13172,8 +13172,8 @@
       757898.78,
       786154.54
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HOME CARE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAOS E PES - ESMALTES TRATAMENTO",
@@ -13244,8 +13244,8 @@
       854168.99,
       886013.87
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAOS E PES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "HEPATOPROTETORES / COLAGOGOS",
@@ -13317,7 +13317,7 @@
       758557.0
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "HEPATOPROTETORES / COLAGOGOS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "ESCOVAS - PENTES CABELOS",
@@ -13388,8 +13388,8 @@
       720353.49,
       747209.5
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ESCOVAS - PENTES CABELOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC- ANTIALERGICOS/ANTI-HISTAMINICO TOP",
@@ -13461,7 +13461,7 @@
       746559.55
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- ANTIALERGICOS/ANTI-HISTAMINICO"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "CAPILAR - CREME PENTEAR",
@@ -13532,8 +13532,8 @@
       822119.39,
       852769.4
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BAZAR - CABOS E CARREGADORES",
@@ -13604,8 +13604,8 @@
       712789.24,
       739363.24
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "CICATRIZANTE/REGENERADOR PELE",
@@ -13676,8 +13676,8 @@
       711503.51,
       738029.58
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CICATRIZANTE/REGENERADOR PELE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "SOLAR - FACIAL BASTAO",
@@ -13748,8 +13748,8 @@
       812329.18,
       842614.2
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SOLAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DESCOLORANTES",
@@ -13820,8 +13820,8 @@
       700260.92,
       726367.84
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DESCOLORANTES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "SERVICOS/DESPESAS",
@@ -13892,8 +13892,8 @@
       693635.37,
       719495.28
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SERVICOS/DESPESAS"
+    "grupo": "Diversos",
+    "subgrupo": "Servicos Tele Entrega"
   },
   {
     "linha": "OTC- REGULADORES INTESTINAIS",
@@ -13965,7 +13965,7 @@
       695994.89
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- REGULADORES INTESTINAIS"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "BAZAR - PILHAS",
@@ -14036,8 +14036,8 @@
       665537.61,
       690349.99
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC - TROMBOLITICOS",
@@ -14109,7 +14109,7 @@
       689530.62
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC"
+    "subgrupo": "Referencia Avulso"
   },
   {
     "linha": "MAOS E PES - REMOVEDORES",
@@ -14180,8 +14180,8 @@
       756778.16,
       784992.14
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAOS E PES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ANTI-HIPERT/ANTAGONISTAS DO CALCIO",
@@ -14253,7 +14253,7 @@
       680874.71
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTI-HIPERT/ANTAGONISTAS DO CALCIO"
+    "subgrupo": "Referencia Super Onerosos"
   },
   {
     "linha": "GASTROPROCINETICOS",
@@ -14325,7 +14325,7 @@
       679945.94
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "GASTROPROCINETICOS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "ANTIGOTOSOS",
@@ -14397,7 +14397,7 @@
       674629.68
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIGOTOSOS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "MATERIAL ESCOLAR",
@@ -14468,8 +14468,8 @@
       647045.16,
       671168.11
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MATERIAL ESCOLAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Bazar ? Papelaria"
   },
   {
     "linha": "ANTIALOPECIA / ANTICALVICE",
@@ -14541,7 +14541,7 @@
       671016.75
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIALOPECIA / ANTICALVICE"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "BANHO",
@@ -14612,8 +14612,8 @@
       637755.94,
       661532.57
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BANHO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MATINAL",
@@ -14684,8 +14684,8 @@
       705021.76,
       731306.18
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MATINAL"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Pereciveis"
   },
   {
     "linha": "OTC- CALMANTES",
@@ -14757,7 +14757,7 @@
       625739.22
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- CALMANTES"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "AFECCOES BUCAIS - AFTAS",
@@ -14829,7 +14829,7 @@
       617704.65
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "AFECCOES BUCAIS - AFTAS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "CUIDADO - CORPO MASSAGEM",
@@ -14900,8 +14900,8 @@
       678536.82,
       703833.83
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BEM ESTAR",
@@ -14973,7 +14973,7 @@
       682715.02
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "BEM ESTAR"
+    "subgrupo": "Liberados"
   },
   {
     "linha": "DERMO - CAPILAR",
@@ -15044,8 +15044,8 @@
       582632.35,
       604353.88
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DERMO"
+    "grupo": "Dermo-Cosmeticos",
+    "subgrupo": "Dermo-Cosmeticos"
   },
   {
     "linha": "BARBA - ESPUMA - CREME - GEL",
@@ -15116,8 +15116,8 @@
       579300.41,
       600897.72
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BARBA"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DERMO - ANTI IDADE",
@@ -15188,8 +15188,8 @@
       579186.85,
       600779.92
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DERMO"
+    "grupo": "Dermo-Cosmeticos",
+    "subgrupo": "Dermo-Cosmeticos"
   },
   {
     "linha": "CUIDADO FACIAL - SERUM",
@@ -15260,8 +15260,8 @@
       659115.17,
       683688.11
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO FACIAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "HIGIENE ORAL - INFANTIL CREME E GEL DENT",
@@ -15332,8 +15332,8 @@
       571355.99,
       592657.12
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HIGIENE ORAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC- ANTIACNEICOS",
@@ -15405,7 +15405,7 @@
       590679.57
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- ANTIACNEICOS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "AGENTES IMUNOESTIMULANTES",
@@ -15477,7 +15477,7 @@
       581719.41
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "AGENTES IMUNOESTIMULANTES"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "ANTISSEPTICO - ALCOOL",
@@ -15548,8 +15548,8 @@
       544740.02,
       565048.86
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ANTISSEPTICO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC- OTOLOGICOS",
@@ -15621,7 +15621,7 @@
       558233.78
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- OTOLOGICOS"
+    "subgrupo": "Referencia Super Onerosos"
   },
   {
     "linha": "SAUDE OCULAR - LUPAS",
@@ -15692,8 +15692,8 @@
       606406.46,
       629014.33
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SAUDE OCULAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "DESODORANTE - CREME / GEL MASCULINO",
@@ -15764,8 +15764,8 @@
       513384.36,
       532524.21
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DESODORANTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ACESSORIOS - INFANTIL SAUDE",
@@ -15836,8 +15836,8 @@
       511289.47,
       530351.21
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ACESSORIOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAOS E PES - ESMALTES COLECAO",
@@ -15908,8 +15908,8 @@
       503520.95,
       522293.07
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAOS E PES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ANTI-HEMORRAGICOS",
@@ -15981,7 +15981,7 @@
       511398.47
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTI-HEMORRAGICOS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "OTC- ANTI-INFLAMAT/ANTI-REUMAT SIST",
@@ -16053,7 +16053,7 @@
       499557.41
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- ANTI-INFLAMAT/ANTI-REUMAT"
+    "subgrupo": "Referencia Avulso"
   },
   {
     "linha": "MAOS E PES - HIDRATANTES",
@@ -16124,8 +16124,8 @@
       477532.94,
       495336.18
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAOS E PES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ISOTONICO",
@@ -16196,8 +16196,8 @@
       475856.58,
       493597.33
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ISOTONICO"
+    "grupo": "Conveniencia",
+    "subgrupo": "Bebidas"
   },
   {
     "linha": "NUTRICAO AD LIQUIDO",
@@ -16268,8 +16268,8 @@
       475722.53,
       493458.28
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "NUTRICAO AD LIQUIDO"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Pereciveis"
   },
   {
     "linha": "ANTIBIOTICOS GINECOLOGICOS",
@@ -16341,7 +16341,7 @@
       490045.79
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIBIOTICOS GINECOLOGICOS"
+    "subgrupo": "Referencia Super Onerosos"
   },
   {
     "linha": "OTC- UROLOGICOS",
@@ -16413,7 +16413,7 @@
       489907.64
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- UROLOGICOS"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "OTC- ANTIFUNGICO/ANTIMICOTICO TOP",
@@ -16485,7 +16485,7 @@
       489206.11
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- ANTIFUNGICO/ANTIMICOTICO TOP"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "SOLAR - KIT",
@@ -16556,8 +16556,8 @@
       541205.43,
       561382.49
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SOLAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "REPOSITOR FLORA INTESTINAL",
@@ -16629,7 +16629,7 @@
       487101.94
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "REPOSITOR FLORA INTESTINAL"
+    "subgrupo": "Referencia Liberado"
   },
   {
     "linha": "DESODORANTE - ROLL-ON MASCULINO",
@@ -16700,8 +16700,8 @@
       454772.88,
       471727.59
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DESODORANTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CONTROLE DE PESO",
@@ -16773,7 +16773,7 @@
       538002.23
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "CONTROLE DE PESO"
+    "subgrupo": "Referencia Liberado"
   },
   {
     "linha": "HIGIENE ORAL - INFANTIL ESCOVA DENTAL",
@@ -16844,8 +16844,8 @@
       515915.8,
       535150.02
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HIGIENE ORAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ALIMENTO INFANTIL",
@@ -16916,8 +16916,8 @@
       445893.58,
       462517.25
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ALIMENTO INFANTIL"
+    "grupo": "Nutricao",
+    "subgrupo": "Nutricao Outros"
   },
   {
     "linha": "OTC- ANTIVARICOSOS/HEMATOMAS TOP",
@@ -16989,7 +16989,7 @@
       460344.34
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- ANTIVARICOSOS/HEMATOMAS TOP"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "LIVROS - ADULTO",
@@ -17060,8 +17060,8 @@
       443336.63,
       459864.98
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "LIVROS"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "CUIDADO FACIAL - AGUA MICELAR",
@@ -17132,8 +17132,8 @@
       507288.43,
       526201.01
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO FACIAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CONGELADOS",
@@ -17204,8 +17204,8 @@
       492963.55,
       511342.07
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CONGELADOS"
+    "grupo": "Conveniencia",
+    "subgrupo": "Congelados"
   },
   {
     "linha": "MAMAE BEBE",
@@ -17276,8 +17276,8 @@
       491107.76,
       509417.1
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAMAE BEBE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "NUTRACEUTICOS",
@@ -17349,7 +17349,7 @@
       512275.67
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "NUTRACEUTICOS"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "CUIDADO - CORPO ESFOLIANTE",
@@ -17420,8 +17420,8 @@
       484353.01,
       502410.52
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DERMO - CLAREADOR",
@@ -17492,8 +17492,8 @@
       417748.78,
       433323.17
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DERMO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "COLORACAO - SPRAY",
@@ -17564,8 +17564,8 @@
       412722.78,
       428109.79
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "COLORACAO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CAPILAR - SHAMPOO A SECO",
@@ -17636,8 +17636,8 @@
       411371.22,
       426707.84
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ACESSORIOS - INFANTIL BICOS",
@@ -17708,8 +17708,8 @@
       466215.56,
       483596.87
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ACESSORIOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC - ANTISSEPTICO - DESINFECTANTE",
@@ -17781,7 +17781,7 @@
       424678.63
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "DESODORANTE - UNISEX",
@@ -17852,8 +17852,8 @@
       400956.58,
       415904.93
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DESODORANTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ANTITABAGISMO",
@@ -17925,7 +17925,7 @@
       411057.54
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTITABAGISMO"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "PERFUMES MASCULINO",
@@ -17996,8 +17996,8 @@
       425171.31,
       441022.42
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "PERFUMES MASCULINO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC - HIPNOTICOS/SEDATIVOS",
@@ -18069,7 +18069,7 @@
       403854.7
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC"
+    "subgrupo": "Similar"
   },
   {
     "linha": "MAQUIAGEM - MASCARA DE CILIOS",
@@ -18140,8 +18140,8 @@
       447498.35,
       464181.85
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "COLORACAO - MASCULINA",
@@ -18212,8 +18212,8 @@
       386653.97,
       401069.09
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "COLORACAO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "PET - ALIMENTAR",
@@ -18284,8 +18284,8 @@
       385860.65,
       400246.19
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "PET"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "ANTISSEPTICO - DESINFECTANTE",
@@ -18356,8 +18356,8 @@
       385757.58,
       400139.28
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ANTISSEPTICO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "PET - HIGIENE",
@@ -18428,8 +18428,8 @@
       383894.99,
       398207.25
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "PET"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "PERFUMES FEMININO - BOLSO",
@@ -18500,8 +18500,8 @@
       437633.15,
       453948.86
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "PERFUMES FEMININO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTOLOGICOS",
@@ -18573,7 +18573,7 @@
       390100.15
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTOLOGICOS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "DERMO - ANTIACNE",
@@ -18644,8 +18644,8 @@
       412253.14,
       427622.64
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DERMO"
+    "grupo": "Dermo-Cosmeticos",
+    "subgrupo": "Dermo-Cosmeticos"
   },
   {
     "linha": "BAZAR - EMBALAGENS",
@@ -18716,8 +18716,8 @@
       365721.25,
       379355.96
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "SABONETE - LIQUIDO REFIL",
@@ -18788,8 +18788,8 @@
       398863.88,
       413734.21
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SABONETE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ANTI-ALCOOLISMO",
@@ -18861,7 +18861,7 @@
       371714.32
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTI-ALCOOLISMO"
+    "subgrupo": "Referencia Controlado"
   },
   {
     "linha": "SOLAR - PROTECAO",
@@ -18932,8 +18932,8 @@
       405199.64,
       420306.17
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SOLAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "SABONETE - BARRAS INFANTIL",
@@ -19004,8 +19004,8 @@
       345732.53,
       358622.03
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SABONETE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "COLORACAO - PERMANENTE SEM AMONIA",
@@ -19076,8 +19076,8 @@
       344433.82,
       357274.9
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "COLORACAO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CUIDADO - CORPO",
@@ -19148,8 +19148,8 @@
       338365.92,
       350980.78
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BAZAR - BRINCOS",
@@ -19220,8 +19220,8 @@
       382992.38,
       397270.99
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "PERFUMES MASCULINO - BOLSO",
@@ -19292,8 +19292,8 @@
       329987.03,
       342289.51
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "PERFUMES MASCULINO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC- ESTIMULANTES DO APETITE",
@@ -19365,7 +19365,7 @@
       335969.84
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- ESTIMULANTES DO APETITE"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "TERAPIA VASCULAR-CEREBRAL E PERIFERICA",
@@ -19437,7 +19437,7 @@
       326384.86
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "TERAPIA VASCULAR-CEREBRAL E PERIFERICA"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "OTC- PEDICULOSE/ESCABIOSE TOP",
@@ -19509,7 +19509,7 @@
       324026.9
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- PEDICULOSE/ESCABIOSE TOP"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "OTC- ANTITERMICOS",
@@ -19581,7 +19581,7 @@
       322816.5
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- ANTITERMICOS"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "OTC- ANTIVIRAIS/ANTIBIOTICOS TOP",
@@ -19653,7 +19653,7 @@
       321714.81
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- ANTIVIRAIS/ANTIBIOTICOS TOP"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "FRALDAS GERIATRICAS - ROUPA INTIMA FEM",
@@ -19724,8 +19724,8 @@
       298559.45,
       309690.26
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "FRALDAS GERIATRICAS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Fraldas"
   },
   {
     "linha": "MAOS E PES - LIXAS E PALITOS",
@@ -19796,8 +19796,8 @@
       292436.89,
       303339.44
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAOS E PES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BAZAR - JOIAS",
@@ -19868,8 +19868,8 @@
       292242.74,
       303138.05
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "BARBA - KIT",
@@ -19940,8 +19940,8 @@
       290364.64,
       301189.93
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BARBA"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BAZAR – TERMICOS COPOS",
@@ -20012,8 +20012,8 @@
       287812.96,
       298543.12
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "DERMO - INFANTIL",
@@ -20084,8 +20084,8 @@
       326701.34,
       338881.32
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DERMO"
+    "grupo": "Dermo-Cosmeticos",
+    "subgrupo": "Dermo-Cosmeticos"
   },
   {
     "linha": "ACESSORIOS - INFANTIL HIGIENE",
@@ -20156,8 +20156,8 @@
       321821.3,
       333819.35
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ACESSORIOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "HIGIENE ORAL - ORTODONTICA",
@@ -20228,8 +20228,8 @@
       279258.42,
       289669.65
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HIGIENE ORAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ANESTESICOS",
@@ -20301,7 +20301,7 @@
       288670.05
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANESTESICOS"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "ABSORVENTE - INCONTINENCIA",
@@ -20372,8 +20372,8 @@
       304195.04,
       315535.95
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ABSORVENTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Absorventes e Lenços Substituido"
   },
   {
     "linha": "PERFUMES FEMININO",
@@ -20444,8 +20444,8 @@
       316445.43,
       328243.05
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "PERFUMES FEMININO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CAPILAR - REPARADOR",
@@ -20516,8 +20516,8 @@
       314420.71,
       326142.85
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BAZAR – TERMICOS HIDRATACAO",
@@ -20588,8 +20588,8 @@
       273255.6,
       283443.04
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "HORMONAS DO CRESCIMENTO",
@@ -20661,7 +20661,7 @@
       279850.41
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "HORMONAS DO CRESCIMENTO"
+    "subgrupo": "Referencia Especiais Controlados"
   },
   {
     "linha": "ACESSORIOS - INFANTIL ALIMENTAÇÃO",
@@ -20732,8 +20732,8 @@
       269649.21,
       279702.19
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ACESSORIOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "COLECALCIFEROL (VIT D)",
@@ -20805,7 +20805,7 @@
       276591.43
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "COLECALCIFEROL (VIT D)"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "REPELENTES",
@@ -20876,8 +20876,8 @@
       301312.46,
       312545.9
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "REPELENTES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "SOLAR - CUIDADO LABIAL",
@@ -20948,8 +20948,8 @@
       255671.94,
       265203.83
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SOLAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - GLOSS",
@@ -21020,8 +21020,8 @@
       291842.53,
       302722.92
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC- DIGESTIVOS/INTOLERANCIA ENZIMAS",
@@ -21093,7 +21093,7 @@
       260644.91
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- DIGESTIVOS/INTOLERANCIA ENZIMAS"
+    "subgrupo": "Referencia Super Onerosos"
   },
   {
     "linha": "MAQUIAGEM - CORRETIVO LIQUIDO",
@@ -21164,8 +21164,8 @@
       284428.68,
       295032.67
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "TONICOS",
@@ -21237,7 +21237,7 @@
       254696.09
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "TONICOS"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "ESTOJOS - KITS FEMININO",
@@ -21308,8 +21308,8 @@
       242193.1,
       251222.47
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ESTOJOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CAPILAR - LEAVE IN",
@@ -21380,8 +21380,8 @@
       240530.38,
       249497.76
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ACESSORIOS - MAQUIAGEM - PINCEIS",
@@ -21452,8 +21452,8 @@
       257453.32,
       267051.62
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ACESSORIOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CHAS",
@@ -21524,8 +21524,8 @@
       256232.7,
       265785.49
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CHAS"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Pereciveis"
   },
   {
     "linha": "PAES",
@@ -21596,8 +21596,8 @@
       270053.32,
       280121.37
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "PAES"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Pereciveis"
   },
   {
     "linha": "OTC- AFECCOES BUCAIS/AFTAS",
@@ -21669,7 +21669,7 @@
       242225.05
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- AFECCOES"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "MASCARAS E ACESSORIOS",
@@ -21741,7 +21741,7 @@
       238031.35
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "MASCARAS E ACESSORIOS"
+    "subgrupo": "Liberados"
   },
   {
     "linha": "CAFES",
@@ -21812,8 +21812,8 @@
       261202.97,
       270941.06
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAFES"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Pereciveis"
   },
   {
     "linha": "BAZAR – TERMICOS LINHA MATE",
@@ -21884,8 +21884,8 @@
       224757.14,
       233136.47
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "HORMONIOS TERAP CITOST (P/CANCER)",
@@ -21957,7 +21957,7 @@
       231466.19
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "HORMONIOS TERAP CITOST (P/CANCER)"
+    "subgrupo": "Referencia Especial"
   },
   {
     "linha": "BAZAR - FERRAMENTAS E UTILIDADES",
@@ -22028,8 +22028,8 @@
       222726.53,
       231030.16
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "DERMO - DESODORANTES",
@@ -22100,8 +22100,8 @@
       249620.18,
       258926.45
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DERMO"
+    "grupo": "Dermo-Cosmeticos",
+    "subgrupo": "Dermo-Cosmeticos"
   },
   {
     "linha": "SUCOS",
@@ -22172,8 +22172,8 @@
       245004.38,
       254138.56
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SUCOS"
+    "grupo": "Conveniencia",
+    "subgrupo": "Bebidas"
   },
   {
     "linha": "OTC- NUTRICOSMETICOS",
@@ -22245,7 +22245,7 @@
       218208.91
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- NUTRICOSMETICOS"
+    "subgrupo": "Referencia Super Onerosos"
   },
   {
     "linha": "KIT - DERMO",
@@ -22316,8 +22316,8 @@
       210004.46,
       217833.78
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "KIT"
+    "grupo": "Dermo-Cosmeticos",
+    "subgrupo": "Dermo-Cosmeticos"
   },
   {
     "linha": "AGENTES IMUNOSSUPRESSORES",
@@ -22389,7 +22389,7 @@
       215532.63
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "AGENTES IMUNOSSUPRESSORES"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "DEPILACAO - CREME",
@@ -22460,8 +22460,8 @@
       222588.87,
       230887.36
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DEPILACAO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "HIGIENE ORAL - ESCOVA ELETRICA/PILHA",
@@ -22532,8 +22532,8 @@
       205603.76,
       213269.02
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HIGIENE ORAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BAZAR - CANECAS",
@@ -22604,8 +22604,8 @@
       200646.98,
       208127.44
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "MAOS E PES - UNHAS POSTICAS",
@@ -22676,8 +22676,8 @@
       199209.4,
       206636.27
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAOS E PES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC- NUTRACEUTICOS",
@@ -22749,7 +22749,7 @@
       204381.01
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- NUTRACEUTICOS"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "BEBIDAS",
@@ -22821,7 +22821,7 @@
       199693.53
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "BEBIDAS"
+    "subgrupo": "Referencia Liberado"
   },
   {
     "linha": "HOME CARE - UTENSILIOS DOMESTICOS",
@@ -22892,8 +22892,8 @@
       190990.2,
       198110.64
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HOME CARE"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "KIT - CAPILAR INFANTIL",
@@ -22964,8 +22964,8 @@
       189094.47,
       196144.23
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "KIT"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ANTIACIDOS",
@@ -23037,7 +23037,7 @@
       196005.14
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIACIDOS"
+    "subgrupo": "Liberados"
   },
   {
     "linha": "ACES - INFANTIL NANINHA/TOALHA BOCA",
@@ -23108,8 +23108,8 @@
       184821.68,
       191712.15
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ACES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DEPILACAO - FOLHA FACIAL",
@@ -23180,8 +23180,8 @@
       181755.52,
       188531.68
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DEPILACAO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - PO SOLTO",
@@ -23252,8 +23252,8 @@
       207480.32,
       215215.54
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "FLORAIS",
@@ -23325,7 +23325,7 @@
       186694.39
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "FLORAIS"
+    "subgrupo": "Liberados"
   },
   {
     "linha": "BARBA - CUIDADOS COM A BARBA",
@@ -23396,8 +23396,8 @@
       178418.24,
       185069.98
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BARBA"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "HIGIENE INFANTIL",
@@ -23469,7 +23469,7 @@
       176843.01
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "HIGIENE INFANTIL"
+    "subgrupo": "Hospitalares"
   },
   {
     "linha": "BAZAR – TERMICOS CAFE",
@@ -23540,8 +23540,8 @@
       168313.55,
       174588.57
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "ANOREXIGENOS",
@@ -23613,7 +23613,7 @@
       172907.4
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANOREXIGENOS"
+    "subgrupo": "Referencia Oneroso Controlado"
   },
   {
     "linha": "OLEOS ESSENCIAIS",
@@ -23684,8 +23684,8 @@
       166613.3,
       172824.93
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "OLEOS ESSENCIAIS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ACESSORIOS - INFANTIL COPOS",
@@ -23756,8 +23756,8 @@
       165807.33,
       171988.91
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ACESSORIOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "HOME CARE - TOALHAS GUARDANAPOS",
@@ -23828,8 +23828,8 @@
       165350.96,
       171515.53
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HOME CARE"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "CUIDADO - FACIAL PINCAS",
@@ -23900,8 +23900,8 @@
       164872.03,
       171018.74
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BAZAR - MEIAS E ROUPA INTIMA",
@@ -23972,8 +23972,8 @@
       163614.38,
       169714.2
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "BAZAR – PRAIA / PISCINA",
@@ -24044,8 +24044,8 @@
       161928.48,
       167965.45
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "ANTI-HIPERT/ HIPOTENSORES",
@@ -24117,7 +24117,7 @@
       166993.39
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTI-HIPERT/ HIPOTENSORES"
+    "subgrupo": "Genericos"
   },
   {
     "linha": "ACESSORIOS - MAQUIAGEM",
@@ -24188,8 +24188,8 @@
       159871.37,
       165831.65
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ACESSORIOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BAZAR – TRADICIONALISTAS",
@@ -24260,8 +24260,8 @@
       153723.88,
       159454.97
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "DERMO - LIMPEZA CORPO",
@@ -24332,8 +24332,8 @@
       153558.72,
       159283.65
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DERMO"
+    "grupo": "Dermo-Cosmeticos",
+    "subgrupo": "Dermo-Cosmeticos"
   },
   {
     "linha": "LIVROS - INFANTIL",
@@ -24404,8 +24404,8 @@
       153508.24,
       159231.29
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "LIVROS"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "CUIDADO FACIAL - DEMAQUILANTE",
@@ -24476,8 +24476,8 @@
       152243.83,
       157919.74
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO FACIAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BAZAR - INFANTIL",
@@ -24548,8 +24548,8 @@
       149580.78,
       155157.41
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria Exclusiva"
   },
   {
     "linha": "MAQUIAGEM - LAPIS DE OLHO",
@@ -24620,8 +24620,8 @@
       146958.8,
       152437.68
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DERMO - SOLAR CORPO",
@@ -24692,8 +24692,8 @@
       146336.03,
       151791.69
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DERMO"
+    "grupo": "Dermo-Cosmeticos",
+    "subgrupo": "Dermo-Cosmeticos"
   },
   {
     "linha": "ESTOJOS - KITS MASCULINO",
@@ -24764,8 +24764,8 @@
       141245.32,
       146511.19
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ESTOJOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BAZAR - CHAVEIRO",
@@ -24836,8 +24836,8 @@
       140615.42,
       145857.8
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "BAZAR – PRESENTEAVEIS",
@@ -24908,8 +24908,8 @@
       138705.34,
       143876.51
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "BAZAR",
@@ -24981,7 +24981,7 @@
       143316.05
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "subgrupo": "Liberados"
   },
   {
     "linha": "CUIDADO - CORPO TALCO",
@@ -25052,8 +25052,8 @@
       137874.56,
       143014.76
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAOS E PES - CUIDADO",
@@ -25124,8 +25124,8 @@
       137334.62,
       142454.69
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAOS E PES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - BATOM LIQUIDO",
@@ -25196,8 +25196,8 @@
       152683.73,
       158376.04
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DERMO - LABIAL",
@@ -25268,8 +25268,8 @@
       131848.1,
       136763.62
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DERMO"
+    "grupo": "Dermo-Cosmeticos",
+    "subgrupo": "Dermo-Cosmeticos"
   },
   {
     "linha": "SEM LINHA",
@@ -25412,8 +25412,8 @@
       131356.23,
       136253.41
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "PEDICULOSE/ESCABIOSE TOP"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "HIGIENE ORAL - KIT VIAGEM",
@@ -25484,8 +25484,8 @@
       130855.78,
       135734.31
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HIGIENE ORAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CAPILAR - AMPOLA",
@@ -25556,8 +25556,8 @@
       129748.31,
       134585.55
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "IMUNOSSUPRESSOR",
@@ -25700,8 +25700,8 @@
       140274.69,
       145504.37
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC - TRANQUILIZANTES/ANSIOLITICOS",
@@ -25773,7 +25773,7 @@
       125842.35
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "HIGIENE ORAL - ACESSORIOS",
@@ -25844,8 +25844,8 @@
       118237.86,
       122645.97
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HIGIENE ORAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ABSORVENTE - INCONTINENCIA MASCULINO",
@@ -25916,8 +25916,8 @@
       117610.15,
       121994.86
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ABSORVENTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Absorventes e Lenços Substituido"
   },
   {
     "linha": "BAZAR - UTENSILIOS DOMESTICOS",
@@ -25988,8 +25988,8 @@
       114251.26,
       118510.74
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "DEPILACAO - CREME FACIAL",
@@ -26060,8 +26060,8 @@
       111721.77,
       115886.95
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DEPILACAO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ANTI ESCLEROSE MULTIPLA",
@@ -26205,7 +26205,7 @@
       109648.8
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC"
+    "subgrupo": "Similar Oneroso"
   },
   {
     "linha": "ACESSORIOS - INFANTIL MORDEDORES",
@@ -26276,8 +26276,8 @@
       102165.94,
       105974.86
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ACESSORIOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "SUPLEMENTO ESPECIAL INFANTIL",
@@ -26420,8 +26420,8 @@
       101974.07,
       105775.84
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAOS E PES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC- CICATRIZANTE/REGENERADOR PELE",
@@ -26493,7 +26493,7 @@
       105500.15
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- CICATRIZANTE/REGENERADOR PELE"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "TOALHAS UMEDECIDAS - ADULTO",
@@ -26564,8 +26564,8 @@
       101587.18,
       105374.52
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "TOALHAS UMEDECIDAS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Higiene Pessoal"
   },
   {
     "linha": "CUIDADO FACIAL - OLEO",
@@ -26636,8 +26636,8 @@
       99503.14,
       103212.79
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO FACIAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria Exclusiva Premiacao"
   },
   {
     "linha": "BAZAR - CHINELO",
@@ -26708,8 +26708,8 @@
       96831.6,
       100441.65
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "HOME CARE – AROMATIZADORES VELAS",
@@ -26780,8 +26780,8 @@
       95193.56,
       98742.54
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HOME CARE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria Exclusiva"
   },
   {
     "linha": "DEPILACAO - CERA",
@@ -26852,8 +26852,8 @@
       94260.34,
       97774.53
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DEPILACAO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "SAUDE SEXUAL",
@@ -26924,8 +26924,8 @@
       93846.2,
       97344.95
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SAUDE SEXUAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "KIT - DERMO SOLAR",
@@ -26996,8 +26996,8 @@
       91213.89,
       94614.5
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "KIT"
+    "grupo": "Dermo-Cosmeticos",
+    "subgrupo": "Dermo-Cosmeticos"
   },
   {
     "linha": "SOLAR - INFANTIS",
@@ -27068,8 +27068,8 @@
       90658.93,
       94038.85
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SOLAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - GEL SOBRANCELHAS",
@@ -27140,8 +27140,8 @@
       89677.68,
       93021.02
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DESODORANTE - ROLLON FEMININO PACK",
@@ -27212,8 +27212,8 @@
       89123.51,
       92446.19
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DESODORANTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DESODORANTE - AERO CORPO",
@@ -27284,8 +27284,8 @@
       88653.21,
       91958.35
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DESODORANTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DERMO - MAOS E PES",
@@ -27356,8 +27356,8 @@
       87182.78,
       90433.1
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DERMO"
+    "grupo": "Dermo-Cosmeticos",
+    "subgrupo": "Dermo-Cosmeticos"
   },
   {
     "linha": "ANTIFISETICOS / ANTIGASES",
@@ -27429,7 +27429,7 @@
       89882.97
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIFISETICOS / ANTIGASES"
+    "subgrupo": "Referencia Super Onerosos"
   },
   {
     "linha": "PET - PETISCOS",
@@ -27500,8 +27500,8 @@
       85670.67,
       88864.62
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "PET"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "OTC - GASTROPROCINETICOS",
@@ -27573,7 +27573,7 @@
       88101.44
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC"
+    "subgrupo": "Similar Avulso"
   },
   {
     "linha": "MAQUIAGEM INFANTIL - BRINQUEDO",
@@ -27644,8 +27644,8 @@
       84722.31,
       87880.9
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM INFANTIL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "REGULADORES CALCIO OSSEO",
@@ -27717,7 +27717,7 @@
       86442.6
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "REGULADORES CALCIO OSSEO"
+    "subgrupo": "Referencia Especial"
   },
   {
     "linha": "ACESSORIOS MEDICAMENTOS",
@@ -27789,7 +27789,7 @@
       85017.0
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ACESSORIOS MEDICAMENTOS"
+    "subgrupo": "Liberados"
   },
   {
     "linha": "ACESSORIO CAPILAR - COLORACAO",
@@ -27860,8 +27860,8 @@
       81582.12,
       84623.64
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ACESSORIO CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "HIGIENE ORAL - INFANTIL ENXAGUANTE",
@@ -27932,8 +27932,8 @@
       81421.19,
       84456.71
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HIGIENE ORAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - LAPIS DE BOCA",
@@ -28004,8 +28004,8 @@
       81037.61,
       84058.83
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "VASODILATADOR",
@@ -28077,7 +28077,7 @@
       83834.69
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "VASODILATADOR"
+    "subgrupo": "Generico Super Oneroso"
   },
   {
     "linha": "REPELENTES INFANTIS ICARIDINA",
@@ -28148,8 +28148,8 @@
       80715.96,
       83725.19
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "REPELENTES INFANTIS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "REPELENTES ICARIDINA",
@@ -28220,8 +28220,8 @@
       79236.74,
       82190.82
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "REPELENTES ICARIDINA"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "REGULADORES INTESTINAIS",
@@ -28293,7 +28293,7 @@
       80232.51
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "REGULADORES INTESTINAIS"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "DERMO - ANTIESTRIAS",
@@ -28364,8 +28364,8 @@
       75952.46,
       78784.1
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DERMO"
+    "grupo": "Dermo-Cosmeticos",
+    "subgrupo": "Dermo-Cosmeticos"
   },
   {
     "linha": "AFECCOES BUCAIS / GARGANTA",
@@ -28437,7 +28437,7 @@
       77488.55
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "AFECCOES BUCAIS / GARGANTA"
+    "subgrupo": "Referencia Liberado"
   },
   {
     "linha": "FRALDAS INFANTIS PISCINA",
@@ -28508,8 +28508,8 @@
       74140.64,
       76904.73
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "FRALDAS INFANTIS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Fraldas"
   },
   {
     "linha": "DEPILACAO - FOLHA CORPORAL",
@@ -28580,8 +28580,8 @@
       73509.24,
       76249.79
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DEPILACAO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CUIDADO FACIAL - HIDRATANTE",
@@ -28652,8 +28652,8 @@
       72908.83,
       75626.99
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO FACIAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "SOLAR - AUTOBRONZEADOR",
@@ -28724,8 +28724,8 @@
       70752.55,
       73390.33
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SOLAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DESODORANTE - ROLL-ON UNISSEX",
@@ -28796,8 +28796,8 @@
       70274.53,
       72894.49
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DESODORANTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "FRALDAS GERIATRICAS - ROUPA INTIMA MASC",
@@ -28868,8 +28868,8 @@
       68596.67,
       71154.07
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "FRALDAS GERIATRICAS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Fraldas"
   },
   {
     "linha": "SOLAR - AERO",
@@ -28940,8 +28940,8 @@
       67909.16,
       70440.93
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SOLAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CAPILAR - MASCULINO",
@@ -29012,8 +29012,8 @@
       67521.32,
       70038.63
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BAZAR - NECESSAIRE",
@@ -29084,8 +29084,8 @@
       65413.02,
       67851.73
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "MAQUIAGEM - LAPIS SOBRANCELHA",
@@ -29156,8 +29156,8 @@
       65302.9,
       67737.5
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ACES - INFANTIL PRENDEDOR CHUPETA",
@@ -29228,8 +29228,8 @@
       64358.23,
       66757.61
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ACES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "SEM CLASSE TERAPEUTICA",
@@ -29301,7 +29301,7 @@
       66508.85
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "SEM CLASSE TERAPEUTICA"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "REPELENTES INFANTIS",
@@ -29372,8 +29372,8 @@
       63820.11,
       66199.43
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "REPELENTES INFANTIS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BAZAR - ACENDEDORES",
@@ -29444,8 +29444,8 @@
       63755.7,
       66132.62
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "MAQUIAGEM - KIT PRESENTE MAKE",
@@ -29516,8 +29516,8 @@
       63598.67,
       65969.74
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAOS E PES - ACESSORIOS",
@@ -29588,8 +29588,8 @@
       63482.37,
       65849.1
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAOS E PES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BAZAR - PELUCIAS",
@@ -29660,8 +29660,8 @@
       63132.72,
       65486.42
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "MAQUIAGEM - BLUSH",
@@ -29732,8 +29732,8 @@
       62718.54,
       65056.79
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "SAUDE OCULAR",
@@ -29805,7 +29805,7 @@
       64865.73
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "SAUDE OCULAR"
+    "subgrupo": "Liberados"
   },
   {
     "linha": "DEPILACAO - CERA MICROONDAS",
@@ -29876,8 +29876,8 @@
       62196.05,
       64514.83
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DEPILACAO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ESTETICA",
@@ -29948,8 +29948,8 @@
       62006.76,
       64318.48
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ESTETICA"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DERMO - LIMPEZA INFANTIL",
@@ -30020,8 +30020,8 @@
       60750.68,
       63015.57
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DERMO"
+    "grupo": "Dermo-Cosmeticos",
+    "subgrupo": "Dermo-Cosmeticos"
   },
   {
     "linha": "PSORIASE",
@@ -30093,7 +30093,7 @@
       62558.02
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "PSORIASE"
+    "subgrupo": "Referencia Super Onerosos"
   },
   {
     "linha": "HIGIENE ORAL - CREME DENTAL VEGANO",
@@ -30164,8 +30164,8 @@
       60088.67,
       62328.88
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HIGIENE ORAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC- DISTURBIOS OSSEOS/MUSCULAR/ARTICUL",
@@ -30237,7 +30237,7 @@
       61634.53
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- DISTURBIOS OSSEOS/MUSCULAR/ARTICUL"
+    "subgrupo": "Referencia Super Onerosos"
   },
   {
     "linha": "DERMOCOSMETICOS - BLOQUEADOS",
@@ -30308,8 +30308,8 @@
       54705.97,
       56745.5
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DERMOCOSMETICOS - BLOQUEADOS"
+    "grupo": "Dermo-Cosmeticos",
+    "subgrupo": "Dermo-Cosmeticos"
   },
   {
     "linha": "PNEUMOLOGIA",
@@ -30452,8 +30452,8 @@
       54449.97,
       56479.96
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ADOCANTES",
@@ -30525,7 +30525,7 @@
       55222.36
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ADOCANTES"
+    "subgrupo": "Referencia Liberado"
   },
   {
     "linha": "OTC- TONICOS",
@@ -30597,7 +30597,7 @@
       54025.51
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- TONICOS"
+    "subgrupo": "Referencia Super Onerosos"
   },
   {
     "linha": "DEPILACAO - ACESSORIOS",
@@ -30668,8 +30668,8 @@
       50897.96,
       52795.52
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DEPILACAO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BAZAR – FESTIVOS",
@@ -30740,8 +30740,8 @@
       50770.67,
       52663.49
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "DESODORANTE - AERO MASCULINO PACK",
@@ -30812,8 +30812,8 @@
       49935.21,
       51796.88
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DESODORANTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ESTIMULANTES DO APETITE",
@@ -30885,7 +30885,7 @@
       51021.78
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ESTIMULANTES DO APETITE"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "MAQUIAGEM – BLUSH STICK",
@@ -30956,8 +30956,8 @@
       47557.48,
       49330.51
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - FIXADOR",
@@ -31028,8 +31028,8 @@
       47359.56,
       49125.2
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "SOLAR - POS SOL",
@@ -31100,8 +31100,8 @@
       47026.46,
       48779.69
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SOLAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ACESSORIO CAPILAR - HIGIENE",
@@ -31172,8 +31172,8 @@
       46098.42,
       47817.05
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ACESSORIO CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DESODORANTE - ROLLON MASCULINO PACK",
@@ -31244,8 +31244,8 @@
       44571.79,
       46233.5
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DESODORANTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "REPOSITORES ELETROLITICOS/REHIDRATANTE",
@@ -31316,8 +31316,8 @@
       44521.77,
       46181.62
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "REPOSITORES ELETROLITICOS/REHIDRATANTE"
+    "grupo": "Nutricao",
+    "subgrupo": "Nutricao Outros"
   },
   {
     "linha": "PANETONES",
@@ -31461,7 +31461,7 @@
       44897.48
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "NEUROTONICOS"
+    "subgrupo": "Referencia"
   },
   {
     "linha": "MAQUIAGEM - INFANTIL",
@@ -31532,8 +31532,8 @@
       42590.71,
       44178.56
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "LENCO INTIMO - ADULTO",
@@ -31604,8 +31604,8 @@
       41756.16,
       43312.9
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "LENCO INTIMO - ADULTO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Lencos e Toalhas Umedecidas"
   },
   {
     "linha": "MANIPULADOS",
@@ -31676,8 +31676,8 @@
       40959.02,
       42486.04
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MANIPULADOS"
+    "grupo": "Manipulados",
+    "subgrupo": "Manipulados Medicamentos"
   },
   {
     "linha": "OTC- FITOTERAPICOS",
@@ -31749,7 +31749,7 @@
       41189.63
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- FITOTERAPICOS"
+    "subgrupo": "Similar Oneroso"
   },
   {
     "linha": "SOLAR - BRONZEAMENTO",
@@ -31820,8 +31820,8 @@
       39246.91,
       40710.1
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SOLAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CUIDADO FACIAL - ESFOLIANTE",
@@ -31892,8 +31892,8 @@
       39232.97,
       40695.64
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO FACIAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ANABOLIZANTES",
@@ -31965,7 +31965,7 @@
       40540.89
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANABOLIZANTES"
+    "subgrupo": "Referencia Super Onerosos Controlado"
   },
   {
     "linha": "BAZAR - AUTOMOTIVO",
@@ -32036,8 +32036,8 @@
       38930.27,
       40381.66
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "CUIDADO FACIAL - MASCARA",
@@ -32108,8 +32108,8 @@
       38618.41,
       40058.17
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO FACIAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DESODORANTE - INFANTIL",
@@ -32180,8 +32180,8 @@
       38113.02,
       39533.94
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DESODORANTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DESODORANTE - SPRAY MASCULINO",
@@ -32252,8 +32252,8 @@
       36764.41,
       38135.05
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DESODORANTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "PET - BRINQUEDOS",
@@ -32324,8 +32324,8 @@
       36252.09,
       37603.63
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "PET"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "MAQUIAGEM - CUIDADO LABIAL",
@@ -32396,8 +32396,8 @@
       35541.06,
       36866.09
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "PERFUMES INFANTIS - FEMININO",
@@ -32468,8 +32468,8 @@
       35022.35,
       36328.04
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "PERFUMES INFANTIS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "COLORACAO - TEMPORARIA",
@@ -32540,8 +32540,8 @@
       34502.82,
       35789.14
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "COLORACAO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - CONTORNO STICK",
@@ -32612,8 +32612,8 @@
       34100.66,
       35371.99
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "SOBRANCELHA - COLORACAO S/ AMONIA",
@@ -32684,8 +32684,8 @@
       32924.47,
       34151.95
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SOBRANCELHA - COLORACAO S/ AMONIA"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BARBA - ACESSORIOS",
@@ -32756,8 +32756,8 @@
       32666.48,
       33884.34
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BARBA"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "PET - ACESSORIOS",
@@ -32828,8 +32828,8 @@
       32346.37,
       33552.3
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "PET"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "DESODORANTE - AERO FEMININO PACK",
@@ -32900,8 +32900,8 @@
       32216.59,
       33417.68
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DESODORANTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "PERFUMES CAPILARES",
@@ -32972,8 +32972,8 @@
       32021.57,
       33215.39
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "PERFUMES CAPILARES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ACESSORIOS - INFANTIL VESTIMENTA",
@@ -33044,8 +33044,8 @@
       31705.06,
       32887.08
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ACESSORIOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM INFANTIL - GLOSS",
@@ -33116,8 +33116,8 @@
       31438.61,
       32610.7
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM INFANTIL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "INSETICIDAS",
@@ -33188,8 +33188,8 @@
       30886.35,
       32037.85
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "INSETICIDAS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - BATOM BALA",
@@ -33260,8 +33260,8 @@
       30799.62,
       31947.88
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ANTIALERGICOS/ANTI-HISTAMINICO TOP",
@@ -33333,7 +33333,7 @@
       31534.01
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTIALERGICOS/ANTI-HISTAMINICO TOP"
+    "subgrupo": "Similar"
   },
   {
     "linha": "DERMO - SOLAR INFANTIL",
@@ -33404,8 +33404,8 @@
       28054.91,
       29100.85
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DERMO"
+    "grupo": "Dermo-Cosmeticos",
+    "subgrupo": "Dermo-Cosmeticos"
   },
   {
     "linha": "SABONETE FACIAL",
@@ -33476,8 +33476,8 @@
       27704.31,
       28737.18
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SABONETE FACIAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "PERFUMES UNISSEX",
@@ -33548,8 +33548,8 @@
       27500.04,
       28525.29
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "PERFUMES UNISSEX"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - PALETA DE CONTORNO",
@@ -33620,8 +33620,8 @@
       27394.73,
       28416.05
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - CANETA DELINEADORA",
@@ -33692,8 +33692,8 @@
       27161.8,
       28174.44
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "HOME CARE - CARVAO",
@@ -33764,8 +33764,8 @@
       26250.43,
       27229.09
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HOME CARE"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia Nutricional"
   },
   {
     "linha": "MAQUIAGEM - HALLOWEEN E CARNAVAL",
@@ -33836,8 +33836,8 @@
       26242.18,
       27220.53
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "FRALDAS GERIATRICAS - PROTETOR COLCHAO",
@@ -33908,8 +33908,8 @@
       25648.73,
       26604.96
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "FRALDAS GERIATRICAS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Absorventes e Lenços Substituido"
   },
   {
     "linha": "MAQUIAGEM - ILUMINADOR",
@@ -33980,8 +33980,8 @@
       25637.45,
       26593.26
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC - ANTIANEMICOS",
@@ -34053,7 +34053,7 @@
       26375.91
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC"
+    "subgrupo": "Similar Oneroso"
   },
   {
     "linha": "ANTINFECCIOSOS TOPICOS",
@@ -34125,7 +34125,7 @@
       26267.27
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ANTINFECCIOSOS TOPICOS"
+    "subgrupo": "Hospitalares"
   },
   {
     "linha": "CUIDADO FACIAL - TONICO",
@@ -34196,8 +34196,8 @@
       25214.02,
       26154.04
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO FACIAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "LIVROS - JUVENIL",
@@ -34268,8 +34268,8 @@
       24775.49,
       25699.16
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "LIVROS"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "MAOS E PES - ESMALTES INFANTIL",
@@ -34340,8 +34340,8 @@
       23273.58,
       24141.26
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAOS E PES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DERMO - AGUA TERMAL",
@@ -34412,8 +34412,8 @@
       23080.71,
       23941.2
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DERMO"
+    "grupo": "Dermo-Cosmeticos",
+    "subgrupo": "Dermo-Cosmeticos"
   },
   {
     "linha": "COLONIA INFANTIL",
@@ -34484,8 +34484,8 @@
       22266.74,
       23096.88
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "COLONIA INFANTIL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - LAPIS RETRATIL SOBRANCELHA",
@@ -34556,8 +34556,8 @@
       21506.59,
       22308.39
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - DELINEADOR LIQUIDO",
@@ -34628,8 +34628,8 @@
       20486.39,
       21250.16
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DESODORANTE - CREME / GEL UNISSEX",
@@ -34700,8 +34700,8 @@
       19919.57,
       20662.21
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DESODORANTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "PERFUMES INFANTIS - MASCULINO",
@@ -34772,8 +34772,8 @@
       19262.21,
       19980.34
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "PERFUMES INFANTIS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CAPILAR - MATIZADORES",
@@ -34844,8 +34844,8 @@
       19012.15,
       19720.96
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "HIGIENE ORAL - CLAREAMENTO",
@@ -34916,8 +34916,8 @@
       18616.63,
       19310.69
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HIGIENE ORAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "HIDRATANTE",
@@ -34988,8 +34988,8 @@
       17337.12,
       17983.48
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "HIDRATANTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria Exclusiva"
   },
   {
     "linha": "PORTA PERFUME",
@@ -35060,8 +35060,8 @@
       17192.24,
       17833.2
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "PORTA PERFUME"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DESODORANTE - ROLL-ON VEGANO",
@@ -35132,8 +35132,8 @@
       17015.39,
       17649.75
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DESODORANTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BAZAR - TERAPEUTICOS",
@@ -35204,8 +35204,8 @@
       16891.83,
       17521.59
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "OTC- ANTILIPEMICOS/REDUTORES COLESTEROL",
@@ -35277,7 +35277,7 @@
       16351.79
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- ANTILIPEMICOS/REDUTORES COLESTEROL"
+    "subgrupo": "Referencia Super Onerosos"
   },
   {
     "linha": "BARBA - APARELHOS / CARGAS",
@@ -35348,8 +35348,8 @@
       15641.64,
       16224.79
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BARBA"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "FLORICULTURA",
@@ -35420,8 +35420,8 @@
       15333.1,
       15904.74
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "FLORICULTURA"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "MAQUIAGEM",
@@ -35492,8 +35492,8 @@
       15274.33,
       15843.78
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - LIP OIL",
@@ -35564,8 +35564,8 @@
       15114.72,
       15678.22
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "SAUDE OCULAR - OCULOS SOLAR",
@@ -35636,8 +35636,8 @@
       14923.1,
       15479.46
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SAUDE OCULAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "CAPILAR - ATIVADORES",
@@ -35708,8 +35708,8 @@
       14889.84,
       15444.96
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "IMUNOLOGIA",
@@ -35852,8 +35852,8 @@
       14594.81,
       15138.93
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CAPILAR - PRE SHAMPOO",
@@ -35924,8 +35924,8 @@
       13665.82,
       14175.31
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAOS E PES - ANTISSEPTICO",
@@ -35996,8 +35996,8 @@
       13622.35,
       14130.21
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAOS E PES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria Exclusiva"
   },
   {
     "linha": "SUPLEMENTO ESPECIAL",
@@ -36068,8 +36068,8 @@
       13527.33,
       14031.65
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SUPLEMENTO ESPECIAL"
+    "grupo": "Nutricao",
+    "subgrupo": "Nutricao Especiais"
   },
   {
     "linha": "CAPILAR - MASCARAS - SACHE",
@@ -36140,8 +36140,8 @@
       13445.83,
       13947.11
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ACESSORIOS MAQUIAGEM - CILIOS POSTICOS",
@@ -36212,8 +36212,8 @@
       13341.89,
       13839.3
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ACESSORIOS MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC - ANTIDIARREICO",
@@ -36285,7 +36285,7 @@
       13591.87
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC"
+    "subgrupo": "Similar Oneroso"
   },
   {
     "linha": "ACESSORIOS - INFANTIL BABADORES",
@@ -36356,8 +36356,8 @@
       12653.05,
       13124.78
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ACESSORIOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DESODORANTE - SPRAY VEGANO",
@@ -36428,8 +36428,8 @@
       12648.82,
       13120.39
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DESODORANTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC- NEUROTONICOS",
@@ -36501,7 +36501,7 @@
       12368.82
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- NEUROTONICOS"
+    "subgrupo": "Referencia Liberado Super Onerosos"
   },
   {
     "linha": "MAQUIAGEM - BLUSH COMPACTO",
@@ -36572,8 +36572,8 @@
       11599.54,
       12031.99
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DESODORANTE - CREME / GEL CORPO",
@@ -36644,8 +36644,8 @@
       11221.98,
       11640.35
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DESODORANTE"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - PALETA DE ILUMINADOR",
@@ -36716,8 +36716,8 @@
       10984.44,
       11393.96
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC- ANTIPARASITARIO",
@@ -36789,7 +36789,7 @@
       11115.78
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC- ANTIPARASITARIO"
+    "subgrupo": "Referencia Onerosos"
   },
   {
     "linha": "ACESSORIOS - INFANTIL ACESSORIOS",
@@ -36860,8 +36860,8 @@
       10567.98,
       10961.97
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ACESSORIOS"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ANTI-RETROVIRAIS (HIV/HEPATITE)",
@@ -37004,8 +37004,8 @@
       10046.74,
       10421.3
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAOS E PES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CAPILAR",
@@ -37076,8 +37076,8 @@
       9017.0,
       9353.17
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BAZAR - ROUPA INTIMA",
@@ -37148,8 +37148,8 @@
       8255.0,
       8562.76
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "SOLAR",
@@ -37220,8 +37220,8 @@
       8098.01,
       8399.92
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "SOLAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DERMO - TRATAMENTO",
@@ -37293,7 +37293,7 @@
       7527.76
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "DERMO"
+    "subgrupo": "Hospitalares"
   },
   {
     "linha": "MAQUIAGEM - CORRETIVO STICK",
@@ -37364,8 +37364,8 @@
       6662.38,
       6910.76
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DEPILACAO - CERA MASCULINA",
@@ -37436,8 +37436,8 @@
       6568.31,
       6813.19
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DEPILACAO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC - CORTCOESTEROIDES SISTEMICOS",
@@ -37509,7 +37509,7 @@
       6717.77
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC"
+    "subgrupo": "Referencia Liberado"
   },
   {
     "linha": "MAQUIAGEM - SOMBRA SOBRANCELHAS",
@@ -37580,8 +37580,8 @@
       6082.83,
       6309.61
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - LIP TINT",
@@ -37652,8 +37652,8 @@
       6028.37,
       6253.12
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - BLUSH STICK",
@@ -37724,8 +37724,8 @@
       5960.39,
       6182.6
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "ACESSORIOS MAQUIAGEM - COLA DE CILIOS",
@@ -37796,8 +37796,8 @@
       4943.18,
       5127.47
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "ACESSORIOS MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM INFANTIL - BATOM LIQUIDO",
@@ -37868,8 +37868,8 @@
       4713.69,
       4889.42
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM INFANTIL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CUIDADO CORPO - HIDRATANTE CORPORAL",
@@ -37940,8 +37940,8 @@
       4708.38,
       4883.92
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO CORPO - HIDRATANTE CORPORAL"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - LAPISEIRA RETRATIL OLHO",
@@ -38012,8 +38012,8 @@
       4643.92,
       4817.05
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DEPILACAO - POS DEPILACAO",
@@ -38084,8 +38084,8 @@
       4624.68,
       4797.1
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DEPILACAO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - LIP BALM",
@@ -38156,8 +38156,8 @@
       4437.74,
       4603.19
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - PALETA MULTIFUNCIONAL",
@@ -38228,8 +38228,8 @@
       4170.39,
       4325.87
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "OTC - ANTIEMETICOS/NAUSEA/ENJOO/VOMITO",
@@ -38301,7 +38301,7 @@
       3862.38
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "OTC"
+    "subgrupo": "Genericos Onerosos"
   },
   {
     "linha": "CONVENIENCIA PERECIVEL",
@@ -38444,8 +38444,8 @@
       2920.16,
       3029.03
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "CHOCOLATES - PASCOA",
@@ -38516,8 +38516,8 @@
       2877.77,
       2985.06
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CHOCOLATES"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia Sazonal"
   },
   {
     "linha": "FRIOS E LATICINIOS",
@@ -38588,8 +38588,8 @@
       2499.0,
       2592.17
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "FRIOS E LATICINIOS"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia Refrigerados"
   },
   {
     "linha": "CUIDADO - CORPO MAQUIAGEM",
@@ -38660,8 +38660,8 @@
       1965.82,
       2039.11
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CUIDADO"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria Exclusiva Premiacao"
   },
   {
     "linha": "ACESSORIOS - INFANTIL BANHO",
@@ -38804,8 +38804,8 @@
       1860.06,
       1929.41
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "CAPILAR"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "MAQUIAGEM - SOMBRA UNITÁRIA",
@@ -38876,8 +38876,8 @@
       1773.7,
       1839.83
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "BAZAR - MALAS",
@@ -38948,8 +38948,8 @@
       1559.39,
       1617.53
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "ACESSORIO CIRURGICO",
@@ -39021,7 +39021,7 @@
       1463.68
     ],
     "grupo": "Medicamentos",
-    "subgrupo": "ACESSORIO CIRURGICO"
+    "subgrupo": "Hospitalares"
   },
   {
     "linha": "COLETORES MENSTRUAIS",
@@ -39164,8 +39164,8 @@
       1121.03,
       1162.82
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "MAQUIAGEM"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "DERMO - OLHOS",
@@ -39236,8 +39236,8 @@
       1011.36,
       1049.07
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "DERMO"
+    "grupo": "Dermo-Cosmeticos",
+    "subgrupo": "Dermo-Cosmeticos"
   },
   {
     "linha": "MAQUIAGEM - BASE STICK",
@@ -39596,8 +39596,8 @@
       533.55,
       553.44
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "BAZAR"
+    "grupo": "Conveniencia",
+    "subgrupo": "Conveniencia - Bazar"
   },
   {
     "linha": "OTC- CONTROLE DE PESO",
@@ -41684,8 +41684,8 @@
       0.29,
       0.3
     ],
-    "grupo": "Medicamentos",
-    "subgrupo": "PROVADORES"
+    "grupo": "Perfumaria",
+    "subgrupo": "Perfumaria"
   },
   {
     "linha": "EXPOSITORES",
