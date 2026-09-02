@@ -1039,3 +1039,205 @@ body {
     padding: 16px;
   }
 }
+
+/* ── Metas por Diretoria & Distritais (Apple Keynote Style) ── */
+.diretoria-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.diretoria-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.diretoria-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.diretoria-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.diretoria-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.diretoria-meta-kpis {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--surface-subtle);
+  border-radius: var(--radius-md);
+}
+
+.diretoria-kpi-item .lbl {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  letter-spacing: 0.5px;
+}
+
+.diretoria-kpi-item .val {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.diretoria-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.diretoria-progress-bar {
+  height: 8px;
+  background: rgba(120, 120, 128, 0.16);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.diretoria-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ranking-distritais-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 8px 2px;
+}
+
+.distrital-rank-pill {
+  flex: 0 0 auto;
+  min-width: 175px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.distrital-rank-pill:hover,
+.distrital-rank-pill.active {
+  border-color: var(--apple-blue);
+  background: var(--apple-blue-soft);
+  transform: translateY(-1px);
+}
+
+.distrital-rank-pill .name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.distrital-rank-pill .sub {
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+}
+
+.distrital-rank-pill .nums {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+}
+
+.distrital-rank-pill .ating {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+/* ── Hierarchical Rows in Table ───────────────────────── */
+.row-diretoria {
+  background: rgba(0, 113, 227, 0.05);
+  font-weight: 700;
+  cursor: pointer;
+  border-top: 2px solid var(--border);
+}
+
+.row-diretoria:hover {
+  background: rgba(0, 113, 227, 0.09) !important;
+}
+
+.row-distrital {
+  background: rgba(88, 86, 214, 0.03);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.row-distrital:hover {
+  background: rgba(88, 86, 214, 0.07) !important;
+}
+
+.row-metas-grupo {
+  background: var(--surface-subtle);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.row-metas-grupo:hover {
+  background: var(--surface-hover) !important;
+}
+
+.row-metas-linha {
+  background: #FFFFFF;
+  font-size: 12px;
+}
+
+.row-metas-linha:hover {
+  background: rgba(0, 0, 0, 0.02) !important;
+}
+
+.tree-indent-0 { padding-left: 12px !important; }
+.tree-indent-1 { padding-left: 32px !important; }
+.tree-indent-2 { padding-left: 54px !important; }
+.tree-indent-3 { padding-left: 76px !important; }
+
+.tree-toggle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: rgba(120, 120, 128, 0.12);
+  margin-right: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  user-select: none;
+}

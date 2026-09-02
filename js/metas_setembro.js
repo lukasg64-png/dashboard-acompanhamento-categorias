@@ -1,34 +1,56 @@
-/* metas_setembro.js — Aba de Metas & Evolução Setembro/2026 (Hierarquia Grupo ➔ Subgrupo ➔ Linha) */
+/* metas_setembro.js — Metas & Evolução Setembro/2026:
+   1) Aba 4: Macro Empresa & Categorias (tabMetasSetembro)
+   2) Aba 5: Metas por Diretoria & Distritais (tabMetasDiretoria)
+*/
 
 let METAS_DATA = null;
 let _metasChart = null;
 let _metasRendered = false;
+let _dirRendered = false;
 
-// Estado de expansão da árvore
+// Estado de filtros da Aba Macro Empresa
 const STATE_METAS = {
-  expandedGrupos: new Set(),
-  expandedSubgrupos: new Set(),
   categoria: 'ALL',
   status: 'ALL',
   search: '',
-  sort: 'meta_mensal' // 'meta_mensal', 'desvio_rs', 'desvio_pct', 'ating_pct', 'nome'
+  sort: 'meta_mensal'
+};
+
+// Estado de filtros e expansão da Aba Diretoria & Distritais
+const STATE_DIR = {
+  diretoria: 'ALL',
+  distrital: 'ALL',
+  grupo: 'ALL',
+  search: '',
+  expandedDirs: new Set(['Cintia Silva', 'Laerti Siqueira']),
+  expandedDists: new Set(),
+  expandedGrupos: new Set()
 };
 
 /* ── Formatação ──────────────────────────────────────── */
 function _fmtRS(v) {
   if (v === null || v === undefined || isNaN(v)) return '-';
-  return 'R$ ' + Math.abs(v).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  return 'R$ ' + Math.abs(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function _fmtRSCompact(v) {
+  if (v === null || v === undefined || isNaN(v)) return '-';
+  const val = Math.abs(v);
+  if (val >= 1e9) return 'R$ ' + (val / 1e9).toFixed(2).replace('.', ',') + ' B';
+  if (val >= 1e6) return 'R$ ' + (val / 1e6).toFixed(2).replace('.', ',') + ' M';
+  if (val >= 1e3) return 'R$ ' + (val / 1e3).toFixed(1).replace('.', ',') + ' mil';
+  return 'R$ ' + val.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
 function _fmtRSSigned(v) {
   if (v === null || v === undefined || isNaN(v)) return '-';
   const prefix = v > 0 ? '+' : v < 0 ? '-' : '';
-  return prefix + ' R$ ' + Math.abs(v).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  return prefix + ' R$ ' + Math.abs(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function _fmtPct(v) {
   if (v === null || v === undefined || isNaN(v)) return '-';
-  return (v > 0 ? '+' : '') + v.toFixed(1) + '%';
+  return (v > 0 ? '+' : '') + v.toFixed(1).replace('.', ',') + '%';
 }
 
 function _escHtml(s) {
@@ -40,32 +62,37 @@ function _escHtml(s) {
 
 function _statusIcon(status) {
   switch (status) {
-    case 'acima': return '<span style="color:#34C759;font-size:15px;" title="Acima da meta">🟢</span>';
-    case 'alerta': return '<span style="color:#FF9F0A;font-size:15px;" title="Alerta: até -5%">🟡</span>';
-    case 'abaixo': return '<span style="color:#FF3B30;font-size:15px;" title="Abaixo da meta">🔴</span>';
-    case 'aguardando': return '<span style="color:#8E8E93;font-size:13px;" title="Aguardando início do período D-1">⏳</span>';
+    case 'acima': return '<span style="color:#34C759;font-size:14px;" title="Acima da meta">🟢</span>';
+    case 'alerta': return '<span style="color:#FF9F0A;font-size:14px;" title="Alerta: até -5%">🟡</span>';
+    case 'abaixo': return '<span style="color:#FF3B30;font-size:14px;" title="Abaixo da meta">🔴</span>';
+    case 'aguardando': return '<span style="color:#8E8E93;font-size:13px;" title="Aguardando dados">⏳</span>';
     default: return '—';
   }
 }
 
+function _badgeAting(ating_pct) {
+  if (ating_pct === null || ating_pct === undefined || isNaN(ating_pct)) return '<span class="apple-tag tag-neu">—</span>';
+  if (ating_pct >= 100) return `<span class="apple-tag tag-pos">${ating_pct.toFixed(1).replace('.', ',')}%</span>`;
+  if (ating_pct >= 95) return `<span class="apple-tag tag-neu" style="color:var(--apple-orange);background:var(--apple-orange-soft);">${ating_pct.toFixed(1).replace('.', ',')}%</span>`;
+  return `<span class="apple-tag tag-neg">${ating_pct.toFixed(1).replace('.', ',')}%</span>`;
+}
+
 function _badgeDesvio(v, tipo) {
-  if (v === null || v === undefined || isNaN(v)) return '<span class="badge neu">—</span>';
-  const cls = v > 0 ? 'pos' : v < 0 ? 'neg' : 'neu';
-  if (tipo === 'pct') return `<span class="badge ${cls}">${_fmtPct(v)}</span>`;
-  return `<span class="delta-${cls}">${_fmtRSSigned(v)}</span>`;
+  if (v === null || v === undefined || isNaN(v)) return '<span class="apple-tag tag-neu">—</span>';
+  const cls = v > 0 ? 'tag-pos' : v < 0 ? 'tag-neg' : 'tag-neu';
+  if (tipo === 'pct') return `<span class="apple-tag ${cls}">${_fmtPct(v)}</span>`;
+  return `<span class="apple-tag ${cls}">${_fmtRSSigned(v)}</span>`;
 }
 
 /* ── Carregar dados ──────────────────────────────────── */
 async function loadMetasData() {
   if (METAS_DATA) return METAS_DATA;
 
-  // Se estiver embutido no single-file HTML build
   if (typeof _METAS_SETEMBRO !== 'undefined' && _METAS_SETEMBRO) {
     METAS_DATA = _METAS_SETEMBRO;
     return METAS_DATA;
   }
 
-  // Fetch from JSON
   try {
     const ts = Date.now();
     const res = await fetch(`data/setembro/dashboard_setembro.json?v=${ts}`);
@@ -77,98 +104,121 @@ async function loadMetasData() {
   }
 }
 
-/* ── Renderizar Tab ──────────────────────────────────── */
+/* ==========================================================================
+   ABA 4: MACRO EMPRESA & CATEGORIAS (tabMetasSetembro)
+   ========================================================================== */
 async function renderMetasSetembroTab() {
   const data = await loadMetasData();
   if (!data) return;
 
   renderMetasKPIs(data);
   renderMetasChart(data);
-  renderMetasHierarchicalTable(data);
-  wireMetasEvents(data);
+  renderMetasGruposEmpresa(data);
+  renderMetasLinhasTable(data);
+  wireMetasMacroEvents(data);
   _metasRendered = true;
 }
 
-/* ── KPIs ────────────────────────────────────────────── */
 function renderMetasKPIs(data) {
   const strip = document.getElementById('kpiStripMetas');
   if (!strip) return;
 
   const emp = data.empresa || {};
-  const dMax = data.d_max || 0;
-  const diasRestantes = data.dias_restantes || 30;
-  const sc = data.status_count || {};
-
-  const atingColor = emp.ating_pct >= 100 ? '#34C759' : emp.ating_pct >= 95 ? '#FF9F0A' : emp.ating_pct > 0 ? '#FF3B30' : 'var(--text-primary)';
-  const desvioColor = emp.desvio_rs > 0 ? '#34C759' : emp.desvio_rs < 0 ? '#FF3B30' : 'var(--text-secondary)';
+  const dMax = data.d_max || 1;
+  const diasRestantes = data.dias_restantes || 29;
 
   strip.innerHTML = `
-    <div class="apple-kpi-card accent-orange">
-      <div class="kpi-card-header">
-        <span class="kpi-card-title">Meta Mês Total</span>
-        <span class="kpi-card-badge" style="background:rgba(255,159,10,0.12);color:#cc7700;">SET/26</span>
-      </div>
-      <div class="kpi-value-main">${_fmtRS(emp.meta_mensal)}</div>
-      <div class="kpi-sub-value">Meta Comercial +16% (598 linhas alocadas)</div>
-    </div>
-
+    <!-- Card 1: Meta Mensal -->
     <div class="apple-kpi-card accent-blue">
       <div class="kpi-card-header">
-        <span class="kpi-card-title">Meta Acum. D${dMax}</span>
-        <span class="kpi-card-badge" style="background:rgba(0,113,227,0.12);color:#0071E3;">D-1</span>
+        <span class="kpi-card-title">META SETEMBRO/2026</span>
+        <span class="apple-tag tag-neu">Mês Completo</span>
       </div>
-      <div class="kpi-value-main">${_fmtRS(emp.meta_acum_dmax)}</div>
-      <div class="kpi-sub-value">${dMax > 0 ? `Curva ponderada até dia ${dMax}` : 'Aguardando início de setembro'}</div>
+      <div class="kpi-value-main" style="color:var(--apple-blue);">${_fmtRSCompact(emp.meta_mensal)}</div>
+      <div class="kpi-sub-value">${_fmtRS(emp.meta_mensal)} total empresa</div>
+      <div class="kpi-footer-deltas">
+        <span class="sublabel">Alocação Distrital × Linhas</span>
+      </div>
     </div>
 
-    <div class="apple-kpi-card accent-teal">
-      <div class="kpi-card-header">
-        <span class="kpi-card-title">Realizado Acum. D${dMax}</span>
-      </div>
-      <div class="kpi-value-main">${_fmtRS(emp.real_acum_dmax)}</div>
-      <div class="kpi-sub-value">${dMax > 0 ? 'Venda Líquida Qlik Sense' : 'Sem vendas registradas'}</div>
-    </div>
-
-    <div class="apple-kpi-card" style="border-top: 3px solid ${desvioColor};">
-      <div class="kpi-card-header">
-        <span class="kpi-card-title">Desvio Acumulado</span>
-      </div>
-      <div class="kpi-value-main" style="color:${desvioColor};">${dMax > 0 ? _fmtRSSigned(emp.desvio_rs) : 'R$ 0'}</div>
-      <div class="kpi-sub-value" style="color:${desvioColor};">${dMax > 0 ? _fmtPct(emp.desvio_pct) + ' vs meta acumulada' : 'Aguardando D-1'}</div>
-    </div>
-
-    <div class="apple-kpi-card" style="border-top: 3px solid ${atingColor};">
-      <div class="kpi-card-header">
-        <span class="kpi-card-title">Atingimento</span>
-      </div>
-      <div class="kpi-value-main" style="color:${atingColor};">${dMax > 0 && emp.ating_pct ? emp.ating_pct.toFixed(1) + '%' : '—'}</div>
-      <div class="kpi-sub-value">${diasRestantes} dias restantes no mês</div>
-    </div>
-
+    <!-- Card 2: Meta Esperada D-1 -->
     <div class="apple-kpi-card accent-indigo">
       <div class="kpi-card-header">
-        <span class="kpi-card-title">Status Linhas</span>
+        <span class="kpi-card-title">META ACUM. ATÉ D-1</span>
+        <span class="apple-tag tag-neu">Dia ${dMax} de 30</span>
       </div>
-      <div class="kpi-value-main" style="font-size: 17px;">
-        🟢 ${sc.acima || 0} &nbsp; 🟡 ${sc.alerta || 0} &nbsp; 🔴 ${sc.abaixo || 0}
+      <div class="kpi-value-main" style="color:var(--apple-indigo);">${_fmtRSCompact(emp.meta_acum_dmax)}</div>
+      <div class="kpi-sub-value">${_fmtRS(emp.meta_acum_dmax)} acumulado esperado</div>
+      <div class="kpi-footer-deltas">
+        <span class="sublabel">${(dMax / 30 * 100).toFixed(1)}% do mês decorrido</span>
       </div>
-      <div class="kpi-sub-value">⏳ ${sc.aguardando || 0} aguardando início de Set/26</div>
+    </div>
+
+    <!-- Card 3: Realizado D-1 -->
+    <div class="apple-kpi-card accent-green">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">REALIZADO D-1 QLIK</span>
+        <span class="apple-tag tag-pos">Resultado Líquido</span>
+      </div>
+      <div class="kpi-value-main" style="color:var(--apple-green-text);">${_fmtRSCompact(emp.real_acum_dmax)}</div>
+      <div class="kpi-sub-value">${_fmtRS(emp.real_acum_dmax)} faturado</div>
+      <div class="kpi-footer-deltas">
+        ${_badgeAting(emp.ating_pct)} <span class="sublabel">Atingimento D-1</span>
+      </div>
+    </div>
+
+    <!-- Card 4: Desvio vs Meta -->
+    <div class="apple-kpi-card ${emp.desvio_rs >= 0 ? 'accent-green' : 'accent-red'}">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">DESVIO D-1 vs META</span>
+        ${_badgeDesvio(emp.desvio_pct, 'pct')}
+      </div>
+      <div class="kpi-value-main" style="color:${emp.desvio_rs >= 0 ? 'var(--apple-green-text)' : 'var(--apple-red-text)'};">${_fmtRSSigned(emp.desvio_rs)}</div>
+      <div class="kpi-sub-value">${emp.desvio_rs >= 0 ? 'Superando a meta diária' : 'Abaixo da meta esperada'}</div>
+      <div class="kpi-footer-deltas">
+        <span class="sublabel">Diferença nominal acumulada</span>
+      </div>
+    </div>
+
+    <!-- Card 5: Projeção Run-Rate -->
+    <div class="apple-kpi-card accent-orange">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">PROJEÇÃO RUN-RATE</span>
+        <span class="apple-tag tag-neu">Ritmo Atual</span>
+      </div>
+      <div class="kpi-value-main" style="color:var(--apple-orange);">${_fmtRSCompact(emp.projecao_runrate)}</div>
+      <div class="kpi-sub-value">${_fmtRS(emp.projecao_runrate)} fechamento estimado</div>
+      <div class="kpi-footer-deltas">
+        <span class="sublabel">Baseado na média diária de vendas</span>
+      </div>
+    </div>
+
+    <!-- Card 6: Dias Restantes -->
+    <div class="apple-kpi-card accent-teal">
+      <div class="kpi-card-header">
+        <span class="kpi-card-title">DIAS RESTANTES</span>
+        <span class="apple-tag tag-neu">Setembro</span>
+      </div>
+      <div class="kpi-value-main" style="color:var(--apple-teal);">${diasRestantes} dias</div>
+      <div class="kpi-sub-value">Necessário: ${_fmtRSCompact((emp.meta_mensal - emp.real_acum_dmax) / Math.max(1, diasRestantes))}/dia</div>
+      <div class="kpi-footer-deltas">
+        <span class="sublabel">Para atingir 100% da meta</span>
+      </div>
     </div>
   `;
 }
 
-/* ── Gráfico Evolução ────────────────────────────────── */
 function renderMetasChart(data) {
   const canvas = document.getElementById('chartMetasEvolucao');
-  if (!canvas || typeof Chart === 'undefined') return;
+  if (!canvas) return;
 
   const emp = data.empresa || {};
-  const dMax = data.d_max || 0;
   const curva = data.curva_diaria || [];
+  const dMax = data.d_max || 1;
 
-  const labels = curva.map(d => `D${d.dia}`);
-  const metaAcum = emp.evolucao_meta || curva.map(d => d.meta_acum);
-  const realAcum = emp.evolucao_real || [];
+  const labels = curva.map(c => `Dia ${c.dia}`);
+  const metaAcum = emp.evolucao_meta || curva.map(c => c.meta_acum);
+  const realAcum = (emp.evolucao_real || []).map((v, i) => i < dMax ? v : null);
 
   if (_metasChart) _metasChart.destroy();
 
@@ -180,29 +230,24 @@ function renderMetasChart(data) {
         {
           label: 'Meta Acumulada R$',
           data: metaAcum,
-          borderColor: '#FF9F0A',
-          backgroundColor: 'rgba(255, 159, 10, 0.08)',
-          borderWidth: 2.5,
-          borderDash: [6, 4],
-          fill: false,
+          borderColor: '#0071E3',
+          backgroundColor: 'rgba(0, 113, 227, 0.08)',
+          fill: true,
           tension: 0.3,
-          pointRadius: 0,
-          pointHoverRadius: 5,
+          borderWidth: 2.5,
+          pointRadius: 2
         },
         {
           label: 'Realizado Acumulado R$',
-          data: realAcum.map((v, i) => i < dMax ? v : null),
-          borderColor: '#0071E3',
-          backgroundColor: 'rgba(0, 113, 227, 0.12)',
-          borderWidth: 3,
+          data: realAcum,
+          borderColor: '#34C759',
+          backgroundColor: 'rgba(52, 199, 89, 0.15)',
           fill: true,
           tension: 0.3,
-          pointRadius: (ctx) => ctx.dataIndex === dMax - 1 ? 6 : 0,
-          pointBackgroundColor: '#0071E3',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointHoverRadius: 7,
-        },
+          borderWidth: 3,
+          pointRadius: 5,
+          pointBackgroundColor: '#34C759'
+        }
       ]
     },
     options: {
@@ -210,385 +255,523 @@ function renderMetasChart(data) {
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: {
-          position: 'top',
-          labels: { usePointStyle: true, padding: 20, font: { size: 12, weight: 600 } }
-        },
+        legend: { position: 'top', labels: { boxWidth: 12, font: { weight: 600 } } },
         tooltip: {
-          backgroundColor: 'rgba(0,0,0,0.85)',
-          titleFont: { size: 13, weight: 700 },
-          bodyFont: { size: 12 },
-          padding: 12,
-          cornerRadius: 10,
           callbacks: {
-            label: function(ctx) {
-              const v = ctx.parsed.y;
-              if (v === null || v === undefined) return '';
-              return `${ctx.dataset.label}: R$ ${(v/1e6).toFixed(1)}M`;
-            }
+            label: (ctx) => `${ctx.dataset.label}: R$ ${(ctx.raw || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
           }
         }
       },
       scales: {
-        x: {
-          grid: { display: false },
-          ticks: { font: { size: 10 }, maxRotation: 0 }
-        },
         y: {
-          grid: { color: 'rgba(0,0,0,0.04)' },
-          ticks: {
-            font: { size: 10 },
-            callback: v => 'R$ ' + (v / 1e6).toFixed(0) + 'M'
-          }
-        }
+          ticks: { callback: (v) => 'R$ ' + (v / 1e6).toFixed(0) + 'M' },
+          grid: { color: 'rgba(0,0,0,0.04)' }
+        },
+        x: { grid: { display: false } }
       }
     }
   });
-
-  const sub = document.getElementById('metasEvolucaoSubtitle');
-  if (sub) {
-    sub.textContent = dMax > 0
-      ? `Setembro/2026 • D-1 até dia ${dMax} • Atualizado: ${data.ultima_atualizacao || ''}`
-      : 'Setembro/2026 • Curva diária ponderada (30 dias) • Aguardando início do mês';
-  }
 }
 
-/* ── Toggle Expand / Collapse ─────────────────────────── */
-function toggleMetasGrupo(grupoNome) {
-  if (STATE_METAS.expandedGrupos.has(grupoNome)) {
-    STATE_METAS.expandedGrupos.delete(grupoNome);
-  } else {
-    STATE_METAS.expandedGrupos.add(grupoNome);
-  }
-  renderMetasHierarchicalTable(METAS_DATA);
-}
+function renderMetasGruposEmpresa(data) {
+  const tbody = document.getElementById('tbodyMetasGruposEmpresa');
+  if (!tbody) return;
 
-function toggleMetasSubgrupo(subKey) {
-  if (STATE_METAS.expandedSubgrupos.has(subKey)) {
-    STATE_METAS.expandedSubgrupos.delete(subKey);
-  } else {
-    STATE_METAS.expandedSubgrupos.add(subKey);
-  }
-  renderMetasHierarchicalTable(METAS_DATA);
-}
-
-/* ── Tabela Hierárquica: Grupo ➔ Subgrupo ➔ Linha ────── */
-function renderMetasHierarchicalTable(data) {
-  const tbody = document.getElementById('tbodyMetasLinhas');
-  const countEl = document.getElementById('metasTableCount');
-  if (!tbody || !data) return;
-
-  const dMax = data.d_max || 0;
-  const catFilter = STATE_METAS.categoria;
-  const statusFilter = STATE_METAS.status;
-  const searchTerm = STATE_METAS.search.toLowerCase().trim();
-  const sortMode = STATE_METAS.sort;
-
-  // 1. Filtrar linhas de produto
-  let filteredLinhas = (data.linhas || []).filter(l => {
-    if (catFilter !== 'ALL' && l.categoria !== catFilter) return false;
-    if (statusFilter !== 'ALL' && l.status !== statusFilter) return false;
-    if (searchTerm) {
-      const match = l.linha.toLowerCase().includes(searchTerm) ||
-                    (l.subgrupo || '').toLowerCase().includes(searchTerm) ||
-                    (l.grupo || '').toLowerCase().includes(searchTerm) ||
-                    (l.familia || '').toLowerCase().includes(searchTerm);
-      if (!match) return false;
-    }
-    return true;
-  });
-
-  // Se houver busca ativa, expande automaticamente grupos e subgrupos correspondentes
-  if (searchTerm) {
-    filteredLinhas.forEach(l => {
-      STATE_METAS.expandedGrupos.add(l.grupo);
-      STATE_METAS.expandedSubgrupos.add(`${l.grupo}||${l.subgrupo}`);
-    });
-  }
-
-  // 2. Construir árvore hierárquica (Grupo ➔ Subgrupo ➔ Linhas)
-  const tree = {};
-  filteredLinhas.forEach(l => {
-    const g = l.grupo || 'Outros';
-    const sg = l.subgrupo || 'Geral';
-
-    if (!tree[g]) {
-      tree[g] = {
-        nome: g,
-        subgrupos: {},
-        meta_mensal: 0,
-        meta_acum_dmax: 0,
-        real_acum_dmax: 0,
-        linhasCount: 0,
-        categorias: new Set()
-      };
-    }
-
-    if (!tree[g].subgrupos[sg]) {
-      tree[g].subgrupos[sg] = {
-        nome: sg,
-        grupoNome: g,
-        key: `${g}||${sg}`,
-        linhas: [],
-        meta_mensal: 0,
-        meta_acum_dmax: 0,
-        real_acum_dmax: 0,
-        categorias: new Set()
-      };
-    }
-
-    tree[g].subgrupos[sg].linhas.push(l);
-    tree[g].subgrupos[sg].meta_mensal += l.meta_mensal;
-    tree[g].subgrupos[sg].meta_acum_dmax += l.meta_acum_dmax;
-    tree[g].subgrupos[sg].real_acum_dmax += l.real_acum_dmax;
-    tree[g].subgrupos[sg].categorias.add(l.categoria);
-
-    tree[g].meta_mensal += l.meta_mensal;
-    tree[g].meta_acum_dmax += l.meta_acum_dmax;
-    tree[g].real_acum_dmax += l.real_acum_dmax;
-    tree[g].linhasCount += 1;
-    tree[g].categorias.add(l.categoria);
-  });
-
-  // 3. Converter para array de grupos e ordenar
-  const gruposList = Object.values(tree);
-  gruposList.forEach(g => {
-    g.desvio_rs = g.real_acum_dmax - g.meta_acum_dmax;
-    g.desvio_pct = g.meta_acum_dmax > 0 ? (g.real_acum_dmax / g.meta_acum_dmax - 1) * 100 : 0;
-    g.ating_pct = g.meta_acum_dmax > 0 ? (g.real_acum_dmax / g.meta_acum_dmax * 100) : 0;
-    g.status = dMax === 0 ? 'aguardando' : g.desvio_pct >= 0 ? 'acima' : g.desvio_pct >= -5 ? 'alerta' : 'abaixo';
-
-    // Ordenar subgrupos dentro do grupo
-    g.subgruposList = Object.values(g.subgrupos);
-    g.subgruposList.forEach(sg => {
-      sg.desvio_rs = sg.real_acum_dmax - sg.meta_acum_dmax;
-      sg.desvio_pct = sg.meta_acum_dmax > 0 ? (sg.real_acum_dmax / sg.meta_acum_dmax - 1) * 100 : 0;
-      sg.ating_pct = sg.meta_acum_dmax > 0 ? (sg.real_acum_dmax / sg.meta_acum_dmax * 100) : 0;
-      sg.status = dMax === 0 ? 'aguardando' : sg.desvio_pct >= 0 ? 'acima' : sg.desvio_pct >= -5 ? 'alerta' : 'abaixo';
-
-      // Ordenar linhas dentro do subgrupo
-      switch (sortMode) {
-        case 'meta_mensal': sg.linhas.sort((a, b) => b.meta_mensal - a.meta_mensal); break;
-        case 'desvio_rs': sg.linhas.sort((a, b) => a.desvio_rs - b.desvio_rs); break;
-        case 'desvio_pct': sg.linhas.sort((a, b) => a.desvio_pct - b.desvio_pct); break;
-        case 'ating_pct': sg.linhas.sort((a, b) => a.ating_pct - b.ating_pct); break;
-        case 'nome': sg.linhas.sort((a, b) => a.linha.localeCompare(b.linha)); break;
-      }
-    });
-
-    // Ordenar subgrupos por maior meta
-    g.subgruposList.sort((a, b) => b.meta_mensal - a.meta_mensal);
-  });
-
-  // Ordenar grupos pelo critério selecionado
-  switch (sortMode) {
-    case 'meta_mensal': gruposList.sort((a, b) => b.meta_mensal - a.meta_mensal); break;
-    case 'desvio_rs': gruposList.sort((a, b) => a.desvio_rs - b.desvio_rs); break;
-    case 'desvio_pct': gruposList.sort((a, b) => a.desvio_pct - b.desvio_pct); break;
-    case 'ating_pct': gruposList.sort((a, b) => a.ating_pct - b.ating_pct); break;
-    case 'nome': gruposList.sort((a, b) => a.nome.localeCompare(b.nome)); break;
-  }
-
-  // 4. Renderizar HTML
+  const grupos = data.grupos || [];
   let html = '';
-  let totalMetaGeral = 0;
-  let totalMetaAcumGeral = 0;
-  let totalRealGeral = 0;
 
-  gruposList.forEach(g => {
-    totalMetaGeral += g.meta_mensal;
-    totalMetaAcumGeral += g.meta_acum_dmax;
-    totalRealGeral += g.real_acum_dmax;
-
-    const isExpGrupo = STATE_METAS.expandedGrupos.has(g.nome);
-    const toggleIconGrupo = isExpGrupo ? '▼' : '▶';
-
-    let catBadgeGrupo = '';
-    if (g.categorias.size === 1) {
-      catBadgeGrupo = g.categorias.has('Medicamento')
-        ? '<span style="color:#5856D6;font-weight:600;">💊 Med</span>'
-        : '<span style="color:#FF9F0A;font-weight:600;">🛍️ NMed</span>';
-    } else {
-      catBadgeGrupo = '<span style="color:var(--text-tertiary);">Misto</span>';
-    }
-
-    // Linha Nível 1: GRUPO
+  grupos.forEach(g => {
     html += `
-      <tr class="row-group" style="background: rgba(0, 113, 227, 0.05); cursor: pointer; font-weight: 700;" onclick="toggleMetasGrupo('${_escHtml(g.nome)}')">
-        <td style="position: sticky; left: 0; z-index: 6; background: #F2F7FD; padding: 10px 14px;">
-          <span class="toggle-icon" style="display:inline-flex;width:18px;height:18px;align-items:center;justify-content:center;background:rgba(0,113,227,0.12);color:var(--apple-blue);border-radius:4px;font-size:10px;margin-right:8px;">${toggleIconGrupo}</span>
-          <strong style="color: var(--apple-blue); font-size: 13px;">${_escHtml(g.nome)}</strong>
-          <span style="font-size: 10.5px; color: var(--text-tertiary); font-weight: 500; margin-left: 6px;">(${g.subgruposList.length} subgrupos • ${g.linhasCount} linhas)</span>
-        </td>
-        <td class="num" style="font-size: 11px; font-weight: 700; color: var(--apple-blue);">GRUPO</td>
-        <td class="num" style="font-size: 11px;">${catBadgeGrupo}</td>
-        <td class="num font-weight-600" style="font-size: 12.5px;">${_fmtRS(g.meta_mensal)}</td>
+      <tr class="row-linha">
+        <td style="font-weight: 700; color: var(--text-primary);">${_escHtml(g.grupo)}</td>
+        <td class="num font-weight-600">${_fmtRS(g.meta_mensal)}</td>
+        <td class="num">${g.share_meta.toFixed(1).replace('.', ',')}%</td>
         <td class="num">${_fmtRS(g.meta_acum_dmax)}</td>
-        <td class="num font-weight-600">${dMax > 0 ? _fmtRS(g.real_acum_dmax) : '—'}</td>
-        <td class="num">${dMax > 0 ? _badgeDesvio(g.desvio_rs, 'rs') : '—'}</td>
-        <td class="num">${dMax > 0 ? _badgeDesvio(g.desvio_pct, 'pct') : '—'}</td>
-        <td class="num">${dMax > 0 ? `<strong>${g.ating_pct.toFixed(1)}%</strong>` : '—'}</td>
+        <td class="num font-weight-600" style="color:var(--apple-blue);">${_fmtRS(g.real_acum_dmax)}</td>
+        <td class="num">${_fmtRSSigned(g.desvio_rs)}</td>
+        <td class="num">${_badgeDesvio(g.desvio_pct, 'pct')}</td>
+        <td class="num">${_badgeAting(g.ating_pct)}</td>
+        <td class="num">${g.total_linhas}</td>
         <td class="num">${_statusIcon(g.status)}</td>
       </tr>
     `;
-
-    // Se Grupo estiver expandido, renderiza os SUBGRUPOS
-    if (isExpGrupo) {
-      g.subgruposList.forEach(sg => {
-        const isExpSub = STATE_METAS.expandedSubgrupos.has(sg.key);
-        const toggleIconSub = isExpSub ? '▼' : '▶';
-
-        let catBadgeSub = '';
-        if (sg.categorias.size === 1) {
-          catBadgeSub = sg.categorias.has('Medicamento')
-            ? '<span style="color:#5856D6;font-size:10px;">💊 Med</span>'
-            : '<span style="color:#FF9F0A;font-size:10px;">🛍️ NMed</span>';
-        } else {
-          catBadgeSub = '<span style="color:var(--text-tertiary);font-size:10px;">Misto</span>';
-        }
-
-        // Linha Nível 2: SUBGRUPO
-        html += `
-          <tr class="row-subgrupo" style="background: rgba(0,0,0,0.015); cursor: pointer;" onclick="toggleMetasSubgrupo('${_escHtml(sg.key)}')">
-            <td style="position: sticky; left: 0; z-index: 5; background: #FAFAFC; padding-left: 28px;">
-              <span class="toggle-icon" style="display:inline-flex;width:16px;height:16px;align-items:center;justify-content:center;background:rgba(0,0,0,0.06);color:var(--text-secondary);border-radius:3px;font-size:9px;margin-right:6px;">${toggleIconSub}</span>
-              <strong style="color: var(--text-primary); font-size: 12px;">${_escHtml(sg.nome)}</strong>
-              <span style="font-size: 10px; color: var(--text-tertiary); margin-left: 4px;">(${sg.linhas.length} linhas)</span>
-            </td>
-            <td class="num" style="font-size: 10.5px; color: var(--text-secondary);">Subgrupo</td>
-            <td class="num">${catBadgeSub}</td>
-            <td class="num font-weight-600">${_fmtRS(sg.meta_mensal)}</td>
-            <td class="num">${_fmtRS(sg.meta_acum_dmax)}</td>
-            <td class="num font-weight-600">${dMax > 0 ? _fmtRS(sg.real_acum_dmax) : '—'}</td>
-            <td class="num">${dMax > 0 ? _badgeDesvio(sg.desvio_rs, 'rs') : '—'}</td>
-            <td class="num">${dMax > 0 ? _badgeDesvio(sg.desvio_pct, 'pct') : '—'}</td>
-            <td class="num">${dMax > 0 ? `<strong>${sg.ating_pct.toFixed(1)}%</strong>` : '—'}</td>
-            <td class="num">${_statusIcon(sg.status)}</td>
-          </tr>
-        `;
-
-        // Se Subgrupo estiver expandido, renderiza as LINHAS
-        if (isExpSub) {
-          sg.linhas.forEach(l => {
-            const catBadgeLinha = l.categoria === 'Medicamento'
-              ? '<span style="color:#5856D6;font-size:10px;">💊 Med</span>'
-              : '<span style="color:#FF9F0A;font-size:10px;">🛍️ NMed</span>';
-
-            // Linha Nível 3: LINHA DE PRODUTO
-            html += `
-              <tr class="row-linha" style="background: #FFFFFF;">
-                <td style="position: sticky; left: 0; z-index: 4; background: #FFFFFF; padding-left: 50px;">
-                  <span style="color: var(--text-tertiary); margin-right: 6px;">↳</span>
-                  <span style="font-weight: 500; color: var(--text-primary); font-size: 11.5px;">${_escHtml(l.linha)}</span>
-                </td>
-                <td class="num" style="font-size: 10px; color: var(--text-tertiary);">${_escHtml(l.familia || '—')}</td>
-                <td class="num">${catBadgeLinha}</td>
-                <td class="num font-weight-600">${_fmtRS(l.meta_mensal)}</td>
-                <td class="num">${_fmtRS(l.meta_acum_dmax)}</td>
-                <td class="num font-weight-600">${dMax > 0 ? _fmtRS(l.real_acum_dmax) : '—'}</td>
-                <td class="num">${dMax > 0 ? _badgeDesvio(l.desvio_rs, 'rs') : '—'}</td>
-                <td class="num">${dMax > 0 ? _badgeDesvio(l.desvio_pct, 'pct') : '—'}</td>
-                <td class="num">${dMax > 0 ? `<strong>${l.ating_pct.toFixed(1)}%</strong>` : '—'}</td>
-                <td class="num">${_statusIcon(l.status)}</td>
-              </tr>
-            `;
-          });
-        }
-      });
-    }
   });
-
-  // 5. Linha de TOTAL GERAL (soma 100% precisa dos Grupos)
-  const totalDesvioGeral = totalRealGeral - totalMetaAcumGeral;
-  const totalDesvioPctGeral = totalMetaAcumGeral > 0 ? (totalRealGeral / totalMetaAcumGeral - 1) * 100 : 0;
-  const totalAtingGeral = totalMetaAcumGeral > 0 ? (totalRealGeral / totalMetaAcumGeral * 100) : 0;
-
-  html += `
-    <tr style="font-weight: 800; background: rgba(0, 113, 227, 0.08); border-top: 2.5px solid var(--border); border-bottom: 2.5px solid var(--border); font-size: 12.5px;">
-      <td style="position: sticky; left: 0; z-index: 7; background: #EDF4FD; padding: 12px 14px;">
-        <strong style="color: var(--apple-blue);">TOTAL GERAL (${gruposList.length} Grupos • ${filteredLinhas.length} Linhas)</strong>
-      </td>
-      <td class="num" style="color: var(--apple-blue);">TOTAL</td>
-      <td class="num">${catFilter !== 'ALL' ? (catFilter === 'Medicamento' ? '💊 Med' : '🛍️ NMed') : 'Todos'}</td>
-      <td class="num" style="font-weight: 800; color: var(--text-primary);">${_fmtRS(totalMetaGeral)}</td>
-      <td class="num" style="font-weight: 700;">${_fmtRS(totalMetaAcumGeral)}</td>
-      <td class="num" style="font-weight: 800;">${dMax > 0 ? _fmtRS(totalRealGeral) : '—'}</td>
-      <td class="num">${dMax > 0 ? _badgeDesvio(totalDesvioGeral, 'rs') : '—'}</td>
-      <td class="num">${dMax > 0 ? _badgeDesvio(totalDesvioPctGeral, 'pct') : '—'}</td>
-      <td class="num">${dMax > 0 ? `<strong>${totalAtingGeral.toFixed(1)}%</strong>` : '—'}</td>
-      <td class="num"></td>
-    </tr>
-  `;
 
   tbody.innerHTML = html;
 
-  if (countEl) {
-    const totalLinesAll = (data.linhas || []).length;
-    countEl.textContent = `${filteredLinhas.length} linhas em ${gruposList.length} grupos${filteredLinhas.length < totalLinesAll ? ` (filtrado de ${totalLinesAll})` : ''}`;
-  }
-}
-
-/* ── Wire Events (Filtros, Busca e Botões da Árvore) ─── */
-let _metasEventsWired = false;
-function wireMetasEvents(data) {
-  if (_metasEventsWired) return;
-  _metasEventsWired = true;
-
-  const catSel = document.getElementById('metasFilterCategoria');
-  const statusSel = document.getElementById('metasFilterStatus');
-  const searchInput = document.getElementById('metasSearch');
-  const sortSel = document.getElementById('metasSortMode');
-
-  const btnExpandGrupos = document.getElementById('btnMetasExpandGrupos');
-  const btnExpandAll = document.getElementById('btnMetasExpandAll');
-  const btnCollapseAll = document.getElementById('btnMetasCollapseAll');
-
-  function updateTable() {
-    if (catSel) STATE_METAS.categoria = catSel.value;
-    if (statusSel) STATE_METAS.status = statusSel.value;
-    if (searchInput) STATE_METAS.search = searchInput.value;
-    if (sortSel) STATE_METAS.sort = sortSel.value;
-    renderMetasHierarchicalTable(data);
-  }
-
-  if (catSel) catSel.addEventListener('change', updateTable);
-  if (statusSel) statusSel.addEventListener('change', updateTable);
-  if (searchInput) searchInput.addEventListener('input', updateTable);
-  if (sortSel) sortSel.addEventListener('change', updateTable);
-
-  // Botões de Expansão / Recolhimento da Árvore
-  if (btnExpandGrupos) {
-    btnExpandGrupos.addEventListener('click', () => {
-      // Expande apenas os grupos (mostra subgrupos)
-      (data.linhas || []).forEach(l => {
-        if (l.grupo) STATE_METAS.expandedGrupos.add(l.grupo);
-      });
-      renderMetasHierarchicalTable(data);
-    });
-  }
-
-  if (btnExpandAll) {
-    btnExpandAll.addEventListener('click', () => {
-      // Expande tudo (grupos e subgrupos)
-      (data.linhas || []).forEach(l => {
-        if (l.grupo) STATE_METAS.expandedGrupos.add(l.grupo);
-        if (l.grupo && l.subgrupo) STATE_METAS.expandedSubgrupos.add(`${l.grupo}||${l.subgrupo}`);
-      });
-      renderMetasHierarchicalTable(data);
-    });
-  }
-
-  if (btnCollapseAll) {
-    btnCollapseAll.addEventListener('click', () => {
-      // Recolhe tudo
-      STATE_METAS.expandedGrupos.clear();
-      STATE_METAS.expandedSubgrupos.clear();
-      renderMetasHierarchicalTable(data);
+  // Preencher Select de Categorias/Grupos
+  const selCat = document.getElementById('metasFilterCategoria');
+  if (selCat && selCat.options.length <= 1) {
+    grupos.forEach(g => {
+      const opt = document.createElement('option');
+      opt.value = g.grupo;
+      opt.textContent = g.grupo;
+      selCat.appendChild(opt);
     });
   }
 }
 
-/* ── Pre-load on DOM ready ───────────────────────────── */
-document.addEventListener('DOMContentLoaded', () => {
-  loadMetasData();
-});
+function renderMetasLinhasTable(data) {
+  const tbody = document.getElementById('tbodyMetasLinhas');
+  if (!tbody) return;
+
+  let linhas = [...(data.linhas || [])];
+
+  // Filtros
+  if (STATE_METAS.categoria !== 'ALL') {
+    linhas = linhas.filter(l => l.grupo === STATE_METAS.categoria || l.categoria === STATE_METAS.categoria);
+  }
+  if (STATE_METAS.status !== 'ALL') {
+    linhas = linhas.filter(l => l.status === STATE_METAS.status);
+  }
+  if (STATE_METAS.search.trim()) {
+    const q = STATE_METAS.search.trim().toLowerCase();
+    linhas = linhas.filter(l => l.linha.toLowerCase().includes(q) || (l.familia && l.familia.toLowerCase().includes(q)) || (l.grupo && l.grupo.toLowerCase().includes(q)));
+  }
+
+  // Ordenação
+  switch (STATE_METAS.sort) {
+    case 'meta_mensal':
+      linhas.sort((a, b) => b.meta_mensal - a.meta_mensal);
+      break;
+    case 'desvio_rs':
+      linhas.sort((a, b) => a.desvio_rs - b.desvio_rs);
+      break;
+    case 'desvio_pct':
+      linhas.sort((a, b) => a.desvio_pct - b.desvio_pct);
+      break;
+    case 'ating_pct':
+      linhas.sort((a, b) => b.ating_pct - a.ating_pct);
+      break;
+    case 'linha':
+      linhas.sort((a, b) => a.linha.localeCompare(b.linha));
+      break;
+  }
+
+  const countEl = document.getElementById('metasTableCount');
+  if (countEl) countEl.textContent = `${linhas.length} linhas`;
+
+  let html = '';
+  linhas.forEach(l => {
+    html += `
+      <tr class="row-linha">
+        <td style="font-weight: 600; color: var(--text-primary);">${_escHtml(l.linha)}</td>
+        <td class="num">${_escHtml(l.grupo || '-')}</td>
+        <td class="num">${_escHtml(l.subgrupo || l.familia || '-')}</td>
+        <td class="num font-weight-600">${_fmtRS(l.meta_mensal)}</td>
+        <td class="num">${_fmtRS(l.meta_acum_dmax)}</td>
+        <td class="num font-weight-600" style="color:var(--apple-blue);">${_fmtRS(l.real_acum_dmax)}</td>
+        <td class="num">${_fmtRSSigned(l.desvio_rs)}</td>
+        <td class="num">${_badgeDesvio(l.desvio_pct, 'pct')}</td>
+        <td class="num">${_badgeAting(l.ating_pct)}</td>
+        <td class="num">${_statusIcon(l.status)}</td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = html || '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--text-tertiary);">Nenhuma linha encontrada com os filtros selecionados.</td></tr>';
+}
+
+function wireMetasMacroEvents(data) {
+  const selCat = document.getElementById('metasFilterCategoria');
+  if (selCat) {
+    selCat.onchange = (e) => {
+      STATE_METAS.categoria = e.target.value;
+      renderMetasLinhasTable(data);
+    };
+  }
+
+  const selStatus = document.getElementById('metasFilterStatus');
+  if (selStatus) {
+    selStatus.onchange = (e) => {
+      STATE_METAS.status = e.target.value;
+      renderMetasLinhasTable(data);
+    };
+  }
+
+  const inSearch = document.getElementById('metasSearch');
+  if (inSearch) {
+    inSearch.oninput = (e) => {
+      STATE_METAS.search = e.target.value;
+      renderMetasLinhasTable(data);
+    };
+  }
+
+  const selSort = document.getElementById('metasSortMode');
+  if (selSort) {
+    selSort.onchange = (e) => {
+      STATE_METAS.sort = e.target.value;
+      renderMetasLinhasTable(data);
+    };
+  }
+}
+
+/* ==========================================================================
+   ABA 5: METAS POR DIRETORIA & DISTRITAIS (tabMetasDiretoria)
+   ========================================================================== */
+async function renderMetasDiretoriaTab() {
+  const data = await loadMetasData();
+  if (!data) return;
+
+  renderDiretoriaCards(data);
+  renderRankingDistritais(data);
+  populateDiretoriaSelectors(data);
+  renderDiretoriaHierarchicalTable(data);
+  wireDiretoriaEvents(data);
+  _dirRendered = true;
+}
+
+function renderDiretoriaCards(data) {
+  const container = document.getElementById('diretoriaCardsGrid');
+  if (!container) return;
+
+  const diretorias = data.diretorias || [];
+  let html = '';
+
+  diretorias.forEach(d => {
+    const atingClamped = Math.min(100, Math.max(0, d.ating_pct));
+    const isCintia = d.diretor.toLowerCase().includes('cintia');
+    const colorTheme = isCintia ? 'var(--apple-blue)' : 'var(--apple-indigo)';
+    const softColor = isCintia ? 'var(--apple-blue-soft)' : 'var(--apple-indigo-soft)';
+
+    html += `
+      <div class="diretoria-card" style="border-top: 4px solid ${colorTheme};">
+        <div class="diretoria-card-header">
+          <div class="diretoria-name">
+            <span>👤</span> ${d.diretor}
+          </div>
+          ${_badgeAting(d.ating_pct)}
+        </div>
+
+        <div class="diretoria-meta-kpis">
+          <div class="diretoria-kpi-item">
+            <div class="lbl">Meta Setembro</div>
+            <div class="val" style="color:${colorTheme};">${_fmtRSCompact(d.meta_mensal)}</div>
+          </div>
+          <div class="diretoria-kpi-item">
+            <div class="lbl">Realizado D-1</div>
+            <div class="val" style="color:var(--apple-green-text);">${_fmtRSCompact(d.real_acum_dmax)}</div>
+          </div>
+          <div class="diretoria-kpi-item">
+            <div class="lbl">Meta D-1</div>
+            <div class="val">${_fmtRSCompact(d.meta_acum_dmax)}</div>
+          </div>
+          <div class="diretoria-kpi-item">
+            <div class="lbl">Desvio D-1</div>
+            <div class="val">${_fmtRSSigned(d.desvio_rs)}</div>
+          </div>
+        </div>
+
+        <div class="diretoria-progress-wrap">
+          <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:600; color:var(--text-secondary);">
+            <span>Progresso da Meta D-1</span>
+            <span>${d.ating_pct.toFixed(1).replace('.', ',')}%</span>
+          </div>
+          <div class="diretoria-progress-bar">
+            <div class="diretoria-progress-fill" style="width:${atingClamped}%; background:${d.ating_pct >= 100 ? 'var(--apple-green)' : colorTheme};"></div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:11.5px; color:var(--text-tertiary); padding-top:6px; border-top:1px solid var(--border-subtle);">
+          <span>🏢 ${d.total_distritais} Distritais subordinados</span>
+          <span style="font-weight:600; color:var(--text-secondary);">${d.share_empresa_pct.toFixed(1)}% do faturamento da rede</span>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function renderRankingDistritais(data) {
+  const container = document.getElementById('rankingDistritaisBar');
+  if (!container) return;
+
+  const distritais = [...(data.distritais || [])].sort((a, b) => b.ating_pct - a.ating_pct);
+  let html = '';
+
+  distritais.forEach((dt, idx) => {
+    const activeClass = (STATE_DIR.distrital === dt.distrital) ? 'active' : '';
+    html += `
+      <div class="distrital-rank-pill ${activeClass}" onclick="filterDistritalPill('${dt.distrital}')">
+        <div class="name">#${idx + 1} ${_escHtml(dt.distrital)}</div>
+        <div class="sub">${dt.diretor}</div>
+        <div class="nums">
+          <span class="ating" style="color:${dt.ating_pct >= 100 ? 'var(--apple-green-text)' : 'var(--text-primary)'};">${dt.ating_pct.toFixed(1).replace('.', ',')}%</span>
+          <span style="font-size:11px; font-weight:600; color:var(--text-secondary);">${_fmtRSCompact(dt.real_acum_dmax)}</span>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function filterDistritalPill(distNome) {
+  const selDist = document.getElementById('dirFilterDistrital');
+  if (STATE_DIR.distrital === distNome) {
+    STATE_DIR.distrital = 'ALL';
+    if (selDist) selDist.value = 'ALL';
+  } else {
+    STATE_DIR.distrital = distNome;
+    if (selDist) selDist.value = distNome;
+  }
+  if (METAS_DATA) {
+    renderRankingDistritais(METAS_DATA);
+    renderDiretoriaHierarchicalTable(METAS_DATA);
+  }
+}
+
+function populateDiretoriaSelectors(data) {
+  const selDist = document.getElementById('dirFilterDistrital');
+  const selGrp = document.getElementById('dirFilterGrupo');
+  if (!selDist || !selGrp) return;
+
+  if (selDist.options.length <= 1) {
+    const dists = data.distritais || [];
+    dists.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d.distrital;
+      opt.textContent = `${d.distrital} (${d.diretor})`;
+      selDist.appendChild(opt);
+    });
+  }
+
+  if (selGrp.options.length <= 1) {
+    const grupos = data.grupos || [];
+    grupos.forEach(g => {
+      const opt = document.createElement('option');
+      opt.value = g.grupo;
+      opt.textContent = g.grupo;
+      selGrp.appendChild(opt);
+    });
+  }
+}
+
+function renderDiretoriaHierarchicalTable(data) {
+  const tbody = document.getElementById('tbodyMetasDiretoria');
+  if (!tbody) return;
+
+  const diretorias = data.diretorias || [];
+  let html = '';
+  let rowCount = 0;
+
+  const q = STATE_DIR.search.trim().toLowerCase();
+  const dirFilter = STATE_DIR.diretoria;
+  const distFilter = STATE_DIR.distrital;
+  const grpFilter = STATE_DIR.grupo;
+
+  diretorias.forEach(dir => {
+    if (dirFilter !== 'ALL' && dir.diretor !== dirFilter) return;
+
+    const isDirExpanded = STATE_DIR.expandedDirs.has(dir.diretor) || q.length > 0;
+    const dirToggle = isDirExpanded ? '▼' : '▶';
+
+    // Linha Nível 1: Diretoria
+    html += `
+      <tr class="row-diretoria" onclick="toggleDirTree('dir', '${dir.diretor}')">
+        <td class="tree-indent-0" style="position:sticky;left:0;z-index:11;background:inherit;">
+          <span class="tree-toggle-icon">${dirToggle}</span>
+          <span style="font-weight:800;color:var(--apple-blue);font-size:13.5px;">🏢 DIRETORIA: ${dir.diretor.toUpperCase()}</span>
+        </td>
+        <td class="num"><span class="apple-tag tag-neu">Diretoria</span></td>
+        <td class="num font-weight-600">${_fmtRS(dir.meta_mensal)}</td>
+        <td class="num">${_fmtRS(dir.meta_acum_dmax)}</td>
+        <td class="num font-weight-600" style="color:var(--apple-blue);">${_fmtRS(dir.real_acum_dmax)}</td>
+        <td class="num">${_fmtRSSigned(dir.desvio_rs)}</td>
+        <td class="num">${_badgeDesvio(dir.desvio_pct, 'pct')}</td>
+        <td class="num">${_badgeAting(dir.ating_pct)}</td>
+        <td class="num">${_statusIcon(dir.status)}</td>
+      </tr>
+    `;
+    rowCount++;
+
+    if (!isDirExpanded) return;
+
+    // Nível 2: Distritais
+    (dir.distritais || []).forEach(dist => {
+      if (distFilter !== 'ALL' && dist.distrital !== distFilter) return;
+
+      const distKey = `${dir.diretor}|${dist.distrital}`;
+      const isDistExpanded = STATE_DIR.expandedDists.has(distKey) || q.length > 0;
+      const distToggle = isDistExpanded ? '▼' : '▶';
+
+      html += `
+        <tr class="row-distrital" onclick="toggleDirTree('dist', '${distKey}')">
+          <td class="tree-indent-1" style="position:sticky;left:0;z-index:10;background:inherit;">
+            <span class="tree-toggle-icon">${distToggle}</span>
+            <span style="font-weight:700;color:var(--text-primary);">📍 Distrital: ${_escHtml(dist.distrital)}</span>
+          </td>
+          <td class="num"><span class="apple-tag tag-neu" style="color:var(--apple-indigo);background:var(--apple-indigo-soft);">Distrital</span></td>
+          <td class="num font-weight-600">${_fmtRS(dist.meta_mensal)}</td>
+          <td class="num">${_fmtRS(dist.meta_acum_dmax)}</td>
+          <td class="num font-weight-600" style="color:var(--apple-indigo);">${_fmtRS(dist.real_acum_dmax)}</td>
+          <td class="num">${_fmtRSSigned(dist.desvio_rs)}</td>
+          <td class="num">${_badgeDesvio(dist.desvio_pct, 'pct')}</td>
+          <td class="num">${_badgeAting(dist.ating_pct)}</td>
+          <td class="num">${_statusIcon(dist.status)}</td>
+        </tr>
+      `;
+      rowCount++;
+
+      if (!isDistExpanded) return;
+
+      // Nível 3: Grupos dentro do Distrital
+      (dist.grupos || []).forEach(grp => {
+        if (grpFilter !== 'ALL' && grp.grupo !== grpFilter) return;
+
+        const grpKey = `${distKey}|${grp.grupo}`;
+        const isGrpExpanded = STATE_DIR.expandedGrupos.has(grpKey) || q.length > 0;
+        const grpToggle = isGrpExpanded ? '▼' : '▶';
+
+        html += `
+          <tr class="row-metas-grupo" onclick="toggleDirTree('grp', '${grpKey}')">
+            <td class="tree-indent-2" style="position:sticky;left:0;z-index:9;background:inherit;">
+              <span class="tree-toggle-icon">${grpToggle}</span>
+              <span style="font-weight:600;color:var(--text-secondary);">📦 ${_escHtml(grp.grupo)}</span>
+            </td>
+            <td class="num"><span class="apple-tag tag-neu">Grupo</span></td>
+            <td class="num font-weight-600">${_fmtRS(grp.meta_mensal)}</td>
+            <td class="num">${_fmtRS(grp.meta_acum_dmax)}</td>
+            <td class="num font-weight-600">${_fmtRS(grp.real_acum_dmax)}</td>
+            <td class="num">${_fmtRSSigned(grp.desvio_rs)}</td>
+            <td class="num">${_badgeDesvio(grp.desvio_pct, 'pct')}</td>
+            <td class="num">${_badgeAting(grp.ating_pct)}</td>
+            <td class="num">${_statusIcon(grp.status)}</td>
+          </tr>
+        `;
+        rowCount++;
+
+        if (!isGrpExpanded) return;
+
+        // Nível 4: Linhas de Produtos dentro do Grupo
+        (grp.linhas || []).forEach(lin => {
+          if (q.length > 0 && !lin.linha.toLowerCase().includes(q) && !(lin.familia && lin.familia.toLowerCase().includes(q))) {
+            return;
+          }
+
+          html += `
+            <tr class="row-metas-linha">
+              <td class="tree-indent-3" style="position:sticky;left:0;z-index:8;background:#FFFFFF;">
+                <span style="color:var(--text-tertiary);margin-right:6px;">•</span>
+                <span style="color:var(--text-primary);">${_escHtml(lin.linha)}</span>
+                ${lin.subgrupo ? `<span style="font-size:10px;color:var(--text-tertiary);margin-left:6px;">(${_escHtml(lin.subgrupo)})</span>` : ''}
+              </td>
+              <td class="num" style="color:var(--text-tertiary);font-size:11px;">Linha</td>
+              <td class="num">${_fmtRS(lin.meta_mensal)}</td>
+              <td class="num">${_fmtRS(lin.meta_acum_dmax)}</td>
+              <td class="num font-weight-600" style="color:var(--apple-blue);">${_fmtRS(lin.real_acum_dmax)}</td>
+              <td class="num">${_fmtRSSigned(lin.desvio_rs)}</td>
+              <td class="num">${_badgeDesvio(lin.desvio_pct, 'pct')}</td>
+              <td class="num">${_badgeAting(lin.ating_pct)}</td>
+              <td class="num">${_statusIcon(lin.status)}</td>
+            </tr>
+          `;
+          rowCount++;
+        });
+      });
+    });
+  });
+
+  tbody.innerHTML = html || '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-tertiary);">Nenhum registro encontrado com os filtros selecionados.</td></tr>';
+
+  const countBadge = document.getElementById('dirTableCount');
+  if (countBadge) countBadge.textContent = `${rowCount} itens visíveis na árvore`;
+}
+
+function toggleDirTree(type, key) {
+  if (type === 'dir') {
+    if (STATE_DIR.expandedDirs.has(key)) STATE_DIR.expandedDirs.delete(key);
+    else STATE_DIR.expandedDirs.add(key);
+  } else if (type === 'dist') {
+    if (STATE_DIR.expandedDists.has(key)) STATE_DIR.expandedDists.delete(key);
+    else STATE_DIR.expandedDists.add(key);
+  } else if (type === 'grp') {
+    if (STATE_DIR.expandedGrupos.has(key)) STATE_DIR.expandedGrupos.delete(key);
+    else STATE_DIR.expandedGrupos.add(key);
+  }
+  if (METAS_DATA) renderDiretoriaHierarchicalTable(METAS_DATA);
+}
+
+function wireDiretoriaEvents(data) {
+  const selDir = document.getElementById('dirFilterDiretoria');
+  if (selDir) {
+    selDir.onchange = (e) => {
+      STATE_DIR.diretoria = e.target.value;
+      renderDiretoriaHierarchicalTable(data);
+    };
+  }
+
+  const selDist = document.getElementById('dirFilterDistrital');
+  if (selDist) {
+    selDist.onchange = (e) => {
+      STATE_DIR.distrital = e.target.value;
+      renderRankingDistritais(data);
+      renderDiretoriaHierarchicalTable(data);
+    };
+  }
+
+  const selGrp = document.getElementById('dirFilterGrupo');
+  if (selGrp) {
+    selGrp.onchange = (e) => {
+      STATE_DIR.grupo = e.target.value;
+      renderDiretoriaHierarchicalTable(data);
+    };
+  }
+
+  const inSearch = document.getElementById('dirSearch');
+  if (inSearch) {
+    inSearch.oninput = (e) => {
+      STATE_DIR.search = e.target.value;
+      renderDiretoriaHierarchicalTable(data);
+    };
+  }
+
+  const btnExpDist = document.getElementById('btnDirExpandDist');
+  if (btnExpDist) {
+    btnExpDist.onclick = () => {
+      (data.distritais || []).forEach(d => STATE_DIR.expandedDists.add(`${d.diretor}|${d.distrital}`));
+      renderDiretoriaHierarchicalTable(data);
+    };
+  }
+
+  const btnExpGrp = document.getElementById('btnDirExpandGrupos');
+  if (btnExpGrp) {
+    btnExpGrp.onclick = () => {
+      (data.diretorias || []).forEach(dir => {
+        STATE_DIR.expandedDirs.add(dir.diretor);
+        (dir.distritais || []).forEach(dt => {
+          const distKey = `${dir.diretor}|${dt.distrital}`;
+          STATE_DIR.expandedDists.add(distKey);
+          (dt.grupos || []).forEach(g => STATE_DIR.expandedGrupos.add(`${distKey}|${g.grupo}`));
+        });
+      });
+      renderDiretoriaHierarchicalTable(data);
+    };
+  }
+
+  const btnExpAll = document.getElementById('btnDirExpandAll');
+  if (btnExpAll) {
+    btnExpAll.onclick = () => {
+      (data.diretorias || []).forEach(dir => {
+        STATE_DIR.expandedDirs.add(dir.diretor);
+        (dir.distritais || []).forEach(dt => {
+          const distKey = `${dir.diretor}|${dt.distrital}`;
+          STATE_DIR.expandedDists.add(distKey);
+          (dt.grupos || []).forEach(g => STATE_DIR.expandedGrupos.add(`${distKey}|${g.grupo}`));
+        });
+      });
+      renderDiretoriaHierarchicalTable(data);
+    };
+  }
+
+  const btnCollapse = document.getElementById('btnDirCollapseAll');
+  if (btnCollapse) {
+    btnCollapse.onclick = () => {
+      STATE_DIR.expandedDirs.clear();
+      STATE_DIR.expandedDists.clear();
+      STATE_DIR.expandedGrupos.clear();
+      renderDiretoriaHierarchicalTable(data);
+    };
+  }
+}

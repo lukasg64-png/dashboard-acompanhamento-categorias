@@ -48,6 +48,7 @@ function initWaterfall() {
       if (target) target.classList.add('active');
       if (tabId === 'tabWaterfall') triggerWaterfall();
       if (tabId === 'tabMetasSetembro' && typeof renderMetasSetembroTab === 'function') renderMetasSetembroTab();
+      if (tabId === 'tabMetasDiretoria' && typeof renderMetasDiretoriaTab === 'function') renderMetasDiretoriaTab();
     });
   });
 

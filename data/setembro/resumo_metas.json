@@ -1,53 +1,54 @@
 {
-  "mes": "Setembro/2026",
-  "dias_totais": 30,
-  "total_linhas": 598,
-  "meta_empresa_mensal": 898281702.7,
-  "meta_empresa_curva": 898281702.71,
-  "categorias": {
-    "Medicamento": 167,
-    "Não-Medicamento": 431
-  },
-  "top10_linhas": [
-    {
-      "linha": "ANTIDIABETICOS",
-      "meta": 64558031.01
+  "meta_empresa_total": 898116411.18,
+  "total_linhas": 563,
+  "total_distritais": 9,
+  "total_diretorias": 2,
+  "diretorias": {
+    "Cintia Silva": {
+      "meta_total": 455992029.46,
+      "distritais": {
+        "Fais Abdalla": {
+          "meta_total": 111435794.86,
+          "total_linhas": 546
+        },
+        "Juliano Petrarca": {
+          "meta_total": 127797159.45,
+          "total_linhas": 550
+        },
+        "Rodrigo Ferreira": {
+          "meta_total": 97203050.37,
+          "total_linhas": 544
+        },
+        "Tiago Machado": {
+          "meta_total": 119556024.78,
+          "total_linhas": 546
+        }
+      }
     },
-    {
-      "linha": "FRALDAS INFANTIS",
-      "meta": 45297762.22
-    },
-    {
-      "linha": "VITAMINAS E SUPLEMENTOS MINERAIS",
-      "meta": 41904160.91
-    },
-    {
-      "linha": "ANTIDEPRESSIVOS / ESTABIL HUMOR",
-      "meta": 39462636.63
-    },
-    {
-      "linha": "MEDICAMENTOS FARMACIA POPULAR",
-      "meta": 24558273.5
-    },
-    {
-      "linha": "ANTIBIOTICOS SISTEMICOS",
-      "meta": 18861524.63
-    },
-    {
-      "linha": "ANTI-HIPERTENSIVOS",
-      "meta": 17621060.06
-    },
-    {
-      "linha": "CONTRACEPTIVOS",
-      "meta": 16407763.16
-    },
-    {
-      "linha": "OTC- ANALGESICOS/ANTITERMICOS",
-      "meta": 16205003.71
-    },
-    {
-      "linha": "ANTILIPEMICOS / REDUTORES COLESTEROL",
-      "meta": 14657694.22
+    "Laerti Siqueira": {
+      "meta_total": 442124381.72,
+      "distritais": {
+        "Andre Jaime": {
+          "meta_total": 85661426.68,
+          "total_linhas": 546
+        },
+        "Cleiton Lima": {
+          "meta_total": 83559687.32,
+          "total_linhas": 544
+        },
+        "Fabio Baldasso": {
+          "meta_total": 98910463.15,
+          "total_linhas": 543
+        },
+        "Larissa Azambuja": {
+          "meta_total": 77253788.4,
+          "total_linhas": 543
+        },
+        "Luiz Kuhn": {
+          "meta_total": 96739016.17,
+          "total_linhas": 543
+        }
+      }
     }
-  ]
+  }
 }

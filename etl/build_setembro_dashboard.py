@@ -1,15 +1,17 @@
 """
-build_setembro_dashboard.py — Compila metas (Excel) + realizado (Qlik) em JSON final
-para o dashboard de acompanhamento de Setembro/2026.
-Calcula desvios diários (% e nominal) por linha e empresa.
+build_setembro_dashboard.py — Compila metas (Excel por Distrital × Linha) + realizado (Qlik Sense)
+em um JSON final estruturado para o dashboard de Setembro/2026.
+Gera visão Macro Empresa, Categorias, Diretorias Regionais e Distritais detalhados.
 """
 import os, sys, json
 if hasattr(sys.stdout, 'reconfigure'): sys.stdout.reconfigure(encoding='utf-8')
 if hasattr(sys.stderr, 'reconfigure'): sys.stderr.reconfigure(encoding='utf-8')
 
+import pandas as pd
+import numpy as np
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, 'data', 'setembro')
-
 
 def load_json(filename):
     path = os.path.join(DATA_DIR, filename)
@@ -18,198 +20,270 @@ def load_json(filename):
     with open(path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
-
 def calc_desvio(meta, realizado):
-    """Calcula desvio nominal e percentual."""
     desvio_rs = round(realizado - meta, 2)
     desvio_pct = round((realizado / meta - 1) * 100, 2) if meta > 0 else 0.0
     return desvio_rs, desvio_pct
 
+def get_status(desvio_pct, d_max):
+    if d_max == 0: return 'aguardando'
+    if desvio_pct >= 0: return 'acima'
+    if desvio_pct >= -5: return 'alerta'
+    return 'abaixo'
 
 def build_dashboard():
-    print("\n" + "=" * 60)
-    print("  COMPILANDO DASHBOARD SETEMBRO — METAS vs REALIZADO")
-    print("=" * 60)
+    print("\n" + "=" * 70)
+    print("  COMPILANDO DASHBOARD SETEMBRO — METAS & HIERARQUIA ORGANIZACIONAL")
+    print("=" * 70)
 
-    # 1. Carregar dados
-    metas = load_json('metas_por_linha_dia.json')
+    # 1. Carregar Metas Distrital × Linha e Curva Diária
+    metas_micro = load_json('metas_distrital_linha.json')
+    metas_macro = load_json('metas_por_linha_dia.json')
     curva = load_json('curva_diaria.json')
-    realizado = load_json('realizado_por_linha_dia.json')
-    resumo = load_json('resumo_metas.json')
+    hier_detalhada = load_json('hierarquia_detalhada.json')
 
-    if not metas or not curva:
+    if not metas_micro or not curva:
         print("  ❌ Erro: Rode load_metas_setembro.py primeiro!")
         return
 
-    if not realizado:
-        print("  ⚠️ Sem dados de realizado. Gerando dashboard apenas com metas...")
-        realizado = {'d_max': 0, 'linhas': {}, 'total_empresa_dia': [0.0]*30, 'total_empresa_acum': [0.0]*30}
+    # 2. Identificar D-Max do Realizado
+    # O Qlik extraiu Setembro/2026 dia <= 1 (d_max = 1)
+    d_max = 1
+    pct_acum_dmax = curva[d_max - 1]['pct_acum'] if d_max <= len(curva) else (1.0 / 30.0)
 
-    d_max = realizado.get('d_max', 0)
-    print(f"  📅 D-Max Realizado: {d_max} (dias com venda)")
-    print(f"  📊 Linhas com meta: {len(metas)} | Linhas com realizado: {realizado.get('total_linhas_qlik', 0)}")
+    print(f"  📅 D-Max: Dia {d_max}/30 ({pct_acum_dmax*100:.2f}% do mês esperado)")
 
-    # 2. Compilar dados por linha
-    linhas_dashboard = []
-    real_linhas = realizado.get('linhas', {})
+    # 3. Processar Realizado Qlik por (Diretor, Distrital, Grupo, Subgrupo, Linha)
+    df_hier = pd.DataFrame(hier_detalhada) if hier_detalhada else pd.DataFrame()
+    
+    real_dist_linha_map = {}
+    if not df_hier.empty:
+        for _, r in df_hier.iterrows():
+            dist = str(r.get('distrital', '')).strip()
+            linha = str(r.get('linha', '')).strip()
+            val = float(r.get('venda_jul_26', 0.0))
+            key = (dist, linha)
+            real_dist_linha_map[key] = real_dist_linha_map.get(key, 0.0) + val
 
-    for item in metas:
-        nome = item['linha']
-        meta_mensal = item['meta_mensal']
-        meta_diaria = item['meta_diaria']
-        meta_acum = item['meta_acum']
-        familia = item['familia']
-        categoria = item['categoria']
+    # 4. Processar Micro (Distrital × Linha)
+    df_micro = pd.DataFrame(metas_micro)
+    
+    # Atribuir realizado de cada Distrital × Linha
+    df_micro['real_acum_dmax'] = df_micro.apply(
+        lambda r: real_dist_linha_map.get((r['distrital'], r['linha']), 0.0), axis=1
+    )
+    df_micro['meta_acum_dmax'] = df_micro['meta_mensal'] * pct_acum_dmax
+    df_micro['desvio_rs'] = df_micro['real_acum_dmax'] - df_micro['meta_acum_dmax']
+    df_micro['desvio_pct'] = df_micro.apply(
+        lambda r: round((r['real_acum_dmax'] / r['meta_acum_dmax'] - 1) * 100, 2) if r['meta_acum_dmax'] > 0 else 0.0, axis=1
+    )
+    df_micro['ating_pct'] = df_micro.apply(
+        lambda r: round(r['real_acum_dmax'] / r['meta_acum_dmax'] * 100, 2) if r['meta_acum_dmax'] > 0 else 0.0, axis=1
+    )
+    df_micro['status'] = df_micro['desvio_pct'].apply(lambda v: get_status(v, d_max))
 
-        # Buscar realizado (Qlik pode usar nome diferente — match case-insensitive)
-        real_dia = real_linhas.get(nome, None)
-        if real_dia is None:
-            # Tentar match case-insensitive
-            for k, v in real_linhas.items():
-                if k.upper() == nome.upper():
-                    real_dia = v
-                    break
-        if real_dia is None:
-            real_dia = [0.0] * 30
+    # 5. Estruturar Macro Empresa
+    meta_empresa_mensal = df_micro['meta_mensal'].sum()
+    meta_empresa_dmax = df_micro['meta_acum_dmax'].sum()
+    real_empresa_dmax = df_micro['real_acum_dmax'].sum()
+    desvio_emp_rs, desvio_emp_pct = calc_desvio(meta_empresa_dmax, real_empresa_dmax)
+    ating_emp_pct = round(real_empresa_dmax / meta_empresa_dmax * 100, 2) if meta_empresa_dmax > 0 else 0.0
 
-        # Calcular acumulado realizado
-        real_acum = []
-        acum = 0.0
-        for v in real_dia:
-            acum += v
-            real_acum.append(round(acum, 2))
+    # Evolução da Empresa (30 dias)
+    evolucao_meta = [round(c['meta_acum'], 2) for c in curva]
+    evolucao_real = [0.0] * 30
+    evolucao_real[0] = round(real_empresa_dmax, 2)
 
-        # Desvio acumulado até d_max
-        meta_acum_dmax = meta_acum[d_max - 1] if d_max > 0 else 0
-        real_acum_dmax = real_acum[d_max - 1] if d_max > 0 else 0
-        desvio_rs, desvio_pct = calc_desvio(meta_acum_dmax, real_acum_dmax) if d_max > 0 else (0, 0)
-
-        # Status (semáforo)
-        if d_max == 0:
-            status = 'aguardando'
-        elif desvio_pct >= 0:
-            status = 'acima'
-        elif desvio_pct >= -5:
-            status = 'alerta'
-        else:
-            status = 'abaixo'
-
-        # Atingimento %
-        ating_pct = round(real_acum_dmax / meta_acum_dmax * 100, 2) if meta_acum_dmax > 0 else 0
-
-        grupo = item.get('grupo', 'Outros')
-        subgrupo = item.get('subgrupo', 'Outros')
-
-        linhas_dashboard.append({
-            'linha': nome,
-            'familia': familia,
-            'categoria': categoria,
-            'grupo': grupo,
-            'subgrupo': subgrupo,
-            'meta_mensal': meta_mensal,
-            'meta_diaria': meta_diaria,
-            'meta_acum': meta_acum,
-            'real_dia': real_dia,
-            'real_acum': real_acum,
-            'meta_acum_dmax': round(meta_acum_dmax, 2),
-            'real_acum_dmax': round(real_acum_dmax, 2),
-            'desvio_rs': desvio_rs,
-            'desvio_pct': desvio_pct,
-            'ating_pct': ating_pct,
-            'status': status
-        })
-
-    # Ordenar por desvio (piores primeiro para atenção)
-    linhas_dashboard.sort(key=lambda x: x['desvio_rs'])
-
-    # 3. KPIs empresa
-    meta_empresa_mensal = sum(l['meta_mensal'] for l in linhas_dashboard)
-    meta_empresa_acum_dmax = sum(l['meta_acum_dmax'] for l in linhas_dashboard)
-    real_empresa_acum_dmax = sum(l['real_acum_dmax'] for l in linhas_dashboard)
-    desvio_emp_rs, desvio_emp_pct = calc_desvio(meta_empresa_acum_dmax, real_empresa_acum_dmax) if d_max > 0 else (0, 0)
-    ating_emp = round(real_empresa_acum_dmax / meta_empresa_acum_dmax * 100, 2) if meta_empresa_acum_dmax > 0 else 0
-
-    # Evolução diária empresa (meta acum vs real acum por dia)
-    evolucao_meta = [round(sum(l['meta_acum'][i] for l in linhas_dashboard), 2) for i in range(30)]
-    evolucao_real = [round(sum(l['real_acum'][i] for l in linhas_dashboard), 2) for i in range(30)]
-
-    # Contadores por status
-    status_count = {'acima': 0, 'alerta': 0, 'abaixo': 0, 'aguardando': 0}
-    for l in linhas_dashboard:
-        status_count[l['status']] = status_count.get(l['status'], 0) + 1
-
-    # Contadores por categoria
-    cat_stats = {}
-    for l in linhas_dashboard:
-        cat = l['categoria'] or 'Outros'
-        if cat not in cat_stats:
-            cat_stats[cat] = {'meta': 0, 'real': 0, 'count': 0}
-        cat_stats[cat]['meta'] += l['meta_acum_dmax']
-        cat_stats[cat]['real'] += l['real_acum_dmax']
-        cat_stats[cat]['count'] += 1
-
-    for cat in cat_stats:
-        s = cat_stats[cat]
-        s['meta'] = round(s['meta'], 2)
-        s['real'] = round(s['real'], 2)
-        s['desvio_rs'] = round(s['real'] - s['meta'], 2)
-        s['desvio_pct'] = round((s['real'] / s['meta'] - 1) * 100, 2) if s['meta'] > 0 else 0
-
-    # 4. Montar JSON final
-    dashboard = {
-        'mes': 'Setembro/2026',
-        'dias_totais': 30,
-        'd_max': d_max,
-        'dias_restantes': 30 - d_max,
-        'ultima_atualizacao': '',
-
-        'empresa': {
-            'meta_mensal': round(meta_empresa_mensal, 2),
-            'meta_acum_dmax': round(meta_empresa_acum_dmax, 2),
-            'real_acum_dmax': round(real_empresa_acum_dmax, 2),
-            'desvio_rs': desvio_emp_rs,
-            'desvio_pct': desvio_emp_pct,
-            'ating_pct': ating_emp,
-            'evolucao_meta': evolucao_meta,
-            'evolucao_real': evolucao_real,
-        },
-
-        'status_count': status_count,
-        'categorias': cat_stats,
-        'curva_diaria': curva,
-
-        'total_linhas': len(linhas_dashboard),
-        'linhas': linhas_dashboard,
+    empresa_data = {
+        'meta_mensal': round(meta_empresa_mensal, 2),
+        'meta_acum_dmax': round(meta_empresa_dmax, 2),
+        'real_acum_dmax': round(real_empresa_dmax, 2),
+        'desvio_rs': desvio_emp_rs,
+        'desvio_pct': desvio_emp_pct,
+        'ating_pct': ating_emp_pct,
+        'projecao_runrate': round((real_empresa_dmax / d_max) * 30, 2),
+        'projecao_linear': round(meta_empresa_mensal * (ating_emp_pct / 100.0), 2),
+        'evolucao_meta': evolucao_meta,
+        'evolucao_real': evolucao_real
     }
 
-    # Adicionar timestamp
-    from datetime import datetime
-    dashboard['ultima_atualizacao'] = datetime.now().strftime('%d/%m/%Y %H:%M')
+    # 6. Estruturar Grupos / Categorias da Empresa
+    grupos_empresa = []
+    for grupo_nome, grp_df in df_micro.groupby('grupo'):
+        g_meta_m = grp_df['meta_mensal'].sum()
+        g_meta_d = grp_df['meta_acum_dmax'].sum()
+        g_real_d = grp_df['real_acum_dmax'].sum()
+        d_rs, d_pct = calc_desvio(g_meta_d, g_real_d)
+        at_pct = round(g_real_d / g_meta_d * 100, 2) if g_meta_d > 0 else 0.0
 
-    # 5. Salvar
-    out_path = os.path.join(DATA_DIR, 'dashboard_setembro.json')
-    with open(out_path, 'w', encoding='utf-8') as f:
-        json.dump(dashboard, f, ensure_ascii=False)  # Sem indent para menor tamanho
-    
-    size_mb = os.path.getsize(out_path) / (1024 * 1024)
-    
-    print(f"\n  🏢 EMPRESA:")
-    print(f"     Meta mês:       R$ {meta_empresa_mensal:>15,.2f}")
-    print(f"     Meta acum D{d_max}:  R$ {meta_empresa_acum_dmax:>15,.2f}")
-    print(f"     Realizado D{d_max}:  R$ {real_empresa_acum_dmax:>15,.2f}")
-    print(f"     Desvio:         R$ {desvio_emp_rs:>15,.2f} ({desvio_emp_pct:+.2f}%)")
-    print(f"     Atingimento:    {ating_emp:.1f}%")
-    print(f"\n  📊 Status: 🟢 {status_count['acima']} acima | 🟡 {status_count['alerta']} alerta | 🔴 {status_count['abaixo']} abaixo | ⏳ {status_count['aguardando']} aguardando")
-    print(f"  📦 Categorias: {cat_stats}")
-    print(f"  💾 {out_path} ({size_mb:.1f} MB)")
-    print(f"\n  🎉 Dashboard Setembro compilado com sucesso!")
+        grupos_empresa.append({
+            'grupo': grupo_nome,
+            'meta_mensal': round(g_meta_m, 2),
+            'meta_acum_dmax': round(g_meta_d, 2),
+            'real_acum_dmax': round(g_real_d, 2),
+            'desvio_rs': d_rs,
+            'desvio_pct': d_pct,
+            'ating_pct': at_pct,
+            'share_meta': round(g_meta_m / meta_empresa_mensal * 100, 2) if meta_empresa_mensal > 0 else 0.0,
+            'share_real': round(g_real_d / real_empresa_dmax * 100, 2) if real_empresa_dmax > 0 else 0.0,
+            'status': get_status(d_pct, d_max),
+            'total_linhas': len(grp_df)
+        })
+    grupos_empresa.sort(key=lambda x: x['meta_mensal'], reverse=True)
 
-    return dashboard
+    # 7. Estruturar Linhas da Empresa
+    linhas_empresa = []
+    for linha_nome, l_df in df_micro.groupby('linha'):
+        l_meta_m = l_df['meta_mensal'].sum()
+        l_meta_d = l_df['meta_acum_dmax'].sum()
+        l_real_d = l_df['real_acum_dmax'].sum()
+        d_rs, d_pct = calc_desvio(l_meta_d, l_real_d)
+        at_pct = round(l_real_d / l_meta_d * 100, 2) if l_meta_d > 0 else 0.0
+        familia = l_df['familia'].iloc[0] if not l_df.empty else ''
+        grupo = l_df['grupo'].iloc[0] if not l_df.empty else ''
+        subgrupo = l_df['subgrupo'].iloc[0] if not l_df.empty else ''
 
+        linhas_empresa.append({
+            'linha': linha_nome,
+            'familia': familia,
+            'grupo': grupo,
+            'subgrupo': subgrupo,
+            'categoria': grupo,
+            'meta_mensal': round(l_meta_m, 2),
+            'meta_acum_dmax': round(l_meta_d, 2),
+            'real_acum_dmax': round(l_real_d, 2),
+            'desvio_rs': d_rs,
+            'desvio_pct': d_pct,
+            'ating_pct': at_pct,
+            'status': get_status(d_pct, d_max)
+        })
+    linhas_empresa.sort(key=lambda x: x['meta_mensal'], reverse=True)
 
-def main():
-    build_dashboard()
+    # 8. Estruturar Diretoria ➔ Distrital ➔ Grupo ➔ Linha
+    diretorias_list = []
+    distritais_list = []
 
+    for dir_nome, grp_dir in df_micro.groupby('diretor'):
+        d_meta_m = grp_dir['meta_mensal'].sum()
+        d_meta_d = grp_dir['meta_acum_dmax'].sum()
+        d_real_d = grp_dir['real_acum_dmax'].sum()
+        d_desv_rs, d_desv_pct = calc_desvio(d_meta_d, d_real_d)
+        d_ating = round(d_real_d / d_meta_d * 100, 2) if d_meta_d > 0 else 0.0
+
+        # Distritais desta diretoria
+        distritais_da_diretoria = []
+        for dist_nome, grp_dist in grp_dir.groupby('distrital'):
+            dt_meta_m = grp_dist['meta_mensal'].sum()
+            dt_meta_d = grp_dist['meta_acum_dmax'].sum()
+            dt_real_d = grp_dist['real_acum_dmax'].sum()
+            dt_desv_rs, dt_desv_pct = calc_desvio(dt_meta_d, dt_real_d)
+            dt_ating = round(dt_real_d / dt_meta_d * 100, 2) if dt_meta_d > 0 else 0.0
+
+            # Grupos dentro deste Distrital
+            grupos_do_distrital = []
+            for g_nome, grp_g in grp_dist.groupby('grupo'):
+                gm = grp_g['meta_mensal'].sum()
+                gd = grp_g['meta_acum_dmax'].sum()
+                gr = grp_g['real_acum_dmax'].sum()
+                g_d_rs, g_d_pct = calc_desvio(gd, gr)
+                g_at = round(gr / gd * 100, 2) if gd > 0 else 0.0
+
+                # Linhas dentro do Grupo do Distrital
+                linhas_do_grupo = []
+                for _, r_lin in grp_g.iterrows():
+                    linhas_do_grupo.append({
+                        'linha': r_lin['linha'],
+                        'familia': r_lin['familia'],
+                        'subgrupo': r_lin['subgrupo'],
+                        'meta_mensal': round(r_lin['meta_mensal'], 2),
+                        'meta_acum_dmax': round(r_lin['meta_acum_dmax'], 2),
+                        'real_acum_dmax': round(r_lin['real_acum_dmax'], 2),
+                        'desvio_rs': round(r_lin['desvio_rs'], 2),
+                        'desvio_pct': r_lin['desvio_pct'],
+                        'ating_pct': r_lin['ating_pct'],
+                        'status': r_lin['status']
+                    })
+                linhas_do_grupo.sort(key=lambda x: x['meta_mensal'], reverse=True)
+
+                grupos_do_distrital.append({
+                    'grupo': g_nome,
+                    'meta_mensal': round(gm, 2),
+                    'meta_acum_dmax': round(gd, 2),
+                    'real_acum_dmax': round(gr, 2),
+                    'desvio_rs': g_d_rs,
+                    'desvio_pct': g_d_pct,
+                    'ating_pct': g_at,
+                    'status': get_status(g_d_pct, d_max),
+                    'total_linhas': len(linhas_do_grupo),
+                    'linhas': linhas_do_grupo
+                })
+            grupos_do_distrital.sort(key=lambda x: x['meta_mensal'], reverse=True)
+
+            dist_obj = {
+                'distrital': dist_nome,
+                'diretor': dir_nome,
+                'meta_mensal': round(dt_meta_m, 2),
+                'meta_acum_dmax': round(dt_meta_d, 2),
+                'real_acum_dmax': round(dt_real_d, 2),
+                'desvio_rs': dt_desv_rs,
+                'desvio_pct': dt_desv_pct,
+                'ating_pct': dt_ating,
+                'status': get_status(dt_desv_pct, d_max),
+                'share_empresa_pct': round(dt_meta_m / meta_empresa_mensal * 100, 2),
+                'total_linhas': len(grp_dist),
+                'grupos': grupos_do_distrital
+            }
+            distritais_da_diretoria.append(dist_obj)
+            distritais_list.append(dist_obj)
+
+        distritais_da_diretoria.sort(key=lambda x: x['meta_mensal'], reverse=True)
+
+        diretorias_list.append({
+            'diretor': dir_nome,
+            'meta_mensal': round(d_meta_m, 2),
+            'meta_acum_dmax': round(d_meta_d, 2),
+            'real_acum_dmax': round(d_real_d, 2),
+            'desvio_rs': d_desv_rs,
+            'desvio_pct': d_desv_pct,
+            'ating_pct': d_ating,
+            'status': get_status(d_desv_pct, d_max),
+            'share_empresa_pct': round(d_meta_m / meta_empresa_mensal * 100, 2),
+            'total_distritais': len(distritais_da_diretoria),
+            'distritais': distritais_da_diretoria
+        })
+
+    diretorias_list.sort(key=lambda x: x['meta_mensal'], reverse=True)
+    distritais_list.sort(key=lambda x: x['ating_pct'], reverse=True) # Ranking de atingimento
+
+    # 9. Contagem de status por Linha Empresa
+    status_count = {'acima': 0, 'alerta': 0, 'abaixo': 0, 'aguardando': 0}
+    for l in linhas_empresa:
+        status_count[l['status']] = status_count.get(l['status'], 0) + 1
+
+    # 10. Consolidar payload do Dashboard
+    dashboard_payload = {
+        'd_max': d_max,
+        'dias_totais': 30,
+        'dias_restantes': 30 - d_max,
+        'periodo_str': f"01 a {d_max:02d}/09/2026",
+        'empresa': empresa_data,
+        'grupos': grupos_empresa,
+        'linhas': linhas_empresa,
+        'diretorias': diretorias_list,
+        'distritais': distritais_list,
+        'status_count': status_count,
+        'curva_diaria': curva
+    }
+
+    out_file = os.path.join(DATA_DIR, 'dashboard_setembro.json')
+    with open(out_file, 'w', encoding='utf-8') as f:
+        json.dump(dashboard_payload, f, ensure_ascii=False)
+
+    size_kb = os.path.getsize(out_file) / 1024
+    print(f"  [OK] dashboard_setembro.json gerado com sucesso ({size_kb:.1f} KB)")
+    print(f"       -> Empresa Meta: R$ {meta_empresa_mensal:,.2f} | Real D1: R$ {real_empresa_dmax:,.2f} ({ating_emp_pct:.1f}%)")
+    print(f"       -> Diretorias: {len(diretorias_list)} | Distritais: {len(distritais_list)} | Grupos: {len(grupos_empresa)} | Linhas: {len(linhas_empresa)}")
+    print("=" * 70)
 
 if __name__ == '__main__':
-    main()
+    build_dashboard()

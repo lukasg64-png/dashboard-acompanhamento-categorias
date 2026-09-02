@@ -201,7 +201,11 @@
         </button>
         <button class="apple-tab-btn" data-tab="tabMetasSetembro" style="border-left: 2px solid var(--apple-orange); margin-left: 4px;">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/></svg>
-          🎯 Metas & Evolução Set/26
+          🎯 Metas Empresa & Categorias
+        </button>
+        <button class="apple-tab-btn" data-tab="tabMetasDiretoria" style="border-left: 2px solid var(--apple-blue); margin-left: 4px;">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+          👥 Metas Diretoria & Distritais
         </button>
       </nav>
 
@@ -375,25 +379,23 @@
       </div><!-- /tabWaterfall -->
 
       <!-- ======================================================================
-           ABA 6: METAS & EVOLUÇÃO — SETEMBRO/2026
+           ABA 4: METAS & EVOLUÇÃO MACRO EMPRESA & CATEGORIAS (SETEMBRO/2026)
            ====================================================================== -->
       <div class="tab-content" id="tabMetasSetembro">
 
-        <!-- KPI Strip Metas -->
+        <!-- KPI Strip Metas Empresa -->
         <section class="kpi-grid-360" id="kpiStripMetas">
           <!-- Renderizado via metas_setembro.js -->
         </section>
 
-        <!-- Filtros + Busca inline -->
+        <!-- Filtros + Busca inline Empresa -->
         <section class="apple-card">
           <div class="apple-card-header" style="padding: 10px 22px;">
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; width: 100%;">
               <div style="display: flex; align-items: center; gap: 8px;">
-                <label style="font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">Categoria:</label>
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">Grupo / Categoria:</label>
                 <select id="metasFilterCategoria" style="padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; background: var(--surface);">
-                  <option value="ALL">Todas</option>
-                  <option value="Medicamento">Medicamento</option>
-                  <option value="Não-Medicamento">Não-Medicamento</option>
+                  <option value="ALL">Todos os Grupos</option>
                 </select>
               </div>
               <div style="display: flex; align-items: center; gap: 8px;">
@@ -412,9 +414,9 @@
               <div style="display: flex; align-items: center; gap: 6px;">
                 <label style="font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">Ordenar:</label>
                 <select id="metasSortMode" style="padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; background: var(--surface);">
+                  <option value="meta_mensal">Meta Mensal (maior)</option>
                   <option value="desvio_rs">Desvio R$ (pior primeiro)</option>
                   <option value="desvio_pct">Desvio % (pior primeiro)</option>
-                  <option value="meta_mensal">Meta Mensal (maior)</option>
                   <option value="ating_pct">Atingimento %</option>
                   <option value="linha">Linha (A-Z)</option>
                 </select>
@@ -423,12 +425,12 @@
           </div>
         </section>
 
-        <!-- Gráfico Evolução Acumulada -->
+        <!-- Gráfico Evolução Acumulada Empresa -->
         <section class="apple-card" id="section-evolucao-metas">
           <div class="apple-card-header">
             <div class="apple-card-title">
               <svg width="18" height="18" fill="none" stroke="var(--apple-orange)" stroke-width="2" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-              Evolução Acumulada — Meta vs Realizado (Empresa)
+              Evolução Acumulada — Meta vs Realizado (Total Empresa)
             </div>
             <div class="apple-card-actions">
               <span id="metasEvolucaoSubtitle" style="font-size: 11px; color: var(--text-tertiary);">Setembro/2026 • Curva diária ponderada</span>
@@ -439,30 +441,59 @@
           </div>
         </section>
 
-        <!-- Tabela Principal: Linhas de Produto vs Meta -->
+        <!-- Tabela Resumo por Grupo / Categoria -->
+        <section class="apple-card" id="section-grupos-metas">
+          <div class="apple-card-header">
+            <div class="apple-card-title">
+              <svg width="18" height="18" fill="none" stroke="var(--apple-indigo)" stroke-width="2" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+              Metas & Realizado por Categoria Mercadológica (Grupos)
+            </div>
+            <div class="apple-card-actions">
+              <span style="font-size: 11px; color: var(--text-tertiary);">Consolidado da Rede</span>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="apple-table" id="tableMetasGruposEmpresa">
+              <thead>
+                <tr>
+                  <th style="min-width: 260px;">Grupo Mercadológico</th>
+                  <th class="num">Meta Mês R$</th>
+                  <th class="num">Share Meta %</th>
+                  <th class="num">Meta D-1 R$</th>
+                  <th class="num">Realizado D-1 R$</th>
+                  <th class="num">Desvio R$</th>
+                  <th class="num">Desvio %</th>
+                  <th class="num">Ating. %</th>
+                  <th class="num">Linhas</th>
+                  <th class="num" style="min-width: 60px;">Status</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyMetasGruposEmpresa"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Tabela Principal: Linhas de Produto da Empresa -->
         <section class="apple-card" id="section-tabela-metas">
           <div class="apple-card-header">
             <div class="apple-card-title">
               <svg width="18" height="18" fill="none" stroke="var(--apple-blue)" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-              Acompanhamento de Metas por Hierarquia Mercadológica
+              Detalhamento de Metas por Linha de Produto
             </div>
             <div class="apple-card-actions" style="display: flex; gap: 6px; align-items: center;">
-              <button type="button" id="btnMetasExpandGrupos" class="apple-tab-btn" style="padding: 4px 10px; font-size: 11px; height: 26px; border: 1px solid var(--border); background: var(--surface);">📂 + Subgrupos</button>
-              <button type="button" id="btnMetasExpandAll" class="apple-tab-btn" style="padding: 4px 10px; font-size: 11px; height: 26px; border: 1px solid var(--border); background: var(--surface);">📖 Expandir Tudo</button>
-              <button type="button" id="btnMetasCollapseAll" class="apple-tab-btn" style="padding: 4px 10px; font-size: 11px; height: 26px; border: 1px solid var(--border); background: var(--surface);">📁 Recolher</button>
-              <span id="metasTableCount" style="font-size: 11px; color: var(--text-tertiary); margin-left: 8px;">598 linhas</span>
+              <span id="metasTableCount" style="font-size: 11px; color: var(--text-tertiary);">563 linhas</span>
             </div>
           </div>
-          <div class="table-container" style="max-height: 650px; overflow-y: auto;">
+          <div class="table-container" style="max-height: 600px; overflow-y: auto;">
             <table class="apple-table" id="tableMetasLinhas">
               <thead>
                 <tr>
-                  <th style="min-width: 320px; position: sticky; left: 0; z-index: 11; background: #FAFAFC;">Hierarquia Mercadológica (Grupo ➔ Subgrupo ➔ Linha)</th>
-                  <th class="num">Nível</th>
-                  <th class="num">Categoria</th>
+                  <th style="min-width: 300px; position: sticky; left: 0; z-index: 11; background: #FAFAFC;">Linha de Produto</th>
+                  <th class="num">Grupo</th>
+                  <th class="num">Subgrupo / Família</th>
                   <th class="num">Meta Mês R$</th>
-                  <th class="num">Meta Acum. R$</th>
-                  <th class="num">Realizado R$</th>
+                  <th class="num">Meta D-1 R$</th>
+                  <th class="num">Realizado D-1 R$</th>
                   <th class="num">Desvio R$</th>
                   <th class="num">Desvio %</th>
                   <th class="num">Ating. %</th>
@@ -475,6 +506,101 @@
         </section>
 
       </div><!-- /tabMetasSetembro -->
+
+      <!-- ======================================================================
+           ABA 5: METAS POR DIRETORIA & DISTRITAIS (SETEMBRO/2026)
+           ====================================================================== -->
+      <div class="tab-content" id="tabMetasDiretoria">
+
+        <!-- Cards das Diretorias Regionais -->
+        <section class="diretoria-cards-grid" id="diretoriaCardsGrid">
+          <!-- Renderizado via metas_setembro.js -->
+        </section>
+
+        <!-- Ranking Rápido dos Distritais -->
+        <section class="apple-card">
+          <div class="apple-card-header" style="padding: 10px 20px 4px 20px;">
+            <div class="apple-card-title" style="font-size: 13px;">
+              🏆 Ranking de Atingimento dos Distritais
+            </div>
+            <div class="apple-card-actions">
+              <span style="font-size: 11px; color: var(--text-tertiary);">Clique no distrital para filtrar na tabela</span>
+            </div>
+          </div>
+          <div class="ranking-distritais-bar" id="rankingDistritaisBar">
+            <!-- Renderizado via metas_setembro.js -->
+          </div>
+        </section>
+
+        <!-- Filtros e Controles da Estrutura -->
+        <section class="apple-card">
+          <div class="apple-card-header" style="padding: 10px 22px;">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; width: 100%;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">Diretoria:</label>
+                <select id="dirFilterDiretoria" style="padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; background: var(--surface);">
+                  <option value="ALL">Todas as Diretorias</option>
+                  <option value="Cintia Silva">Cintia Silva</option>
+                  <option value="Laerti Siqueira">Laerti Siqueira</option>
+                </select>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">Distrital:</label>
+                <select id="dirFilterDistrital" style="padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; background: var(--surface);">
+                  <option value="ALL">Todos os Distritais</option>
+                </select>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">Grupo:</label>
+                <select id="dirFilterGrupo" style="padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; background: var(--surface);">
+                  <option value="ALL">Todos os Grupos</option>
+                </select>
+              </div>
+              <div style="flex: 1; min-width: 180px;">
+                <input type="text" id="dirSearch" placeholder="🔍 Buscar linha, grupo ou distrital..." style="width: 100%; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 12px; background: var(--surface);">
+              </div>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <button type="button" id="btnDirExpandDist" class="apple-tab-btn" style="padding: 4px 10px; font-size: 11px; height: 26px; border: 1px solid var(--border); background: var(--surface);">👥 + Distritais</button>
+                <button type="button" id="btnDirExpandGrupos" class="apple-tab-btn" style="padding: 4px 10px; font-size: 11px; height: 26px; border: 1px solid var(--border); background: var(--surface);">📦 + Grupos</button>
+                <button type="button" id="btnDirExpandAll" class="apple-tab-btn" style="padding: 4px 10px; font-size: 11px; height: 26px; border: 1px solid var(--border); background: var(--surface);">📖 Tudo</button>
+                <button type="button" id="btnDirCollapseAll" class="apple-tab-btn" style="padding: 4px 10px; font-size: 11px; height: 26px; border: 1px solid var(--border); background: var(--surface);">📁 Recolher</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tabela Hierárquica Multinível: Diretoria ➔ Distrital ➔ Grupo ➔ Linha -->
+        <section class="apple-card">
+          <div class="apple-card-header">
+            <div class="apple-card-title">
+              <svg width="18" height="18" fill="none" stroke="var(--apple-blue)" stroke-width="2" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+              Estrutura Organizacional de Metas & Realizado
+            </div>
+            <div class="apple-card-actions">
+              <span id="dirTableCount" style="font-size: 11px; color: var(--text-tertiary);">2 Diretorias • 9 Distritais • 4.905 Linhas</span>
+            </div>
+          </div>
+          <div class="table-container" style="max-height: 650px; overflow-y: auto;">
+            <table class="apple-table" id="tableMetasDiretoria">
+              <thead>
+                <tr>
+                  <th style="min-width: 320px; position: sticky; left: 0; z-index: 11; background: #FAFAFC;">Estrutura (Diretoria ➔ Distrital ➔ Grupo ➔ Linha)</th>
+                  <th class="num">Nível</th>
+                  <th class="num">Meta Mês R$</th>
+                  <th class="num">Meta D-1 R$</th>
+                  <th class="num">Realizado D-1 R$</th>
+                  <th class="num">Desvio R$</th>
+                  <th class="num">Desvio %</th>
+                  <th class="num">Ating. %</th>
+                  <th class="num" style="min-width: 60px;">Status</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyMetasDiretoria"></tbody>
+            </table>
+          </div>
+        </section>
+
+      </div><!-- /tabMetasDiretoria -->
 
     </main>
   </div>
