@@ -38,28 +38,68 @@ def get_excel_workbook():
     
     return openpyxl.load_workbook(target, data_only=True)
 
+# Tabela de pesos diários de Setembro/2026 oficializada
+TABELA_PESOS_SETEMBRO = [
+    {"dia": 1,  "dia_semana": "Terça",   "peso": 1.034},
+    {"dia": 2,  "dia_semana": "Quarta",  "peso": 1.082},
+    {"dia": 3,  "dia_semana": "Quinta",  "peso": 1.033},
+    {"dia": 4,  "dia_semana": "Sexta",   "peso": 1.112},
+    {"dia": 5,  "dia_semana": "Sábado",  "peso": 1.005},
+    {"dia": 6,  "dia_semana": "Domingo", "peso": 0.695},
+    {"dia": 7,  "dia_semana": "Segunda", "peso": 1.039},
+    {"dia": 8,  "dia_semana": "Terça",   "peso": 1.034},
+    {"dia": 9,  "dia_semana": "Quarta",  "peso": 1.082},
+    {"dia": 10, "dia_semana": "Quinta",  "peso": 1.033},
+    {"dia": 11, "dia_semana": "Sexta",   "peso": 1.112},
+    {"dia": 12, "dia_semana": "Sábado",  "peso": 1.005},
+    {"dia": 13, "dia_semana": "Domingo", "peso": 0.695},
+    {"dia": 14, "dia_semana": "Segunda", "peso": 1.039},
+    {"dia": 15, "dia_semana": "Terça",   "peso": 1.034},
+    {"dia": 16, "dia_semana": "Quarta",  "peso": 1.082},
+    {"dia": 17, "dia_semana": "Quinta",  "peso": 1.033},
+    {"dia": 18, "dia_semana": "Sexta",   "peso": 1.112},
+    {"dia": 19, "dia_semana": "Sábado",  "peso": 1.005},
+    {"dia": 20, "dia_semana": "Domingo", "peso": 0.695},
+    {"dia": 21, "dia_semana": "Segunda", "peso": 1.039},
+    {"dia": 22, "dia_semana": "Terça",   "peso": 1.034},
+    {"dia": 23, "dia_semana": "Quarta",  "peso": 1.082},
+    {"dia": 24, "dia_semana": "Quinta",  "peso": 1.033},
+    {"dia": 25, "dia_semana": "Sexta",   "peso": 1.112},
+    {"dia": 26, "dia_semana": "Sábado",  "peso": 1.005},
+    {"dia": 27, "dia_semana": "Domingo", "peso": 0.695},
+    {"dia": 28, "dia_semana": "Segunda", "peso": 1.039},
+    {"dia": 29, "dia_semana": "Terça",   "peso": 1.034},
+    {"dia": 30, "dia_semana": "Quarta",  "peso": 1.082}
+]
+
 def load_curva_diaria_setembro():
-    """Gera ou carrega a curva diária de Setembro/2026 (30 dias)."""
+    """Gera ou carrega a curva diária de Setembro/2026 (30 dias) com os pesos exatos."""
     curva_file = os.path.join(DATA_DIR, 'curva_diaria.json')
     if os.path.exists(curva_file):
-        with open(curva_file, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        try:
+            with open(curva_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            pass
     
-    # Fallback linear se não existir
+    soma_pesos = sum(item["peso"] for item in TABELA_PESOS_SETEMBRO)
     dias = []
-    pct_dia = 1.0 / 30.0
-    for d in range(1, 31):
+    acum_pct = 0.0
+    for item in TABELA_PESOS_SETEMBRO:
+        pct_dia = item["peso"] / soma_pesos
+        acum_pct += pct_dia
         dias.append({
-            'dia': d,
-            'dia_semana': '',
-            'peso': 1.0,
-            'pct_dia': pct_dia,
-            'pct_acum': pct_dia * d,
+            'dia': item['dia'],
+            'dia_semana': item['dia_semana'],
+            'peso': item['peso'],
+            'pct_dia': round(pct_dia, 10),
+            'pct_acum': round(acum_pct, 10),
             'proj_dia': 0,
             'proj_acum': 0,
             'meta_dia': 0,
             'meta_acum': 0
         })
+    dias[-1]['pct_acum'] = 1.0
     return dias
 
 def main():
