@@ -192,15 +192,18 @@ def main():
         meta_mensal=('meta_mensal', 'sum')
     ).reset_index()
 
+    pcts_acum = [c['pct_acum'] for c in curva]
+
     metas_por_linha_dia = []
     for _, r in df_linhas.iterrows():
         mm = r['meta_mensal']
-        meta_diaria = [round(mm * p, 2) for p in pcts_dia]
-        meta_acum = []
-        ac = 0.0
-        for md in meta_diaria:
-            ac += md
-            meta_acum.append(round(ac, 2))
+        meta_acum = [round(mm * pac, 2) for pac in pcts_acum]
+        meta_acum[-1] = mm
+        meta_diaria = []
+        prev_ac = 0.0
+        for ac in meta_acum:
+            meta_diaria.append(round(ac - prev_ac, 2))
+            prev_ac = ac
 
         metas_por_linha_dia.append({
             'linha': r['linha'],
@@ -221,12 +224,13 @@ def main():
     metas_distrital_linha = []
     for _, r in df.iterrows():
         mm = r['meta_mensal']
-        meta_diaria = [round(mm * p, 2) for p in pcts_dia]
-        meta_acum = []
-        ac = 0.0
-        for md in meta_diaria:
-            ac += md
-            meta_acum.append(round(ac, 2))
+        meta_acum = [round(mm * pac, 2) for pac in pcts_acum]
+        meta_acum[-1] = mm
+        meta_diaria = []
+        prev_ac = 0.0
+        for ac in meta_acum:
+            meta_diaria.append(round(ac - prev_ac, 2))
+            prev_ac = ac
 
         metas_distrital_linha.append({
             'diretor': r['diretor'],
