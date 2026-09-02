@@ -47,8 +47,6 @@ function initWaterfall() {
       const target = document.getElementById(tabId);
       if (target) target.classList.add('active');
       if (tabId === 'tabWaterfall') triggerWaterfall();
-      if (tabId === 'tabShareMatrix' && typeof updateCharts === 'function') updateCharts();
-      if (tabId === 'tabClientes' && typeof renderClientesTab === 'function') renderClientesTab();
       if (tabId === 'tabMetasSetembro' && typeof renderMetasSetembroTab === 'function') renderMetasSetembroTab();
     });
   });
@@ -91,11 +89,11 @@ function updateConfigSummary() {
   const el = document.getElementById('wfConfigSummary');
   if (!el) return;
 
-  const isAgosto = (typeof STATE !== 'undefined' && STATE.mesReferencia === 'agosto');
-  const curLabel = isAgosto ? 'Ago/26' : 'Jul/26';
+  const isSetembro = (typeof STATE === 'undefined' || STATE.mesReferencia === 'setembro');
+  const curLabel = isSetembro ? 'Set/26' : 'Ago/26';
   const compLabel = WF.comparison === 'mom'
-    ? (isAgosto ? 'Jul/26' : 'Jun/26')
-    : (isAgosto ? 'Ago/25' : 'Jul/25');
+    ? (isSetembro ? 'Ago/26' : 'Jul/26')
+    : (isSetembro ? 'Set/25' : 'Ago/25');
 
   const compText = WF.comparison === 'mom' ? `MoM: ${compLabel} → ${curLabel}` : `YoY: ${compLabel} → ${curLabel}`;
 
@@ -124,12 +122,12 @@ function tag(icon, text) {
 
 /* ── Get Waterfall Data ──────────────────────────────── */
 function getWaterfallData() {
-  const isAgosto = (typeof STATE !== 'undefined' && STATE.mesReferencia === 'agosto');
-  const curLabel = isAgosto ? 'Ago/26' : 'Jul/26';
+  const isSetembro = (typeof STATE === 'undefined' || STATE.mesReferencia === 'setembro');
+  const curLabel = isSetembro ? 'Set/26' : 'Ago/26';
   const isMom = WF.comparison === 'mom';
   const compLabel = isMom
-    ? (isAgosto ? 'Jul/26' : 'Jun/26')
-    : (isAgosto ? 'Ago/25' : 'Jul/25');
+    ? (isSetembro ? 'Ago/26' : 'Jul/26')
+    : (isSetembro ? 'Set/25' : 'Ago/25');
 
   let items = [];
   let title = '';

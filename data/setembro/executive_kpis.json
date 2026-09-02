@@ -1,0 +1,33 @@
+{
+  "total_empresa": {
+    "venda_jul_26": 32487947.34,
+    "venda_jun_26": 27831022.08,
+    "venda_jul_25": 28566675.58,
+    "mom_pct": 16.73,
+    "mom_rs": 4656925.26,
+    "yoy_pct": 13.73,
+    "yoy_rs": 3921271.76
+  },
+  "digital": {
+    "venda_jul_26": 1949594.93,
+    "venda_jun_26": 1705390.97,
+    "venda_jul_25": 1358901.23,
+    "share_jul_26": 6.0,
+    "mom_pct": 14.32,
+    "yoy_pct": 43.47
+  },
+  "digital_tele": {
+    "venda_jul_26": 2759609.4,
+    "venda_jun_26": 2289285.52,
+    "venda_jul_25": 2025952.19,
+    "share_jul_26": 8.49,
+    "mom_pct": 20.54,
+    "yoy_pct": 36.21
+  },
+  "periodo_info": {
+    "mes": "Setembro/2026",
+    "tipo": "D-1 (Qlik Sense Enterprise)",
+    "dias_fechados": 1,
+    "periodo_str": "01/09/2026"
+  }
+}

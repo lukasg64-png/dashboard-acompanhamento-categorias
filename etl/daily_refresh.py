@@ -114,7 +114,7 @@ def main():
     log("=" * 70)
 
     py_exe = sys.executable
-    extract_script = os.path.join(BASE_DIR, 'etl', 'extract_complete_qlik_models.py')
+    extract_script = os.path.join(BASE_DIR, 'etl', 'extract_complete_qlik_models_setembro.py')
     fallback_script = os.path.join(BASE_DIR, 'etl', 'process_agosto.py')
     build_script = os.path.join(BASE_DIR, 'etl', 'build_single_file.py')
 
@@ -127,7 +127,7 @@ def main():
         max_retries = 3
         for attempt in range(1, max_retries + 1):
             log(f"Tentativa {attempt}/{max_retries} de extração direta Qlik Sense...")
-            extracted = run_cmd(f'"{py_exe}" -u "{extract_script}"', f"1/3 Extração Qlik Sense Engine (Tentativa {attempt})", timeout=600)
+            extracted = run_cmd(f'"{py_exe}" -u "{extract_script}"', f"1/3 Extração Qlik Sense Engine Setembro (Tentativa {attempt})", timeout=600)
             if extracted:
                 break
             if attempt < max_retries:
@@ -135,7 +135,7 @@ def main():
                 time.sleep(15)
 
     if not extracted:
-        log("⚠️ Extração direta via Qlik WS não concluída. Executando fallback via Excel OneDrive...")
+        log("⚠️ Extração direta via Qlik WS não concluída. Executando fallback...")
         run_cmd(f'"{py_exe}" -u "{fallback_script}"', "1b/3 Fallback Processamento Excel", timeout=600)
 
     # 2b. Pipeline Metas Setembro (Excel + Qlik + Dashboard)
@@ -163,7 +163,9 @@ def main():
 
     # 4. Identificar período atualizado para o commit
     periodo_str = datetime.now().strftime('%d/%m/%Y %H:%M')
-    kpis_file = os.path.join(BASE_DIR, 'data', 'agosto', 'executive_kpis.json')
+    kpis_file = os.path.join(BASE_DIR, 'data', 'setembro', 'executive_kpis.json')
+    if not os.path.exists(kpis_file):
+        kpis_file = os.path.join(BASE_DIR, 'data', 'agosto', 'executive_kpis.json')
     if os.path.exists(kpis_file):
         try:
             with open(kpis_file, 'r', encoding='utf-8') as f:

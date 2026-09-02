@@ -1,8 +1,8 @@
-/* app.js — Acompanhamento de Categorias — v14 (Suporte a Mês de Referência: Agosto Parcial & Julho Fechado) */
+/* app.js — Acompanhamento de Categorias — v15 (Setembro D-1 Qlik & Agosto Fechado) */
 
 let DATA = { kpis: null, canais: [], canaisHier: [], categorias: [], hierarquia: [], filtroHierarquia: {}, filtrosProduto: null };
 let STATE = {
-  mesReferencia: 'agosto', // 'agosto' ou 'julho'
+  mesReferencia: 'setembro', // 'setembro' ou 'agosto'
   diretores: new Set(),
   distritais: new Set(),
   coordenadores: new Set(),
@@ -65,10 +65,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 /* ── Data loading ─────────────────────────────────── */
-async function loadAllData(mes = 'agosto') {
+async function loadAllData(mes = 'setembro') {
   try {
-    updateLoadingProgress(25, `Buscando dados de ${mes === 'agosto' ? 'Agosto (D-1 Qlik)' : 'Julho (Fechado)'}...`);
-    const prefix = mes === 'agosto' ? 'data/agosto/' : 'data/';
+    updateLoadingProgress(25, `Buscando dados de ${mes === 'setembro' ? 'Setembro (D-1 Qlik)' : 'Agosto (Fechado)'}...`);
+    const prefix = mes === 'setembro' ? 'data/setembro/' : 'data/agosto/';
     const urls = [
       prefix + 'executive_kpis.json',
       prefix + 'canais_summary.json',
@@ -76,8 +76,7 @@ async function loadAllData(mes = 'agosto') {
       prefix + 'categorias_summary.json',
       prefix + 'hierarquia_detalhada.json',
       prefix + 'filtro_hierarquia.json',
-      prefix + 'filtros_produto.json',
-      prefix + 'clientes_summary.json'
+      prefix + 'filtros_produto.json'
     ];
     const ts = Date.now();
     const results = await Promise.all(urls.map(u => fetch(`${u}?v=${ts}`).then(r => r.json()).catch(() => null)));
@@ -89,7 +88,7 @@ async function loadAllData(mes = 'agosto') {
     DATA.hierarquia = results[4] || [];
     DATA.filtroHierarquia = results[5] || {};
     DATA.filtrosProduto = results[6] || null;
-    DATA.clientes = results[7] || null;
+    DATA.clientes = null;
   } catch (e) { console.error('Erro ao carregar dados:', e); }
 }
 
@@ -116,7 +115,10 @@ function wireEvents() {
       if (STATE.mesReferencia === month) return;
       STATE.mesReferencia = month;
 
-      showLoadingProgress(`Carregando ${month === 'agosto' ? 'Agosto/26 (D-1 Qlik)' : 'Julho/26 (Fechado)'}...`);
+      const monthBtns = document.querySelectorAll('#monthSelector .segmented-btn, #monthSelector .month-btn');
+      monthBtns.forEach(b => b.classList.toggle('active', b.dataset.month === month));
+
+      showLoadingProgress(`Carregando ${month === 'setembro' ? 'Setembro/26 (D-1 Qlik)' : 'Agosto/26 (Fechado)'}...`);
 
       // Reset filters
       STATE.diretores.clear();
@@ -154,7 +156,7 @@ function wireEvents() {
       if (mesSel) mesSel.value = month;
       monthBtns.forEach(b => b.classList.toggle('active', b.dataset.month === month));
 
-      showLoadingProgress(`Carregando ${month === 'agosto' ? 'Agosto/26 (D-1 Qlik)' : 'Julho/26 (Fechado)'}...`);
+      showLoadingProgress(`Carregando ${month === 'setembro' ? 'Setembro/26 (D-1 Qlik)' : 'Agosto/26 (Fechado)'}...`);
 
       STATE.diretores.clear();
       STATE.distritais.clear();
@@ -987,10 +989,10 @@ function getFilteredGrupos() {
 
 /* ── Dynamic Table Headers ────────────────────────── */
 function updateTableHeaders() {
-  const isAgosto = (STATE.mesReferencia === 'agosto');
-  const curLabel = isAgosto ? 'Ago/26' : 'Jul/26';
-  const momLabel = isAgosto ? 'Jul/26' : 'Jun/26';
-  const yoyLabel = isAgosto ? 'Ago/25' : 'Jul/25';
+  const isSetembro = (STATE.mesReferencia === 'setembro');
+  const curLabel = isSetembro ? 'Set/26' : 'Ago/26';
+  const momLabel = isSetembro ? 'Ago/26' : 'Jul/26';
+  const yoyLabel = isSetembro ? 'Set/25' : 'Ago/25';
 
   // Canais table headers
   if (sel('thCanalCol1')) sel('thCanalCol1').textContent = curLabel;
@@ -1019,8 +1021,6 @@ function render() {
   renderExecutiveKpis();
   renderCategorias();
   renderCanais();
-  renderClientesTab();
-  if (typeof updateCharts === 'function') updateCharts();
   // Update waterfall if its tab is currently active
   const wfTab = document.getElementById('tabWaterfall');
   if (wfTab && wfTab.classList.contains('active') && typeof triggerWaterfall === 'function') {
@@ -1031,23 +1031,23 @@ function render() {
 function renderRefPeriodo() {
   const el = sel('refPeriodoText') || sel('refPeriodo');
   if (!el) return;
-  if (STATE.mesReferencia === 'agosto') {
-    const pInfo = DATA.kpis?.periodo_info?.periodo_str || '01 a 18/08/2026';
-    const maxDia = DATA.kpis?.periodo_info?.dias_fechados || 18;
+  if (STATE.mesReferencia === 'setembro') {
+    const pInfo = DATA.kpis?.periodo_info?.periodo_str || '01 a 01/09/2026';
+    const maxDia = DATA.kpis?.periodo_info?.dias_fechados || 1;
     if (STATE.startDay === 1 && STATE.endDay >= maxDia) {
-      el.textContent = `Agosto/2026 (${pInfo} D-1) • MoM vs Jul/26 • YoY vs Ago/25`;
+      el.textContent = `Setembro/2026 (${pInfo} D-1) • MoM vs Ago/26 • YoY vs Set/25`;
     } else {
       const dS = String(STATE.startDay).padStart(2, '0');
       const dE = String(Math.min(STATE.endDay, maxDia)).padStart(2, '0');
-      el.textContent = `Agosto/2026 (Dias ${dS} a ${dE}/08) • MoM vs Jul/26 • YoY vs Ago/25`;
+      el.textContent = `Setembro/2026 (Dias ${dS} a ${dE}/09) • MoM vs Ago/26 • YoY vs Set/25`;
     }
   } else {
-    if (STATE.startDay === 1 && STATE.endDay === 31) {
-      el.textContent = 'Julho/2026 (Fechado) • MoM vs Jun/26 • YoY vs Jul/25';
+    if (STATE.startDay === 1 && STATE.endDay >= 31) {
+      el.textContent = 'Agosto/2026 (Fechado) • MoM vs Jul/26 • YoY vs Ago/25';
     } else {
       const dStart = String(STATE.startDay).padStart(2, '0');
       const dEnd = String(STATE.endDay).padStart(2, '0');
-      el.textContent = `Julho/2026 (Dias ${dStart} a ${dEnd}/07) • Comparativo MTD`;
+      el.textContent = `Agosto/2026 (Dias ${dStart} a ${dEnd}/08) • Comparativo MTD`;
     }
   }
 }
@@ -1720,177 +1720,3 @@ function fmtInt(val) {
   return Math.round(val).toLocaleString('pt-BR');
 }
 
-/* ── Renderização da Aba Clientes Únicos & Cupons (360°) ─── */
-function renderClientesTab() {
-  const strip = sel('kpiStripClientes');
-  const tbodyCanais = sel('tbodyClientesCanais');
-  const tbodyGrupos = sel('tbodyClientesGrupos');
-  if (!strip || !tbodyCanais || !tbodyGrupos) return;
-
-  const cliData = DATA.clientes;
-  if (!cliData || !cliData.totais) {
-    strip.innerHTML = '<div class="apple-kpi-card accent-blue"><div class="kpi-value-main" style="font-size:16px;">Dados de clientes disponíveis apenas na base de Agosto</div></div>';
-    tbodyCanais.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:20px; color:var(--text-tertiary);">Dados de clientes disponíveis na base de Agosto (D-1 Qlik Sense).</td></tr>';
-    tbodyGrupos.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--text-tertiary);">Dados de clientes disponíveis na base de Agosto (D-1 Qlik Sense).</td></tr>';
-    return;
-  }
-
-  const tot = cliData.totais;
-  const canais = cliData.canais || [];
-  const grupos = cliData.grupos || [];
-
-  // Calcular clientes digitais somando canais digitais
-  const digChs = canais.filter(c => ['APP', 'SITE', 'iFood', 'e_Commerce', 'APP Tele Entrega', 'SITE Tele Entrega', 'Super Fácil', 'Mercado Livre', 'Rappi'].some(n => c.canal.toLowerCase().includes(n.toLowerCase())));
-  const totCliDig = digChs.reduce((s, c) => s + (c.cli_26 || 0), 0);
-  const pctCliDig = tot.cli_26 > 0 ? (totCliDig / tot.cli_26 * 100) : 0;
-
-  // 1. Renderizar 6 KPI Cards Apple de Clientes
-  strip.innerHTML = `
-    <!-- Card 1: Total Clientes -->
-    <div class="apple-kpi-card accent-blue">
-      <div class="kpi-card-header">
-        <span class="kpi-card-title">CLIENTES ÚNICOS ATIVOS</span>
-        <span class="apple-tag tag-neu">Total D-1</span>
-      </div>
-      <div class="kpi-value-main">${fmtInt(tot.cli_26)}</div>
-      <div class="kpi-sub-value">${fmtCompact(tot.cli_26).replace('R$ ', '')} compradores no período</div>
-      <div class="kpi-footer-deltas">
-        ${tagPct(tot.cli_mom_pct)} <span class="sublabel">MoM</span>
-        ${tagPct(tot.cli_yoy_pct)} <span class="sublabel">YoY</span>
-      </div>
-    </div>
-
-    <!-- Card 2: Total Cupons -->
-    <div class="apple-kpi-card accent-indigo">
-      <div class="kpi-card-header">
-        <span class="kpi-card-title">CUPONS / TRANSAÇÕES</span>
-        <span class="apple-tag tag-neu">Volume</span>
-      </div>
-      <div class="kpi-value-main" style="color: var(--apple-indigo);">${fmtInt(tot.cup_26)}</div>
-      <div class="kpi-sub-value">${fmtCompact(tot.cup_26).replace('R$ ', '')} transações emitidas</div>
-      <div class="kpi-footer-deltas">
-        ${tagPct(tot.cup_mom_pct)} <span class="sublabel">MoM</span>
-        ${tagPct(tot.cup_yoy_pct)} <span class="sublabel">YoY</span>
-      </div>
-    </div>
-
-    <!-- Card 3: Ticket Médio -->
-    <div class="apple-kpi-card accent-green">
-      <div class="kpi-card-header">
-        <span class="kpi-card-title">TICKET MÉDIO</span>
-        <span class="apple-tag tag-pos">R$ / Cupom</span>
-      </div>
-      <div class="kpi-value-main" style="color: var(--apple-green-text);">${fmtRS(tot.ticket_medio)}</div>
-      <div class="kpi-sub-value">Faturamento / Cupons</div>
-      <div class="kpi-footer-deltas">
-        <span class="sublabel">Frequência: ${tot.freq_media.toFixed(2).replace('.', ',')} compras/cli</span>
-      </div>
-    </div>
-
-    <!-- Card 4: Gasto Médio por Cliente -->
-    <div class="apple-kpi-card accent-orange">
-      <div class="kpi-card-header">
-        <span class="kpi-card-title">GASTO MÉDIO / CLIENTE</span>
-        <span class="apple-tag tag-neu">R$ / Cliente</span>
-      </div>
-      <div class="kpi-value-main" style="color: var(--apple-orange);">${fmtRS(tot.gasto_medio)}</div>
-      <div class="kpi-sub-value">Faturamento / Clientes Ativos</div>
-      <div class="kpi-footer-deltas">
-        <span class="sublabel">No período de ${esc(DATA.kpis?.periodo_info?.periodo_str || '01 a 20/08/2026')}</span>
-      </div>
-    </div>
-
-    <!-- Card 5: Frequência de Compra -->
-    <div class="apple-kpi-card accent-purple">
-      <div class="kpi-card-header">
-        <span class="kpi-card-title">FREQUÊNCIA DE COMPRA</span>
-        <span class="apple-tag tag-neu">Cupons/Cli</span>
-      </div>
-      <div class="kpi-value-main" style="color: var(--apple-purple);">${tot.freq_media.toFixed(2).replace('.', ',')}x</div>
-      <div class="kpi-sub-value">Média de idas à farmácia</div>
-      <div class="kpi-footer-deltas">
-        <span class="sublabel">Taxa de recorrência ativa</span>
-      </div>
-    </div>
-
-    <!-- Card 6: Clientes Digitais -->
-    <div class="apple-kpi-card accent-teal">
-      <div class="kpi-card-header">
-        <span class="kpi-card-title">CLIENTES DIGITAIS</span>
-        <span class="apple-tag tag-neu">App + Site + Parcerias</span>
-      </div>
-      <div class="kpi-value-main" style="color: var(--apple-teal);">${fmtInt(totCliDig)}</div>
-      <div class="kpi-sub-value">${fmtPct(pctCliDig)} de penetração nos clientes</div>
-      <div class="kpi-footer-deltas">
-        <span class="sublabel">Compradores digitais únicos</span>
-      </div>
-    </div>
-  `;
-
-  // 2. Renderizar Tabela de Canais por Clientes
-  const sortedCanais = [...canais].sort((a, b) => (b.cli_26 || 0) - (a.cli_26 || 0));
-  let canaisHtml = '';
-  sortedCanais.forEach(c => {
-    canaisHtml += `
-      <tr class="row-linha">
-        <td style="font-weight: 600; color: var(--text-primary);">${esc(c.canal)}</td>
-        <td class="num font-weight-600">${fmtInt(c.cli_26)}</td>
-        <td class="num">${fmtInt(c.cli_26_06)}</td>
-        <td class="num">${fmtInt(c.cli_25)}</td>
-        <td class="num">${badgePct(c.cli_mom_pct)}</td>
-        <td class="num">${badgePct(c.cli_yoy_pct)}</td>
-        <td class="num">${fmtInt(c.cup_26)}</td>
-        <td class="num">${fmtRS(c.ticket_medio)}</td>
-        <td class="num">${fmtRS(c.gasto_medio)}</td>
-        <td class="num">${renderShareCell(c.penetr_base)}</td>
-      </tr>
-    `;
-  });
-
-  canaisHtml += `
-    <tr style="font-weight: 700; background: rgba(0, 113, 227, 0.06); border-top: 2px solid var(--border);">
-      <td>TOTAL GERAL DA REDE</td>
-      <td class="num font-weight-600">${fmtInt(tot.cli_26)}</td>
-      <td class="num">${fmtInt(tot.cli_26_06)}</td>
-      <td class="num">${fmtInt(tot.cli_25)}</td>
-      <td class="num">${badgePct(tot.cli_mom_pct)}</td>
-      <td class="num">${badgePct(tot.cli_yoy_pct)}</td>
-      <td class="num">${fmtInt(tot.cup_26)}</td>
-      <td class="num">${fmtRS(tot.ticket_medio)}</td>
-      <td class="num">${fmtRS(tot.gasto_medio)}</td>
-      <td class="num">${renderShareCell(100)}</td>
-    </tr>
-  `;
-  tbodyCanais.innerHTML = canaisHtml;
-
-  // 3. Renderizar Tabela de Categorias por Clientes
-  const sortedGrupos = [...grupos].sort((a, b) => (b.cli_26 || 0) - (a.cli_26 || 0));
-  let gruposHtml = '';
-  sortedGrupos.forEach(g => {
-    gruposHtml += `
-      <tr class="row-linha">
-        <td style="font-weight: 600; color: var(--text-primary);">${esc(g.grupo)}</td>
-        <td class="num font-weight-600">${fmtInt(g.cli_26)}</td>
-        <td class="num">${fmtInt(g.cli_26_06)}</td>
-        <td class="num">${fmtInt(g.cli_25)}</td>
-        <td class="num">${badgePct(g.cli_yoy_pct)}</td>
-        <td class="num">${fmtRS(g.venda_26)}</td>
-        <td class="num">${fmtRS(g.gasto_medio)}</td>
-        <td class="num">${renderShareCell(g.penetr_base)}</td>
-      </tr>
-    `;
-  });
-  gruposHtml += `
-    <tr style="font-weight: 700; background: rgba(0, 113, 227, 0.06); border-top: 2px solid var(--border);">
-      <td>TOTAL GERAL DA REDE (CPFs ÚNICOS) *</td>
-      <td class="num font-weight-600">${fmtInt(tot.cli_26)}</td>
-      <td class="num">${fmtInt(tot.cli_26_06)}</td>
-      <td class="num">${fmtInt(tot.cli_25)}</td>
-      <td class="num">${badgePct(tot.cli_yoy_pct)}</td>
-      <td class="num">-</td>
-      <td class="num">${fmtRS(tot.gasto_medio)}</td>
-      <td class="num">${renderShareCell(100)}</td>
-    </tr>
-  `;
-  tbodyGrupos.innerHTML = gruposHtml;
-}

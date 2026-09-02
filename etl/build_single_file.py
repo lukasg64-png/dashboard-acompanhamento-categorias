@@ -97,15 +97,15 @@ def pack_month_dataset(folder):
 def build():
     os.makedirs(os.path.dirname(OUTPUT_DIST), exist_ok=True)
 
-    print("Empacotando dataset de Julho (fechado)...")
-    packed_julho = pack_month_dataset(DATA_DIR)
+    print("Empacotando dataset de Setembro (D-1 Qlik)...")
+    packed_setembro = pack_month_dataset(SETEMBRO_DIR)
     
-    print("Empacotando dataset de Agosto (D-1 Qlik)...")
+    print("Empacotando dataset de Agosto (fechado)...")
     packed_agosto = pack_month_dataset(AGOSTO_DIR)
 
     css = read(CSS_FILE)
     js_app = read(JS_APP)
-    js_charts = read(JS_CHARTS)
+    js_charts = read(JS_CHARTS) if os.path.exists(JS_CHARTS) else ''
     js_waterfall = read(JS_WATERFALL) if os.path.exists(JS_WATERFALL) else ''
     js_metas = read(JS_METAS) if os.path.exists(JS_METAS) else ''
 
@@ -130,7 +130,7 @@ function _decompress(packed) {{
 }}
 
 const _PACKED = {{
-  "julho": {json.dumps(packed_julho, ensure_ascii=False, separators=(',',':'))},
+  "setembro": {json.dumps(packed_setembro, ensure_ascii=False, separators=(',',':'))},
   "agosto": {json.dumps(packed_agosto, ensure_ascii=False, separators=(',',':'))}
 }};
 
@@ -138,8 +138,8 @@ const _PACKED = {{
 """
 
     patched_app = js_app.replace(
-        "async function loadAllData(mes = 'agosto') {",
-        "async function loadAllData(mes = 'agosto') {\n  if (typeof _PACKED !== 'undefined') {\n    const pkg = _PACKED[mes] || _PACKED['agosto'] || _PACKED['julho'];\n    if (typeof updateLoadingProgress === 'function') updateLoadingProgress(20, 'Carregando KPIs e Canais...');\n    DATA.kpis = pkg.kpis;\n    DATA.canais = pkg.canais;\n    if (typeof updateLoadingProgress === 'function') updateLoadingProgress(40, 'Descompactando Canais e Hierarquia...');\n    DATA.canaisHier = _decompress(pkg.canais_hier_packed);\n    if (typeof updateLoadingProgress === 'function') updateLoadingProgress(60, 'Descompactando Categorias...');\n    DATA.categorias = _decompress(pkg.categorias_packed);\n    if (typeof updateLoadingProgress === 'function') updateLoadingProgress(75, 'Estruturando Hierarquia...');\n    DATA.hierarquia = _decompress(pkg.hierarquia_packed);\n    DATA.filtroHierarquia = pkg.filtroHierarquia;\n    DATA.filtrosProduto = pkg.filtrosProduto;\n    DATA.clientes = pkg.clientes || null;\n    if (typeof updateLoadingProgress === 'function') updateLoadingProgress(85, 'Concluindo base de dados...');\n    return;\n  }"
+        "async function loadAllData(mes = 'setembro') {",
+        "async function loadAllData(mes = 'setembro') {\n  if (typeof _PACKED !== 'undefined') {\n    const pkg = _PACKED[mes] || _PACKED['setembro'] || _PACKED['agosto'];\n    if (typeof updateLoadingProgress === 'function') updateLoadingProgress(20, 'Carregando KPIs e Canais...');\n    DATA.kpis = pkg.kpis;\n    DATA.canais = pkg.canais;\n    if (typeof updateLoadingProgress === 'function') updateLoadingProgress(40, 'Descompactando Canais e Hierarquia...');\n    DATA.canaisHier = _decompress(pkg.canais_hier_packed);\n    if (typeof updateLoadingProgress === 'function') updateLoadingProgress(60, 'Descompactando Categorias...');\n    DATA.categorias = _decompress(pkg.categorias_packed);\n    if (typeof updateLoadingProgress === 'function') updateLoadingProgress(75, 'Estruturando Hierarquia...');\n    DATA.hierarquia = _decompress(pkg.hierarquia_packed);\n    DATA.filtroHierarquia = pkg.filtroHierarquia;\n    DATA.filtrosProduto = pkg.filtrosProduto;\n    DATA.clientes = null;\n    if (typeof updateLoadingProgress === 'function') updateLoadingProgress(85, 'Concluindo base de dados...');\n    return;\n  }"
     )
 
     html_template = read(TEMPLATE_FILE)
