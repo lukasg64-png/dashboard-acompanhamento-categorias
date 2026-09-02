@@ -1,51 +1,51 @@
 {
-  "meta_empresa_total": 898116411.18,
+  "meta_empresa_total": 898116411.32,
   "total_linhas": 563,
   "total_distritais": 9,
   "total_diretorias": 2,
   "diretorias": {
     "Cintia Silva": {
-      "meta_total": 455992029.46,
+      "meta_total": 455992029.56,
       "distritais": {
         "Fais Abdalla": {
-          "meta_total": 111435794.86,
+          "meta_total": 111435794.88,
           "total_linhas": 546
         },
         "Juliano Petrarca": {
-          "meta_total": 127797159.45,
+          "meta_total": 127797159.48,
           "total_linhas": 550
         },
         "Rodrigo Ferreira": {
-          "meta_total": 97203050.37,
+          "meta_total": 97203050.39,
           "total_linhas": 544
         },
         "Tiago Machado": {
-          "meta_total": 119556024.78,
+          "meta_total": 119556024.81,
           "total_linhas": 546
         }
       }
     },
     "Laerti Siqueira": {
-      "meta_total": 442124381.72,
+      "meta_total": 442124381.76,
       "distritais": {
         "Andre Jaime": {
           "meta_total": 85661426.68,
           "total_linhas": 546
         },
         "Cleiton Lima": {
-          "meta_total": 83559687.32,
+          "meta_total": 83559687.33,
           "total_linhas": 544
         },
         "Fabio Baldasso": {
-          "meta_total": 98910463.15,
+          "meta_total": 98910463.16,
           "total_linhas": 543
         },
         "Larissa Azambuja": {
-          "meta_total": 77253788.4,
+          "meta_total": 77253788.41,
           "total_linhas": 543
         },
         "Luiz Kuhn": {
-          "meta_total": 96739016.17,
+          "meta_total": 96739016.18,
           "total_linhas": 543
         }
       }

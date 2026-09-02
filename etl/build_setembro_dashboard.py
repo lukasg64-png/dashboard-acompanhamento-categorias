@@ -70,9 +70,9 @@ def build_dashboard():
     
     # Atribuir realizado de cada Distrital × Linha
     df_micro['real_acum_dmax'] = df_micro.apply(
-        lambda r: real_dist_linha_map.get((r['distrital'], r['linha']), 0.0), axis=1
+        lambda r: round(real_dist_linha_map.get((r['distrital'], r['linha']), 0.0), 2), axis=1
     )
-    df_micro['meta_acum_dmax'] = df_micro['meta_mensal'] * pct_acum_dmax
+    df_micro['meta_acum_dmax'] = df_micro['meta_mensal'].apply(lambda v: round(v * pct_acum_dmax, 2))
     df_micro['desvio_rs'] = df_micro['real_acum_dmax'] - df_micro['meta_acum_dmax']
     df_micro['desvio_pct'] = df_micro.apply(
         lambda r: round((r['real_acum_dmax'] / r['meta_acum_dmax'] - 1) * 100, 2) if r['meta_acum_dmax'] > 0 else 0.0, axis=1
@@ -83,9 +83,9 @@ def build_dashboard():
     df_micro['status'] = df_micro['desvio_pct'].apply(lambda v: get_status(v, d_max))
 
     # 5. Estruturar Macro Empresa
-    meta_empresa_mensal = df_micro['meta_mensal'].sum()
-    meta_empresa_dmax = df_micro['meta_acum_dmax'].sum()
-    real_empresa_dmax = df_micro['real_acum_dmax'].sum()
+    meta_empresa_mensal = round(df_micro['meta_mensal'].sum(), 2)
+    meta_empresa_dmax = round(df_micro['meta_acum_dmax'].sum(), 2)
+    real_empresa_dmax = round(df_micro['real_acum_dmax'].sum(), 2)
     desvio_emp_rs, desvio_emp_pct = calc_desvio(meta_empresa_dmax, real_empresa_dmax)
     ating_emp_pct = round(real_empresa_dmax / meta_empresa_dmax * 100, 2) if meta_empresa_dmax > 0 else 0.0
 
@@ -95,9 +95,9 @@ def build_dashboard():
     evolucao_real[0] = round(real_empresa_dmax, 2)
 
     empresa_data = {
-        'meta_mensal': round(meta_empresa_mensal, 2),
-        'meta_acum_dmax': round(meta_empresa_dmax, 2),
-        'real_acum_dmax': round(real_empresa_dmax, 2),
+        'meta_mensal': meta_empresa_mensal,
+        'meta_acum_dmax': meta_empresa_dmax,
+        'real_acum_dmax': real_empresa_dmax,
         'desvio_rs': desvio_emp_rs,
         'desvio_pct': desvio_emp_pct,
         'ating_pct': ating_emp_pct,
@@ -182,12 +182,6 @@ def build_dashboard():
             # Grupos dentro deste Distrital
             grupos_do_distrital = []
             for g_nome, grp_g in grp_dist.groupby('grupo'):
-                gm = grp_g['meta_mensal'].sum()
-                gd = grp_g['meta_acum_dmax'].sum()
-                gr = grp_g['real_acum_dmax'].sum()
-                g_d_rs, g_d_pct = calc_desvio(gd, gr)
-                g_at = round(gr / gd * 100, 2) if gd > 0 else 0.0
-
                 # Linhas dentro do Grupo do Distrital
                 linhas_do_grupo = []
                 for _, r_lin in grp_g.iterrows():
@@ -205,11 +199,17 @@ def build_dashboard():
                     })
                 linhas_do_grupo.sort(key=lambda x: x['meta_mensal'], reverse=True)
 
+                gm = round(sum(l['meta_mensal'] for l in linhas_do_grupo), 2)
+                gd = round(sum(l['meta_acum_dmax'] for l in linhas_do_grupo), 2)
+                gr = round(sum(l['real_acum_dmax'] for l in linhas_do_grupo), 2)
+                g_d_rs, g_d_pct = calc_desvio(gd, gr)
+                g_at = round(gr / gd * 100, 2) if gd > 0 else 0.0
+
                 grupos_do_distrital.append({
                     'grupo': g_nome,
-                    'meta_mensal': round(gm, 2),
-                    'meta_acum_dmax': round(gd, 2),
-                    'real_acum_dmax': round(gr, 2),
+                    'meta_mensal': gm,
+                    'meta_acum_dmax': gd,
+                    'real_acum_dmax': gr,
                     'desvio_rs': g_d_rs,
                     'desvio_pct': g_d_pct,
                     'ating_pct': g_at,
@@ -219,12 +219,18 @@ def build_dashboard():
                 })
             grupos_do_distrital.sort(key=lambda x: x['meta_mensal'], reverse=True)
 
+            dt_meta_m = round(sum(g['meta_mensal'] for g in grupos_do_distrital), 2)
+            dt_meta_d = round(sum(g['meta_acum_dmax'] for g in grupos_do_distrital), 2)
+            dt_real_d = round(sum(g['real_acum_dmax'] for g in grupos_do_distrital), 2)
+            dt_desv_rs, dt_desv_pct = calc_desvio(dt_meta_d, dt_real_d)
+            dt_ating = round(dt_real_d / dt_meta_d * 100, 2) if dt_meta_d > 0 else 0.0
+
             dist_obj = {
                 'distrital': dist_nome,
                 'diretor': dir_nome,
-                'meta_mensal': round(dt_meta_m, 2),
-                'meta_acum_dmax': round(dt_meta_d, 2),
-                'real_acum_dmax': round(dt_real_d, 2),
+                'meta_mensal': dt_meta_m,
+                'meta_acum_dmax': dt_meta_d,
+                'real_acum_dmax': dt_real_d,
                 'desvio_rs': dt_desv_rs,
                 'desvio_pct': dt_desv_pct,
                 'ating_pct': dt_ating,
@@ -238,11 +244,17 @@ def build_dashboard():
 
         distritais_da_diretoria.sort(key=lambda x: x['meta_mensal'], reverse=True)
 
+        d_meta_m = round(sum(dt['meta_mensal'] for dt in distritais_da_diretoria), 2)
+        d_meta_d = round(sum(dt['meta_acum_dmax'] for dt in distritais_da_diretoria), 2)
+        d_real_d = round(sum(dt['real_acum_dmax'] for dt in distritais_da_diretoria), 2)
+        d_desv_rs, d_desv_pct = calc_desvio(d_meta_d, d_real_d)
+        d_ating = round(d_real_d / d_meta_d * 100, 2) if d_meta_d > 0 else 0.0
+
         diretorias_list.append({
             'diretor': dir_nome,
-            'meta_mensal': round(d_meta_m, 2),
-            'meta_acum_dmax': round(d_meta_d, 2),
-            'real_acum_dmax': round(d_real_d, 2),
+            'meta_mensal': d_meta_m,
+            'meta_acum_dmax': d_meta_d,
+            'real_acum_dmax': d_real_d,
             'desvio_rs': d_desv_rs,
             'desvio_pct': d_desv_pct,
             'ating_pct': d_ating,
@@ -254,6 +266,15 @@ def build_dashboard():
 
     diretorias_list.sort(key=lambda x: x['meta_mensal'], reverse=True)
     distritais_list.sort(key=lambda x: x['ating_pct'], reverse=True) # Ranking de atingimento
+
+    # Sincronizar Empresa Meta D-1 com a soma exata dos distritais e diretorias
+    empresa_data['meta_acum_dmax'] = round(sum(d['meta_acum_dmax'] for d in diretorias_list), 2)
+    empresa_data['meta_mensal'] = round(sum(d['meta_mensal'] for d in diretorias_list), 2)
+    empresa_data['real_acum_dmax'] = round(sum(d['real_acum_dmax'] for d in diretorias_list), 2)
+    desv_emp_rs, desv_emp_pct = calc_desvio(empresa_data['meta_acum_dmax'], empresa_data['real_acum_dmax'])
+    empresa_data['desvio_rs'] = desv_emp_rs
+    empresa_data['desvio_pct'] = desv_emp_pct
+    empresa_data['ating_pct'] = round(empresa_data['real_acum_dmax'] / empresa_data['meta_acum_dmax'] * 100, 2)
 
     # 9. Contagem de status por Linha Empresa
     status_count = {'acima': 0, 'alerta': 0, 'abaixo': 0, 'aguardando': 0}

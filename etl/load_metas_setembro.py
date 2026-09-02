@@ -112,14 +112,27 @@ def main():
                     'subgrupo': subgrupo_str,
                     'linha': linha_str,
                     'familia': familia_str,
-                    'meta_mensal': round(meta_val, 2)
+                    'meta_mensal': meta_val
                 })
             except Exception:
                 pass
 
     df = pd.DataFrame(rows)
+    raw_total = df['meta_mensal'].sum()
     print(f"  Total registros processados: {len(df)}")
-    print(f"  Meta Total Setembro: R$ {df['meta_mensal'].sum():,.2f}")
+    print(f"  Meta Raw Total Setembro: R$ {raw_total:,.4f}")
+
+    # Arredondar para 2 casas e fazer balanceamento de centavos para bater 100.0000% com o Excel
+    df['meta_mensal'] = df['meta_mensal'].round(2)
+    diff_cents = int(round((raw_total - df['meta_mensal'].sum()) * 100))
+    if diff_cents != 0:
+        top_indices = df.nlargest(abs(diff_cents), 'meta_mensal').index
+        step = 0.01 if diff_cents > 0 else -0.01
+        for idx in top_indices:
+            df.loc[idx, 'meta_mensal'] = round(df.loc[idx, 'meta_mensal'] + step, 2)
+
+    meta_empresa_total = round(df['meta_mensal'].sum(), 2)
+    print(f"  Meta Final Balanceada (Centavos Exatos): R$ {meta_empresa_total:,.2f}")
 
     # 3. Carregar curva diária para calcular metas diárias
     curva = load_curva_diaria_setembro()
