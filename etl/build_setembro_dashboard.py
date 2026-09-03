@@ -41,15 +41,24 @@ def build_dashboard():
     metas_macro = load_json('metas_por_linha_dia.json')
     curva = load_json('curva_diaria.json')
     hier_detalhada = load_json('hierarquia_detalhada.json')
+    realizado_info = load_json('realizado_por_linha_dia.json') or {}
+    kpis_info = load_json('executive_kpis.json') or {}
 
     if not metas_micro or not curva:
         print("  ❌ Erro: Rode load_metas_setembro.py primeiro!")
         return
 
-    # 2. Identificar D-Max do Realizado
-    # O Qlik extraiu Setembro/2026 dia <= 1 (d_max = 1)
-    d_max = 1
-    pct_acum_dmax = curva[d_max - 1]['pct_acum'] if d_max <= len(curva) else (1.0 / 30.0)
+    # 2. Identificar D-Max do Realizado Dinamicamente
+    d_max = realizado_info.get('d_max')
+    if not d_max:
+        d_max = kpis_info.get('periodo_info', {}).get('dias_fechados')
+    if not d_max:
+        from datetime import date
+        today_day = date.today().day
+        d_max = max(1, today_day - 1 if today_day > 1 else 1)
+
+    d_max = min(max(1, int(d_max)), len(curva))
+    pct_acum_dmax = curva[d_max - 1]['pct_acum'] if d_max <= len(curva) else (d_max / 30.0)
 
     print(f"  📅 D-Max: Dia {d_max}/30 ({pct_acum_dmax*100:.2f}% do mês esperado)")
 
@@ -92,7 +101,11 @@ def build_dashboard():
     # Evolução da Empresa (30 dias)
     evolucao_meta = [round(c['meta_acum'], 2) for c in curva]
     evolucao_real = [0.0] * 30
-    evolucao_real[0] = round(real_empresa_dmax, 2)
+    if 'total_empresa_acum' in realizado_info and isinstance(realizado_info['total_empresa_acum'], list):
+        for idx in range(min(d_max, len(realizado_info['total_empresa_acum']))):
+            evolucao_real[idx] = round(realizado_info['total_empresa_acum'][idx], 2)
+    else:
+        evolucao_real[d_max - 1] = round(real_empresa_dmax, 2)
 
     empresa_data = {
         'meta_mensal': meta_empresa_mensal,
@@ -302,7 +315,7 @@ def build_dashboard():
 
     size_kb = os.path.getsize(out_file) / 1024
     print(f"  [OK] dashboard_setembro.json gerado com sucesso ({size_kb:.1f} KB)")
-    print(f"       -> Empresa Meta: R$ {meta_empresa_mensal:,.2f} | Real D1: R$ {real_empresa_dmax:,.2f} ({ating_emp_pct:.1f}%)")
+    print(f"       -> Empresa Meta: R$ {meta_empresa_mensal:,.2f} | Real D{d_max}: R$ {real_empresa_dmax:,.2f} ({ating_emp_pct:.1f}%)")
     print(f"       -> Diretorias: {len(diretorias_list)} | Distritais: {len(distritais_list)} | Grupos: {len(grupos_empresa)} | Linhas: {len(linhas_empresa)}")
     print("=" * 70)
 

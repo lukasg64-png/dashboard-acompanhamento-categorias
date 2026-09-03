@@ -5,6 +5,13 @@ Executado automaticamente todos os dias às 07:30 via Windows Task Scheduler.
 import os, sys, subprocess, time, json, socket
 from datetime import datetime
 
+if hasattr(sys.stdout, 'reconfigure'):
+    try: sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    except Exception: pass
+if hasattr(sys.stderr, 'reconfigure'):
+    try: sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception: pass
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOG_DIR = os.path.join(BASE_DIR, 'logs')
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -13,7 +20,13 @@ LOG_FILE = os.path.join(LOG_DIR, 'daily_refresh.log')
 def log(msg):
     ts = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     entry = f"[{ts}] {msg}"
-    print(entry)
+    try:
+        print(entry)
+    except UnicodeEncodeError:
+        try:
+            print(entry.encode('ascii', errors='replace').decode('ascii'))
+        except Exception:
+            pass
     try:
         with open(LOG_FILE, 'a', encoding='utf-8') as f:
             f.write(entry + '\n')

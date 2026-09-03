@@ -125,8 +125,20 @@ def main():
 
     # 2. Carregar Excel "novas metas por distrital.xlsx"
     wb = get_excel_workbook()
-    ws = wb.active
-    print(f"  Planilha ativa: {ws.title} ({ws.max_row} linhas)")
+    
+    # Encontrar a planilha correta (contendo dados de alocação Distrital x Linha)
+    ws = None
+    for sheet_name in wb.sheetnames:
+        sheet_candidate = wb[sheet_name]
+        if sheet_candidate.max_row and sheet_candidate.max_row > 100:
+            ws = sheet_candidate
+            break
+        if any(term in sheet_name.lower() for term in ['aloca', 'linha', 'distrito', 'distrital']):
+            ws = sheet_candidate
+            break
+    if ws is None:
+        ws = wb.active
+    print(f"  Planilha selecionada: '{ws.title}' ({ws.max_row} linhas)")
 
     rows = []
     for r in range(4, ws.max_row + 1):
