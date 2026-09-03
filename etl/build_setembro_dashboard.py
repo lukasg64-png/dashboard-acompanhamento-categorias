@@ -98,14 +98,47 @@ def build_dashboard():
     desvio_emp_rs, desvio_emp_pct = calc_desvio(meta_empresa_dmax, real_empresa_dmax)
     ating_emp_pct = round(real_empresa_dmax / meta_empresa_dmax * 100, 2) if meta_empresa_dmax > 0 else 0.0
 
-    # Evolução da Empresa (30 dias)
-    evolucao_meta = [round(c['meta_acum'], 2) for c in curva]
-    evolucao_real = [0.0] * 30
-    if 'total_empresa_acum' in realizado_info and isinstance(realizado_info['total_empresa_acum'], list):
-        for idx in range(min(d_max, len(realizado_info['total_empresa_acum']))):
-            evolucao_real[idx] = round(realizado_info['total_empresa_acum'][idx], 2)
-    else:
-        evolucao_real[d_max - 1] = round(real_empresa_dmax, 2)
+    # Evolução Diária da Empresa (30 dias)
+    evolucao_meta_acum = [round(c['meta_acum'], 2) for c in curva]
+    evolucao_meta_diaria = [round(c.get('meta_dia', 0.0), 2) for c in curva]
+    
+    evolucao_real_acum = [0.0] * 30
+    evolucao_real_diaria = [0.0] * 30
+    desvio_diario_pct = [None] * 30
+    desvio_diario_rs = [None] * 30
+    ating_diario_pct = [None] * 30
+
+    total_emp_dia = realizado_info.get('total_empresa_dia', [])
+    total_emp_acum = realizado_info.get('total_empresa_acum', [])
+
+    for idx in range(30):
+        if idx < d_max:
+            r_dia = round(total_emp_dia[idx], 2) if idx < len(total_emp_dia) else 0.0
+            r_acum = round(total_emp_acum[idx], 2) if idx < len(total_emp_acum) else 0.0
+            m_dia = evolucao_meta_diaria[idx]
+            
+            evolucao_real_diaria[idx] = r_dia
+            evolucao_real_acum[idx] = r_acum
+            
+            if m_dia > 0:
+                d_pct = round(((r_dia / m_dia) - 1.0) * 100.0, 2)
+                d_rs = round(r_dia - m_dia, 2)
+                at_pct = round((r_dia / m_dia) * 100.0, 2)
+            else:
+                d_pct = 0.0
+                d_rs = 0.0
+                at_pct = 0.0
+                
+            desvio_diario_pct[idx] = d_pct
+            desvio_diario_rs[idx] = d_rs
+            ating_diario_pct[idx] = at_pct
+
+            if idx < len(curva):
+                curva[idx]['real_dia'] = r_dia
+                curva[idx]['real_acum'] = r_acum
+                curva[idx]['desvio_dia_pct'] = d_pct
+                curva[idx]['desvio_dia_rs'] = d_rs
+                curva[idx]['ating_dia_pct'] = at_pct
 
     empresa_data = {
         'meta_mensal': meta_empresa_mensal,
@@ -114,10 +147,15 @@ def build_dashboard():
         'desvio_rs': desvio_emp_rs,
         'desvio_pct': desvio_emp_pct,
         'ating_pct': ating_emp_pct,
-        'projecao_runrate': round((real_empresa_dmax / d_max) * 30, 2),
+        'projecao_runrate': round((real_empresa_dmax / d_max) * 30, 2) if d_max > 0 else 0.0,
         'projecao_linear': round(meta_empresa_mensal * (ating_emp_pct / 100.0), 2),
-        'evolucao_meta': evolucao_meta,
-        'evolucao_real': evolucao_real
+        'evolucao_meta': evolucao_meta_acum,
+        'evolucao_real': evolucao_real_acum,
+        'evolucao_meta_diaria': evolucao_meta_diaria,
+        'evolucao_real_diaria': evolucao_real_diaria,
+        'desvio_diario_pct': desvio_diario_pct,
+        'desvio_diario_rs': desvio_diario_rs,
+        'ating_diario_pct': ating_diario_pct
     }
 
     # 6. Estruturar Grupos / Categorias da Empresa

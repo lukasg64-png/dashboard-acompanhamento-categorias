@@ -13,7 +13,8 @@ const STATE_METAS = {
   categoria: 'ALL',
   status: 'ALL',
   search: '',
-  sort: 'meta_mensal'
+  sort: 'meta_mensal',
+  chartMode: 'diario' // 'diario' ou 'acumulado'
 };
 
 // Estado de filtros e expansão da Aba Diretoria & Distritais
@@ -208,6 +209,77 @@ function renderMetasKPIs(data) {
   `;
 }
 
+// Plugin customizado para desenhar badges numéricos com % de desvio em cada dia
+const metasDesvioDataLabelsPlugin = {
+  id: 'metasDesvioDataLabels',
+  afterDatasetsDraw(chart, args, options) {
+    const { ctx } = chart;
+    const datasets = chart.data.datasets;
+    const desvioDatasetIndex = datasets.findIndex(ds => ds.isDesvioLine);
+    if (desvioDatasetIndex === -1) return;
+
+    const dataset = datasets[desvioDatasetIndex];
+    const meta = chart.getDatasetMeta(desvioDatasetIndex);
+    if (!meta || !meta.data) return;
+
+    ctx.save();
+    meta.data.forEach((element, index) => {
+      const val = dataset.data[index];
+      if (val === null || val === undefined || isNaN(val)) return;
+
+      const isPositive = val >= 0;
+      const text = (isPositive ? '+' : '') + Number(val).toFixed(1).replace('.', ',') + '%';
+      const bgColor = isPositive ? '#34C759' : '#FF3B30';
+
+      ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      const textMetrics = ctx.measureText(text);
+      const textWidth = textMetrics.width;
+      const paddingX = 7;
+      const pillHeight = 20;
+      const pillWidth = textWidth + paddingX * 2;
+      const pillRadius = 5;
+
+      const x = element.x;
+      const yOffset = -22;
+      const y = Math.max(12, element.y + yOffset);
+      const pillX = x - pillWidth / 2;
+      const pillY = y - pillHeight / 2;
+
+      // Sombra suave para o badge
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetY = 2;
+
+      // Fundo do Badge (Verde se bateu / Vermelho se abaixo)
+      ctx.fillStyle = bgColor;
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(pillX, pillY, pillWidth, pillHeight, pillRadius);
+      } else {
+        ctx.rect(pillX, pillY, pillWidth, pillHeight);
+      }
+      ctx.fill();
+
+      // Reset de sombra
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      // Borda branca de alto contraste
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Texto do % de Desvio
+      ctx.fillStyle = '#FFFFFF';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, x, y);
+    });
+    ctx.restore();
+  }
+};
+
 function renderMetasChart(data) {
   const canvas = document.getElementById('chartMetasEvolucao');
   if (!canvas) return;
@@ -215,62 +287,233 @@ function renderMetasChart(data) {
   const emp = data.empresa || {};
   const curva = data.curva_diaria || [];
   const dMax = data.d_max || 1;
+  const isDiario = STATE_METAS.chartMode !== 'acumulado';
 
-  const labels = curva.map(c => `Dia ${c.dia}`);
-  const metaAcum = emp.evolucao_meta || curva.map(c => c.meta_acum);
-  const realAcum = (emp.evolucao_real || []).map((v, i) => i < dMax ? v : null);
+  const titleEl = document.getElementById('metasChartTitle');
+  const subtitleEl = document.getElementById('metasEvolucaoSubtitle');
+  if (titleEl) {
+    titleEl.textContent = isDiario
+      ? 'Acompanhamento Diário — Venda vs Meta & % Desvio (Total Empresa)'
+      : 'Evolução Acumulada MTD — Meta vs Realizado (Total Empresa)';
+  }
+  if (subtitleEl) {
+    subtitleEl.textContent = isDiario
+      ? 'Setembro/2026 • Barras de Faturamento Diário + Traço com % de Desvio (Verde/Vermelho)'
+      : 'Setembro/2026 • Curva diária acumulada ponderada';
+  }
 
   if (_metasChart) _metasChart.destroy();
 
-  _metasChart = new Chart(canvas, {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: 'Meta Acumulada R$',
-          data: metaAcum,
-          borderColor: '#0071E3',
-          backgroundColor: 'rgba(0, 113, 227, 0.08)',
-          fill: true,
-          tension: 0.3,
-          borderWidth: 2.5,
-          pointRadius: 2
+  if (isDiario) {
+    // ── MODO 1: DIÁRIO (BARRAS DE VENDA + META + TRAÇO COM % DESVIO) ──
+    const labels = curva.map(c => `Dia ${c.dia} (${c.dia_semana ? c.dia_semana.slice(0, 3) : ''})`);
+
+    const metaDiaria = curva.map((c, i) => {
+      return c.meta_dia || (emp.evolucao_meta_diaria ? emp.evolucao_meta_diaria[i] : 0);
+    });
+
+    const realDiario = curva.map((c, i) => {
+      if (i >= dMax) return null;
+      return c.real_dia !== undefined ? c.real_dia : (emp.evolucao_real_diaria ? emp.evolucao_real_diaria[i] : null);
+    });
+
+    const desvioPct = curva.map((c, i) => {
+      if (i >= dMax) return null;
+      const r = c.real_dia !== undefined ? c.real_dia : (emp.evolucao_real_diaria ? emp.evolucao_real_diaria[i] : 0);
+      const m = c.meta_dia || (emp.evolucao_meta_diaria ? emp.evolucao_meta_diaria[i] : 1);
+      if (!m || m <= 0) return 0;
+      return Number(((r / m - 1.0) * 100.0).toFixed(2));
+    });
+
+    const vendaColors = curva.map((c, i) => {
+      if (i >= dMax) return 'rgba(0,0,0,0)';
+      const d = desvioPct[i];
+      return d >= 0 ? 'rgba(52, 199, 89, 0.85)' : 'rgba(255, 59, 48, 0.85)';
+    });
+
+    const vendaBorderColors = curva.map((c, i) => {
+      if (i >= dMax) return 'rgba(0,0,0,0)';
+      const d = desvioPct[i];
+      return d >= 0 ? '#248A3D' : '#D70015';
+    });
+
+    const pointBgColors = curva.map((c, i) => {
+      if (i >= dMax) return 'transparent';
+      const d = desvioPct[i];
+      return d >= 0 ? '#34C759' : '#FF3B30';
+    });
+
+    _metasChart = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            type: 'bar',
+            label: 'Meta do Dia R$',
+            data: metaDiaria,
+            backgroundColor: 'rgba(0, 113, 227, 0.18)',
+            borderColor: 'rgba(0, 113, 227, 0.65)',
+            borderWidth: 1.5,
+            borderRadius: 6,
+            yAxisID: 'y',
+            order: 3
+          },
+          {
+            type: 'bar',
+            label: 'Venda do Dia R$',
+            data: realDiario,
+            backgroundColor: vendaColors,
+            borderColor: vendaBorderColors,
+            borderWidth: 1.5,
+            borderRadius: 6,
+            yAxisID: 'y',
+            order: 2
+          },
+          {
+            type: 'line',
+            label: '% Desvio (Venda / Meta - 1)',
+            data: desvioPct,
+            borderColor: '#8E8E93',
+            borderDash: [5, 4],
+            borderWidth: 2,
+            tension: 0.2,
+            pointRadius: 6,
+            pointHoverRadius: 9,
+            pointBackgroundColor: pointBgColors,
+            pointBorderColor: '#FFFFFF',
+            pointBorderWidth: 2.5,
+            yAxisID: 'y1',
+            order: 1,
+            isDesvioLine: true
+          }
+        ]
+      },
+      plugins: [metasDesvioDataLabelsPlugin],
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: { boxWidth: 12, font: { weight: 600, size: 12 } }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(28, 28, 30, 0.95)',
+            titleFont: { size: 13, weight: 'bold' },
+            bodyFont: { size: 12 },
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: {
+              title: (items) => {
+                const idx = items[0].dataIndex;
+                const c = curva[idx] || {};
+                return `Dia ${c.dia}/09/2026 (${c.dia_semana || ''})`;
+              },
+              label: (ctx) => {
+                const idx = ctx.dataIndex;
+                const c = curva[idx] || {};
+                const r = c.real_dia !== undefined ? c.real_dia : (emp.evolucao_real_diaria ? emp.evolucao_real_diaria[idx] : 0);
+                const m = c.meta_dia || (emp.evolucao_meta_diaria ? emp.evolucao_meta_diaria[idx] : 0);
+                const d = desvioPct[idx];
+
+                if (ctx.dataset.yAxisID === 'y1') {
+                  if (d === null || d === undefined) return ' % Desvio: Aguardando dados';
+                  const icon = d >= 0 ? '🟢 Bateu a meta' : '🔴 Abaixo da meta';
+                  return ` % Desvio: ${(d >= 0 ? '+' : '')}${d.toFixed(2).replace('.', ',')}% (${icon})`;
+                } else if (ctx.dataset.label.includes('Venda')) {
+                  if (idx >= dMax || r === null || r === 0) return ' Venda do Dia: Aguardando fechamento';
+                  return ` Venda Realizada: R$ ${r.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                } else {
+                  return ` Meta do Dia: R$ ${m.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                }
+              }
+            }
+          }
         },
-        {
-          label: 'Realizado Acumulado R$',
-          data: realAcum,
-          borderColor: '#34C759',
-          backgroundColor: 'rgba(52, 199, 89, 0.15)',
-          fill: true,
-          tension: 0.3,
-          borderWidth: 3,
-          pointRadius: 5,
-          pointBackgroundColor: '#34C759'
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { position: 'top', labels: { boxWidth: 12, font: { weight: 600 } } },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => `${ctx.dataset.label}: R$ ${(ctx.raw || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+        scales: {
+          y: {
+            type: 'linear',
+            position: 'left',
+            ticks: {
+              callback: (v) => 'R$ ' + (v / 1e6).toFixed(0) + 'M'
+            },
+            grid: { color: 'rgba(0,0,0,0.04)' },
+            title: { display: true, text: 'Faturamento Diário (R$)', font: { weight: 'bold', size: 11 } }
+          },
+          y1: {
+            type: 'linear',
+            position: 'right',
+            grid: { drawOnChartArea: false },
+            ticks: {
+              callback: (v) => (v > 0 ? '+' : '') + v.toFixed(0) + '%'
+            },
+            title: { display: true, text: '% Desvio (Venda / Meta - 1)', font: { weight: 'bold', size: 11 } }
+          },
+          x: {
+            grid: { display: false }
           }
         }
-      },
-      scales: {
-        y: {
-          ticks: { callback: (v) => 'R$ ' + (v / 1e6).toFixed(0) + 'M' },
-          grid: { color: 'rgba(0,0,0,0.04)' }
-        },
-        x: { grid: { display: false } }
       }
-    }
-  });
+    });
+
+  } else {
+    // ── MODO 2: ACUMULADO MTD (CURVA ACUMULADA) ──
+    const labels = curva.map(c => `Dia ${c.dia}`);
+    const metaAcum = emp.evolucao_meta || curva.map(c => c.meta_acum);
+    const realAcum = (emp.evolucao_real || []).map((v, i) => i < dMax ? v : null);
+
+    _metasChart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Meta Acumulada R$',
+            data: metaAcum,
+            borderColor: '#0071E3',
+            backgroundColor: 'rgba(0, 113, 227, 0.08)',
+            fill: true,
+            tension: 0.3,
+            borderWidth: 2.5,
+            pointRadius: 2
+          },
+          {
+            label: 'Realizado Acumulado R$',
+            data: realAcum,
+            borderColor: '#34C759',
+            backgroundColor: 'rgba(52, 199, 89, 0.15)',
+            fill: true,
+            tension: 0.3,
+            borderWidth: 3,
+            pointRadius: 5,
+            pointBackgroundColor: '#34C759'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 12, font: { weight: 600 } } },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => `${ctx.dataset.label}: R$ ${(ctx.raw || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+            }
+          }
+        },
+        scales: {
+          y: {
+            ticks: { callback: (v) => 'R$ ' + (v / 1e6).toFixed(0) + 'M' },
+            grid: { color: 'rgba(0,0,0,0.04)' }
+          },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
 }
 
 function renderMetasGruposEmpresa(data) {
@@ -373,6 +616,23 @@ function renderMetasLinhasTable(data) {
 }
 
 function wireMetasMacroEvents(data) {
+  const btnDiario = document.getElementById('btnMetasChartDiario');
+  const btnAcum = document.getElementById('btnMetasChartAcum');
+  if (btnDiario && btnAcum) {
+    btnDiario.onclick = () => {
+      STATE_METAS.chartMode = 'diario';
+      btnDiario.classList.add('active');
+      btnAcum.classList.remove('active');
+      renderMetasChart(data);
+    };
+    btnAcum.onclick = () => {
+      STATE_METAS.chartMode = 'acumulado';
+      btnAcum.classList.add('active');
+      btnDiario.classList.remove('active');
+      renderMetasChart(data);
+    };
+  }
+
   const selCat = document.getElementById('metasFilterCategoria');
   if (selCat) {
     selCat.onchange = (e) => {

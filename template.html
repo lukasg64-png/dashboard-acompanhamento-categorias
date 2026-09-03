@@ -425,18 +425,22 @@
           </div>
         </section>
 
-        <!-- Gráfico Evolução Acumulada Empresa -->
+        <!-- Gráfico Evolução Diária / Acumulada Empresa -->
         <section class="apple-card" id="section-evolucao-metas">
-          <div class="apple-card-header">
+          <div class="apple-card-header" style="flex-wrap: wrap; gap: 8px;">
             <div class="apple-card-title">
               <svg width="18" height="18" fill="none" stroke="var(--apple-orange)" stroke-width="2" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-              Evolução Acumulada — Meta vs Realizado (Total Empresa)
+              <span id="metasChartTitle">Acompanhamento Diário — Venda vs Meta & % Desvio (Total Empresa)</span>
             </div>
-            <div class="apple-card-actions">
-              <span id="metasEvolucaoSubtitle" style="font-size: 11px; color: var(--text-tertiary);">Setembro/2026 • Curva diária ponderada</span>
+            <div class="apple-card-actions" style="display: flex; align-items: center; gap: 12px;">
+              <div class="segmented-control" id="chartMetasModeToggle" style="margin: 0; padding: 2px;">
+                <button class="segmented-btn active" data-mode="diario" id="btnMetasChartDiario" style="padding: 4px 10px; font-size: 11px;">📊 Diário (Venda vs Meta & Desvio)</button>
+                <button class="segmented-btn" data-mode="acumulado" id="btnMetasChartAcum" style="padding: 4px 10px; font-size: 11px;">📈 Curva Acumulada MTD</button>
+              </div>
+              <span id="metasEvolucaoSubtitle" style="font-size: 11px; color: var(--text-tertiary);">Setembro/2026 • D-1 Qlik Sense</span>
             </div>
           </div>
-          <div class="apple-card-body" style="height: 300px; display: grid; place-items: center;">
+          <div class="apple-card-body" style="height: 340px; display: grid; place-items: center; padding: 8px 12px;">
             <canvas id="chartMetasEvolucao"></canvas>
           </div>
         </section>
