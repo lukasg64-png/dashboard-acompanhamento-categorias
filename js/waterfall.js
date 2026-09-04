@@ -15,11 +15,10 @@ const DIM_LABELS = {
   categoria: 'Categorias',
   subgrupo: 'Subgrupos',
   linha: 'Linhas',
-  laboratorio: 'Laboratórios',
+  diretor: 'Diretorias',
+  distrital: 'Distritais',
   canal_agregado: 'Canais (Agrupado)',
-  canal: 'Canais (Detalhado)',
-  diretor: 'Diretores',
-  distrital: 'Distritais'
+  canal: 'Canais (Detalhado)'
 };
 
 const METRIC_LABELS = {
@@ -192,6 +191,12 @@ function getWaterfallData() {
         current: d.real_acum_dmax || 0,
         base: d.meta_acum_dmax || 0
       }));
+    } else if (WF.dimension === 'canal_agregado') {
+      items = buildCanaisAgregados(true);
+      title = `Canais (Agrupado): Realizado D-1 vs Base Anterior (Canais não possuem meta orçamentária)`;
+    } else if (WF.dimension === 'canal') {
+      items = buildCanaisDetalhado(true);
+      title = `Canais (Detalhado): Realizado D-1 vs Base Anterior (Canais não possuem meta orçamentária)`;
     } else {
       // Fallback para dimensões sem meta direta
       const grupos = metasData?.grupos || [];
@@ -218,20 +223,17 @@ function getWaterfallData() {
       case 'linha':
         items = buildFromHierField('linha', curField, baseField);
         break;
-      case 'laboratorio':
-        items = buildFromHierField('laboratorio', curField, baseField);
+      case 'diretor':
+        items = buildFromCatField('diretor', curField, baseField);
+        break;
+      case 'distrital':
+        items = buildFromCatField('distrital', curField, baseField);
         break;
       case 'canal_agregado':
         items = buildCanaisAgregados(isMom);
         break;
       case 'canal':
         items = buildCanaisDetalhado(isMom);
-        break;
-      case 'diretor':
-        items = buildFromCatField('diretor', curField, baseField);
-        break;
-      case 'distrital':
-        items = buildFromCatField('distrital', curField, baseField);
         break;
     }
   }
@@ -319,7 +321,9 @@ function buildFromCatField(field, curField, baseField) {
 
 function buildCanaisAgregados(isMom) {
   const canais = (typeof getFilteredCanaisList === 'function') ? getFilteredCanaisList() : (DATA.canais || []);
-  const useDays = (typeof STATE !== 'undefined' && STATE.mesReferencia === 'julho') && (STATE.startDay !== 1 || STATE.endDay !== 31);
+  const maxDia = (DATA.kpis?.periodo_info?.dias_fechados) || (typeof STATE !== 'undefined' && STATE.mesReferencia === 'agosto' ? 19 : 3);
+  const defaultEnd = (typeof STATE !== 'undefined' && STATE.mesReferencia === 'agosto') ? maxDia : 31;
+  const useDays = typeof STATE !== 'undefined' && (STATE.startDay !== 1 || STATE.endDay < defaultEnd);
 
   // Build group map
   const canalToGroup = {};
@@ -339,8 +343,10 @@ function buildCanaisAgregados(isMom) {
         ? (c.d26_06 ? sumDays(c.d26_06, STATE.startDay, STATE.endDay) : 0)
         : (c.d25 ? sumDays(c.d25, STATE.startDay, STATE.endDay) : 0);
     } else {
-      curVal = c.v26 || 0;
-      baseVal = isMom ? (c.v26_06 || 0) : (c.v25 || 0);
+      curVal = c.venda_jul_26 != null ? c.venda_jul_26 : (c.v26 || 0);
+      baseVal = isMom
+        ? (c.venda_jun_26 != null ? c.venda_jun_26 : (c.v26_06 || 0))
+        : (c.venda_jul_25 != null ? c.venda_jul_25 : (c.v25 || 0));
     }
 
     map[grp].current += curVal;
@@ -352,7 +358,9 @@ function buildCanaisAgregados(isMom) {
 
 function buildCanaisDetalhado(isMom) {
   const canais = (typeof getFilteredCanaisList === 'function') ? getFilteredCanaisList() : (DATA.canais || []);
-  const useDays = (typeof STATE !== 'undefined' && STATE.mesReferencia === 'julho') && (STATE.startDay !== 1 || STATE.endDay !== 31);
+  const maxDia = (DATA.kpis?.periodo_info?.dias_fechados) || (typeof STATE !== 'undefined' && STATE.mesReferencia === 'agosto' ? 19 : 3);
+  const defaultEnd = (typeof STATE !== 'undefined' && STATE.mesReferencia === 'agosto') ? maxDia : 31;
+  const useDays = typeof STATE !== 'undefined' && (STATE.startDay !== 1 || STATE.endDay < defaultEnd);
 
   return canais.map(c => {
     let curVal, baseVal;
@@ -362,8 +370,10 @@ function buildCanaisDetalhado(isMom) {
         ? (c.d26_06 ? sumDays(c.d26_06, STATE.startDay, STATE.endDay) : 0)
         : (c.d25 ? sumDays(c.d25, STATE.startDay, STATE.endDay) : 0);
     } else {
-      curVal = c.v26 || 0;
-      baseVal = isMom ? (c.v26_06 || 0) : (c.v25 || 0);
+      curVal = c.venda_jul_26 != null ? c.venda_jul_26 : (c.v26 || 0);
+      baseVal = isMom
+        ? (c.venda_jun_26 != null ? c.venda_jun_26 : (c.v26_06 || 0))
+        : (c.venda_jul_25 != null ? c.venda_jul_25 : (c.v25 || 0));
     }
     return { label: c.canal, current: curVal, base: baseVal };
   });

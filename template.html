@@ -72,6 +72,14 @@
     <!-- Sidebar de Filtros estilo macOS Settings/Finder -->
     <aside class="sidebar" id="sidebar">
 
+      <!-- Busca Rápida macOS Style -->
+      <div class="sidebar-section" style="margin-bottom: 12px;">
+        <label class="sidebar-label" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>🔍 Busca Rápida</span>
+        </label>
+        <input type="text" id="globalSearch" class="sidebar-select" placeholder="Filtrar por grupo ou linha..." style="padding: 6px 10px; font-size: 12px; width: 100%;">
+      </div>
+
       <!-- Mês de Referência -->
       <div class="sidebar-card-box" style="border-left: 3px solid var(--apple-blue);">
         <label class="sidebar-label" style="color: var(--apple-blue);">📊 Base de Dados</label>
@@ -85,7 +93,7 @@
         <label class="sidebar-label" style="color: var(--apple-indigo);">📅 Recorte de Dias (MTD)</label>
         <select class="sidebar-select" id="filterPeriodoPreset">
           <option value="FULL">Período Completo D-1</option>
-          <option value="MTD_15">Até o Dia 15</option>
+          <option value="ONTEM">Apenas Ontem (D-1)</option>
           <option value="MTD_10">Até o Dia 10</option>
           <option value="CUSTOM">Personalizado (Intervalo)</option>
         </select>
@@ -112,11 +120,6 @@
         <div id="msDistrital" class="ms-container"></div>
       </div>
 
-      <div class="sidebar-section">
-        <label class="sidebar-label">Coordenador</label>
-        <div id="msCoordenador" class="ms-container"></div>
-      </div>
-
       <hr class="sidebar-divider">
 
       <!-- Filtros Mercadológicos -->
@@ -135,11 +138,6 @@
         <div id="msLinha" class="ms-container"></div>
       </div>
 
-      <div class="sidebar-section">
-        <label class="sidebar-label">Laboratório (Indústria)</label>
-        <div id="msLaboratorio" class="ms-container"></div>
-      </div>
-
       <hr class="sidebar-divider">
 
       <!-- Filtro Negativo (Exclusão) -->
@@ -151,7 +149,6 @@
             <option value="linha">Excluir Linha</option>
             <option value="grupo">Excluir Grupo</option>
             <option value="subgrupo">Excluir Subgrupo</option>
-            <option value="laboratorio">Excluir Laboratório</option>
             <option value="canal">Excluir Canal</option>
           </select>
           <div id="boxExcluirValor" style="display: none;">
@@ -231,18 +228,18 @@
             <table class="apple-table" id="tableCanais">
               <thead>
                 <tr>
-                  <th style="min-width: 220px;">Canal / Compilação</th>
-                  <th class="num" id="thCanalCol1">Set/26</th>
-                  <th class="num" id="thCanalCol2">Ago/26 (MoM)</th>
-                  <th class="num" id="thCanalCol3">Set/25 (YoY)</th>
-                  <th class="num">Cresc. MoM %</th>
-                  <th class="num">Cresc. MoM R$</th>
-                  <th class="num">Evol. YoY %</th>
-                  <th class="num">Evol. YoY R$</th>
-                  <th class="num" id="thCanalPartCol1">Share Set/26</th>
-                  <th class="num" id="thCanalPartCol2">Share Ago/26</th>
-                  <th class="num" id="thCanalPartCol3">Share Set/25</th>
-                  <th class="num" title="Variação de Share YoY em pontos percentuais">Var. Share p.p.</th>
+                  <th style="min-width: 220px;" class="sortable" data-sort="alpha">Canal / Compilação</th>
+                  <th class="num sortable" data-sort="venda_jul_26" id="thCanalCol1">Set/26</th>
+                  <th class="num sortable" data-sort="venda_jun_26" id="thCanalCol2">Ago/26 (MoM)</th>
+                  <th class="num sortable" data-sort="venda_jul_25" id="thCanalCol3">Set/25 (YoY)</th>
+                  <th class="num sortable" data-sort="mom_pct">Cresc. MoM %</th>
+                  <th class="num sortable" data-sort="mom_rs">Cresc. MoM R$</th>
+                  <th class="num sortable" data-sort="yoy_pct">Evol. YoY %</th>
+                  <th class="num sortable" data-sort="yoy_rs">Evol. YoY R$</th>
+                  <th class="num sortable" data-sort="part_jul_26" id="thCanalPartCol1">Share Set/26</th>
+                  <th class="num sortable" data-sort="part_jun_26" id="thCanalPartCol2">Share Ago/26</th>
+                  <th class="num sortable" data-sort="part_jul_25" id="thCanalPartCol3">Share Set/25</th>
+                  <th class="num sortable" data-sort="var_pp" title="Variação de Share YoY em pontos percentuais">Var. Share p.p.</th>
                 </tr>
               </thead>
               <tbody id="tbodyCanais"></tbody>
@@ -272,7 +269,7 @@
             <table class="apple-table" id="tableCategorias">
               <thead>
                 <tr>
-                  <th style="min-width: 240px;">Grupo / Subgrupo Mercadológico</th>
+                  <th style="min-width: 240px;" class="sortable" data-sort="alpha">Grupo / Subgrupo Mercadológico</th>
                   <th class="num sortable" data-sort="venda_jul_26" id="thCatCol1">Set/26</th>
                   <th class="num sortable" data-sort="venda_jun_26" id="thCatCol2">Ago/26</th>
                   <th class="num sortable" data-sort="venda_jul_25" id="thCatCol3">Set/25</th>
@@ -283,7 +280,7 @@
                   <th class="num sortable" data-sort="part_jul_26" id="thPartJul26">Share Set/26</th>
                   <th class="num sortable" data-sort="part_jun_26" id="thPartJun26">Share Ago/26</th>
                   <th class="num sortable" data-sort="part_jul_25" id="thPartJul25">Share Set/25</th>
-                  <th class="num" id="thVarPP" title="Variação de Share YoY em pontos percentuais">Var. p.p.</th>
+                  <th class="num sortable" data-sort="var_pp" id="thVarPP" title="Variação de Share YoY em pontos percentuais">Var. p.p.</th>
                 </tr>
               </thead>
               <tbody id="tbodyCategorias"></tbody>
@@ -306,7 +303,8 @@
               <button class="segmented-btn active" data-dim="categoria">Categorias</button>
               <button class="segmented-btn" data-dim="subgrupo">Subgrupos</button>
               <button class="segmented-btn" data-dim="linha">Linhas</button>
-              <button class="segmented-btn" data-dim="laboratorio">Laboratórios</button>
+              <button class="segmented-btn" data-dim="diretor">Diretorias</button>
+              <button class="segmented-btn" data-dim="distrital">Distritais</button>
               <button class="segmented-btn" data-dim="canal_agregado">Canais (Agrupado)</button>
               <button class="segmented-btn" data-dim="canal">Canais (Detalhado)</button>
             </div>

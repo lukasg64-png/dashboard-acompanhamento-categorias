@@ -112,6 +112,15 @@ async function renderMetasSetembroTab() {
   const data = await loadMetasData();
   if (!data) return;
 
+  if (typeof STATE !== 'undefined' && STATE.grupos && STATE.grupos.size === 1) {
+    const gVal = Array.from(STATE.grupos)[0];
+    const selCat = document.getElementById('metasFilterCategoria');
+    if (selCat && (STATE_METAS.categoria === 'ALL' || STATE_METAS.categoria !== gVal)) {
+      STATE_METAS.categoria = gVal;
+      selCat.value = gVal;
+    }
+  }
+
   renderMetasKPIs(data);
   renderMetasChart(data);
   renderMetasGruposEmpresa(data);
@@ -693,6 +702,23 @@ async function renderMetasDiretoriaTab() {
   const data = await loadMetasData();
   if (!data) return;
 
+  if (typeof STATE !== 'undefined' && STATE.diretores && STATE.diretores.size === 1) {
+    const dVal = Array.from(STATE.diretores)[0];
+    const selDir = document.getElementById('dirFilterDiretoria');
+    if (selDir && (STATE_DIR.diretoria === 'ALL' || STATE_DIR.diretoria !== dVal)) {
+      STATE_DIR.diretoria = dVal;
+      selDir.value = dVal;
+    }
+  }
+  if (typeof STATE !== 'undefined' && STATE.distritais && STATE.distritais.size === 1) {
+    const dtVal = Array.from(STATE.distritais)[0];
+    const selDt = document.getElementById('dirFilterDistrital');
+    if (selDt && (STATE_DIR.distrital === 'ALL' || STATE_DIR.distrital !== dtVal)) {
+      STATE_DIR.distrital = dtVal;
+      selDt.value = dtVal;
+    }
+  }
+
   renderDiretoriaCards(data);
   renderRankingDistritais(data);
   populateDiretoriaSelectors(data);
@@ -767,7 +793,11 @@ function renderRankingDistritais(data) {
   const container = document.getElementById('rankingDistritaisBar');
   if (!container) return;
 
-  const distritais = [...(data.distritais || [])].sort((a, b) => b.ating_pct - a.ating_pct);
+  let distritais = [...(data.distritais || [])];
+  if (STATE_DIR.diretoria && STATE_DIR.diretoria !== 'ALL') {
+    distritais = distritais.filter(d => d.diretor === STATE_DIR.diretoria);
+  }
+  distritais.sort((a, b) => b.ating_pct - a.ating_pct);
   let html = '';
 
   distritais.forEach((dt, idx) => {
@@ -802,20 +832,29 @@ function filterDistritalPill(distNome) {
   }
 }
 
-function populateDiretoriaSelectors(data) {
+function populateDiretoriaDistritais(data) {
   const selDist = document.getElementById('dirFilterDistrital');
-  const selGrp = document.getElementById('dirFilterGrupo');
-  if (!selDist || !selGrp) return;
+  if (!selDist) return;
 
-  if (selDist.options.length <= 1) {
-    const dists = data.distritais || [];
-    dists.forEach(d => {
-      const opt = document.createElement('option');
-      opt.value = d.distrital;
-      opt.textContent = `${d.distrital} (${d.diretor})`;
-      selDist.appendChild(opt);
-    });
+  let dists = data.distritais || [];
+  if (STATE_DIR.diretoria && STATE_DIR.diretoria !== 'ALL') {
+    dists = dists.filter(d => d.diretor === STATE_DIR.diretoria);
   }
+
+  selDist.innerHTML = '<option value="ALL">Todos os Distritais</option>';
+  dists.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.distrital;
+    opt.textContent = `${d.distrital} (${d.diretor})`;
+    if (STATE_DIR.distrital === d.distrital) opt.selected = true;
+    selDist.appendChild(opt);
+  });
+}
+
+function populateDiretoriaSelectors(data) {
+  populateDiretoriaDistritais(data);
+  const selGrp = document.getElementById('dirFilterGrupo');
+  if (!selGrp) return;
 
   if (selGrp.options.length <= 1) {
     const grupos = data.grupos || [];
@@ -978,6 +1017,9 @@ function wireDiretoriaEvents(data) {
   if (selDir) {
     selDir.onchange = (e) => {
       STATE_DIR.diretoria = e.target.value;
+      STATE_DIR.distrital = 'ALL';
+      populateDiretoriaDistritais(data);
+      renderRankingDistritais(data);
       renderDiretoriaHierarchicalTable(data);
     };
   }

@@ -187,19 +187,20 @@ function wireEvents() {
     presetSel.addEventListener('change', e => {
       STATE.periodPreset = e.target.value;
       const customBox = sel('customDaysRange');
+      const maxDia = (DATA.kpis?.periodo_info?.dias_fechados) || (STATE.mesReferencia === 'setembro' ? 3 : 31);
       if (STATE.periodPreset === 'FULL') {
         STATE.startDay = 1; STATE.endDay = 31;
         if (customBox) customBox.style.display = 'none';
-      } else if (STATE.periodPreset === 'MTD_15') {
-        STATE.startDay = 1; STATE.endDay = 15;
+      } else if (STATE.periodPreset === 'ONTEM') {
+        STATE.startDay = maxDia; STATE.endDay = maxDia;
         if (customBox) customBox.style.display = 'none';
-      } else if (STATE.periodPreset === 'MTD_20') {
-        STATE.startDay = 1; STATE.endDay = 20;
+      } else if (STATE.periodPreset === 'MTD_10') {
+        STATE.startDay = 1; STATE.endDay = Math.min(10, maxDia);
         if (customBox) customBox.style.display = 'none';
       } else if (STATE.periodPreset === 'CUSTOM') {
         if (customBox) customBox.style.display = 'flex';
         STATE.startDay = parseInt(sel('filterStartDay').value) || 1;
-        STATE.endDay = parseInt(sel('filterEndDay').value) || 31;
+        STATE.endDay = parseInt(sel('filterEndDay').value) || maxDia;
       }
       STATE.expandedCat.clear(); render();
     });
@@ -490,12 +491,6 @@ function populateAllMultiSelects() {
   // Distritais com Cascata
   updateCascadingDistritais();
 
-  // Coordenadores
-  const coordenadores = (fh.coordenadores || []).sort();
-  renderMultiSelect('msCoordenador', coordenadores, STATE.coordenadores, 'Todos os Coordenadores', () => {
-    STATE.expandedCat.clear(); render();
-  });
-
   // Grupos
   const grupos = (fh.grupos || []).sort();
   renderMultiSelect('msGrupo', grupos, STATE.grupos, 'Todos os Grupos', () => {
@@ -601,33 +596,6 @@ function updateCascadingLinhas() {
   });
 
   renderMultiSelect('msLinha', availableLinhas, STATE.linhas, 'Todas as Linhas', () => {
-    updateCascadingLaboratorios();
-    STATE.expandedCat.clear(); render();
-  });
-
-  updateCascadingLaboratorios();
-}
-
-function updateCascadingLaboratorios() {
-  const hier = DATA.hierarquia || [];
-  let filteredHier = hier;
-
-  if (STATE.diretores.size > 0) filteredHier = filteredHier.filter(h => h.diretor && STATE.diretores.has(h.diretor));
-  if (STATE.distritais.size > 0) filteredHier = filteredHier.filter(h => h.distrital && STATE.distritais.has(h.distrital));
-  if (STATE.grupos.size > 0) filteredHier = filteredHier.filter(h => STATE.grupos.has(h.grupo));
-  if (STATE.subgrupos.size > 0) filteredHier = filteredHier.filter(h => STATE.subgrupos.has(h.subgrupo));
-  if (STATE.linhas.size > 0) filteredHier = filteredHier.filter(h => STATE.linhas.has(h.linha));
-
-  let availableLabs = [...new Set(filteredHier.map(h => h.laboratorio).filter(Boolean))].sort();
-  if (availableLabs.length === 0) {
-    availableLabs = (DATA.filtroHierarquia.laboratorios || []).sort();
-  }
-
-  Array.from(STATE.laboratorios).forEach(lab => {
-    if (!availableLabs.includes(lab)) STATE.laboratorios.delete(lab);
-  });
-
-  renderMultiSelect('msLaboratorio', availableLabs, STATE.laboratorios, 'Todos os Laboratórios', () => {
     STATE.expandedCat.clear(); render();
   });
 }
@@ -640,7 +608,6 @@ function populateExclusionValues() {
   if (STATE.excluirTipo === 'linha') list = DATA.filtroHierarquia.linhas || [];
   else if (STATE.excluirTipo === 'grupo') list = DATA.filtroHierarquia.grupos || [];
   else if (STATE.excluirTipo === 'subgrupo') list = DATA.filtroHierarquia.subgrupos || [];
-  else if (STATE.excluirTipo === 'laboratorio') list = DATA.filtroHierarquia.laboratorios || [];
   else if (STATE.excluirTipo === 'canal') list = DATA.canais.map(c => c.canal);
 
   list = [...new Set(list)].sort();
@@ -732,7 +699,7 @@ function applyHierarchyFilter(arr) {
 }
 
 function getFilteredHier() {
-  if ((STATE.canalDetalhado && STATE.canalDetalhado !== 'ALL') || (STATE.grupoCanal && STATE.grupoCanal !== 'ALL')) {
+  if ((STATE.canalDetalhado && STATE.canalDetalhado !== 'ALL') || (STATE.grupoCanal && STATE.grupoCanal !== 'ALL') || (STATE.excluirTipo === 'canal' && STATE.excluirValor !== 'NONE')) {
     let items = DATA.canaisHier || [];
 
     if (STATE.diretores.size > 0) items = items.filter(c => STATE.diretores.has(c.diretor));
@@ -982,6 +949,18 @@ function getFilteredGrupos() {
     case 'alpha':
       grupos.sort((a, b) => a.grupo.localeCompare(b.grupo));
       break;
+    case 'part_jul_26':
+      grupos.sort((a, b) => (b.venda_jul_26 || 0) - (a.venda_jul_26 || 0));
+      break;
+    case 'part_jun_26':
+      grupos.sort((a, b) => (b.venda_jun_26 || 0) - (a.venda_jun_26 || 0));
+      break;
+    case 'part_jul_25':
+      grupos.sort((a, b) => (b.venda_jul_25 || 0) - (a.venda_jul_25 || 0));
+      break;
+    case 'var_pp':
+      grupos.sort((a, b) => (b.yoy_rs || 0) - (a.yoy_rs || 0));
+      break;
   }
 
   return grupos;
@@ -1025,6 +1004,14 @@ function render() {
   const wfTab = document.getElementById('tabWaterfall');
   if (wfTab && wfTab.classList.contains('active') && typeof triggerWaterfall === 'function') {
     triggerWaterfall();
+  }
+  const metasEmpTab = document.getElementById('tabMetasSetembro');
+  if (metasEmpTab && metasEmpTab.classList.contains('active') && typeof renderMetasSetembroTab === 'function') {
+    renderMetasSetembroTab();
+  }
+  const metasDirTab = document.getElementById('tabMetasDiretoria');
+  if (metasDirTab && metasDirTab.classList.contains('active') && typeof renderMetasDiretoriaTab === 'function') {
+    renderMetasDiretoriaTab();
   }
 }
 
@@ -1307,6 +1294,18 @@ function renderCanais() {
         break;
       case 'alpha':
         items.sort((a, b) => a.canal.localeCompare(b.canal));
+        break;
+      case 'part_jul_26':
+        items.sort((a, b) => (b.v26 || 0) - (a.v26 || 0));
+        break;
+      case 'part_jun_26':
+        items.sort((a, b) => (b.v26_06 || 0) - (a.v26_06 || 0));
+        break;
+      case 'part_jul_25':
+        items.sort((a, b) => (b.v25 || 0) - (a.v25 || 0));
+        break;
+      case 'var_pp':
+        items.sort((a, b) => ((b.v26 - b.v25) || 0) - ((a.v26 - a.v25) || 0));
         break;
     }
   };
@@ -1636,6 +1635,18 @@ function renderCategorias() {
           break;
         case 'alpha':
           subItems.sort((a, b) => a.linha.localeCompare(b.linha));
+          break;
+        case 'part_jul_26':
+          subItems.sort((a, b) => (b.h_sh26 || 0) - (a.h_sh26 || 0));
+          break;
+        case 'part_jun_26':
+          subItems.sort((a, b) => (b.h_sh26_06 || 0) - (a.h_sh26_06 || 0));
+          break;
+        case 'part_jul_25':
+          subItems.sort((a, b) => (b.h_sh25 || 0) - (a.h_sh25 || 0));
+          break;
+        case 'var_pp':
+          subItems.sort((a, b) => (b.h_var_pp || 0) - (a.h_var_pp || 0));
           break;
       }
 
