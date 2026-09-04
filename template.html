@@ -49,9 +49,6 @@
         <button type="button" class="segmented-btn active" data-month="setembro" id="btnMesSetembro">
           ⚡ Setembro/26 (D-1 Qlik)
         </button>
-        <button type="button" class="segmented-btn" data-month="agosto" id="btnMesAgosto">
-          📁 Agosto/26 (Fechado)
-        </button>
       </div>
 
       <!-- Badge Período D-1 -->
@@ -80,7 +77,6 @@
         <label class="sidebar-label" style="color: var(--apple-blue);">📊 Base de Dados</label>
         <select class="sidebar-select" id="filterMesReferencia" style="font-weight: 600;">
           <option value="setembro" selected>Setembro/2026 (D-1 Qlik Sense)</option>
-          <option value="agosto">Agosto/2026 (Mês Fechado)</option>
         </select>
       </div>
 
@@ -321,6 +317,7 @@
             <div class="apple-segmented-control" id="wfComparison">
               <button class="segmented-btn active" data-comp="mom">MoM (Mês Anterior)</button>
               <button class="segmented-btn" data-comp="yoy">YoY (Ano Anterior)</button>
+              <button class="segmented-btn" data-comp="meta">Vs Meta (Meta D-1)</button>
             </div>
           </div>
 
@@ -337,10 +334,12 @@
             <div>
               <div class="wf-group-label">🔀 Ordenação</div>
               <select class="sidebar-select" id="wfSort" style="width: auto;">
-                <option value="impacto">Maior Impacto R$</option>
-                <option value="crescimento">Maior Crescimento %</option>
-                <option value="queda">Maior Queda %</option>
-                <option value="alpha">Alfabética</option>
+                <option value="impacto">Maior Impacto R$ (|Δ|)</option>
+                <option value="ganho_rs">Maior Desvio / Ganho R$ (+ ▲)</option>
+                <option value="queda_rs">Maior Desvio / Queda R$ (- ▼)</option>
+                <option value="crescimento">Maior Crescimento % (+%)</option>
+                <option value="queda">Maior Queda % (-%)</option>
+                <option value="alpha">Alfabética (A-Z)</option>
               </select>
             </div>
             <div>
@@ -414,11 +413,16 @@
               <div style="display: flex; align-items: center; gap: 6px;">
                 <label style="font-size: 11px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">Ordenar:</label>
                 <select id="metasSortMode" style="padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; background: var(--surface);">
-                  <option value="meta_mensal">Meta Mensal (maior)</option>
-                  <option value="desvio_rs">Desvio R$ (pior primeiro)</option>
-                  <option value="desvio_pct">Desvio % (pior primeiro)</option>
-                  <option value="ating_pct">Atingimento %</option>
-                  <option value="linha">Linha (A-Z)</option>
+                  <option value="meta_mensal_desc">Meta Mensal (Maior → Menor)</option>
+                  <option value="meta_mensal_asc">Meta Mensal (Menor → Maior)</option>
+                  <option value="desvio_rs_pos">Maior Desvio R$ Positivo (Acima da Meta ▲)</option>
+                  <option value="desvio_rs_neg">Maior Desvio R$ Negativo (Abaixo da Meta ▼)</option>
+                  <option value="desvio_pct_pos">Maior Desvio % Positivo (+%)</option>
+                  <option value="desvio_pct_neg">Maior Desvio % Negativo (-%)</option>
+                  <option value="ating_pct_desc">Atingimento % (Maior → Menor)</option>
+                  <option value="ating_pct_asc">Atingimento % (Menor → Maior)</option>
+                  <option value="linha_asc">Linha (A → Z)</option>
+                  <option value="linha_desc">Linha (Z → A)</option>
                 </select>
               </div>
             </div>

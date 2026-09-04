@@ -1,13 +1,13 @@
-/* waterfall.js — v2 — Dynamic Waterfall with Pivot-Table Controls */
+/* waterfall.js — v3 — Dynamic Waterfall with Pivot-Table Controls & Meta Comparison */
 
 let waterfallChart = null;
 
 /* ── Waterfall State ────────────────────────────────── */
 const WF = {
   dimension: 'categoria',  // categoria, subgrupo, linha, laboratorio, canal_agregado, canal, diretor, distrital
-  comparison: 'mom',        // mom, yoy
+  comparison: 'mom',        // mom, yoy, meta
   metric: 'total',          // total, digital, dt
-  sort: 'impacto',          // impacto, crescimento, queda, alpha
+  sort: 'impacto',          // impacto, ganho_rs, queda_rs, crescimento, queda, alpha
   limit: 20
 };
 
@@ -91,26 +91,31 @@ function updateConfigSummary() {
   if (!el) return;
 
   const isSetembro = (typeof STATE === 'undefined' || STATE.mesReferencia === 'setembro');
-  const curLabel = isSetembro ? 'Set/26' : 'Ago/26';
-  const compLabel = WF.comparison === 'mom'
-    ? (isSetembro ? 'Ago/26' : 'Jul/26')
-    : (isSetembro ? 'Set/25' : 'Ago/25');
+  const isMeta = WF.comparison === 'meta';
+  const curLabel = isMeta ? 'Realizado D-1' : (isSetembro ? 'Set/26' : 'Ago/26');
+  const compLabel = isMeta
+    ? 'Meta Acum. D-1'
+    : (WF.comparison === 'mom'
+        ? (isSetembro ? 'Ago/26' : 'Jul/26')
+        : (isSetembro ? 'Set/25' : 'Ago/25'));
 
-  const compText = WF.comparison === 'mom' ? `MoM: ${compLabel} → ${curLabel}` : `YoY: ${compLabel} → ${curLabel}`;
+  const compText = isMeta
+    ? `Vs Meta: ${compLabel} → ${curLabel}`
+    : (WF.comparison === 'mom' ? `MoM: ${compLabel} → ${curLabel}` : `YoY: ${compLabel} → ${curLabel}`);
 
   // Active sidebar filters
   let filterTags = '';
   if (typeof STATE !== 'undefined') {
-    if (STATE.diretores.size > 0) filterTags += tag('👤', `Diretor: ${Array.from(STATE.diretores).join(', ')}`);
-    if (STATE.distritais.size > 0) filterTags += tag('📍', `Distrital: ${Array.from(STATE.distritais).join(', ')}`);
-    if (STATE.grupos.size > 0) filterTags += tag('📦', `Grupo: ${Array.from(STATE.grupos).join(', ')}`);
-    if (STATE.grupoCanal !== 'ALL') filterTags += tag('🏪', `Canal: ${STATE.grupoCanal}`);
+    if (STATE.diretores && STATE.diretores.size > 0) filterTags += tag('👤', `Diretor: ${Array.from(STATE.diretores).join(', ')}`);
+    if (STATE.distritais && STATE.distritais.size > 0) filterTags += tag('📍', `Distrital: ${Array.from(STATE.distritais).join(', ')}`);
+    if (STATE.grupos && STATE.grupos.size > 0) filterTags += tag('📦', `Grupo: ${Array.from(STATE.grupos).join(', ')}`);
+    if (STATE.grupoCanal && STATE.grupoCanal !== 'ALL') filterTags += tag('🏪', `Canal: ${STATE.grupoCanal}`);
   }
 
   el.innerHTML = `
-    ${tag('📐', DIM_LABELS[WF.dimension])}
+    ${tag('📐', DIM_LABELS[WF.dimension] || 'Categorias')}
     ${tag('⚡', compText)}
-    ${tag('💰', METRIC_LABELS[WF.metric])}
+    ${tag('💰', METRIC_LABELS[WF.metric] || 'Faturamento Total')}
     ${tag('🔀', document.getElementById('wfSort')?.options[document.getElementById('wfSort')?.selectedIndex]?.text || WF.sort)}
     ${tag('📊', 'Top ' + WF.limit)}
     ${filterTags}
@@ -124,50 +129,111 @@ function tag(icon, text) {
 /* ── Get Waterfall Data ──────────────────────────────── */
 function getWaterfallData() {
   const isSetembro = (typeof STATE === 'undefined' || STATE.mesReferencia === 'setembro');
-  const curLabel = isSetembro ? 'Set/26' : 'Ago/26';
+  const isMeta = WF.comparison === 'meta';
+  const curLabel = isMeta ? 'Realizado D-1' : (isSetembro ? 'Set/26' : 'Ago/26');
   const isMom = WF.comparison === 'mom';
-  const compLabel = isMom
-    ? (isSetembro ? 'Ago/26' : 'Jul/26')
-    : (isSetembro ? 'Set/25' : 'Ago/25');
+  const compLabel = isMeta
+    ? 'Meta Acum. D-1'
+    : (isMom
+        ? (isSetembro ? 'Ago/26' : 'Jul/26')
+        : (isSetembro ? 'Set/25' : 'Ago/25'));
 
   let items = [];
   let title = '';
 
-  // Choose value fields based on metric
-  const curField = WF.metric === 'digital' ? 'venda_digital_jul_26' : WF.metric === 'dt' ? 'venda_dt_jul_26' : 'venda_jul_26';
-  const momField = WF.metric === 'digital' ? 'venda_digital_jun_26' : WF.metric === 'dt' ? 'venda_dt_jun_26' : 'venda_jun_26';
-  const yoyField = WF.metric === 'digital' ? 'venda_digital_jul_25' : WF.metric === 'dt' ? 'venda_dt_jul_25' : 'venda_jul_25';
-  const baseField = isMom ? momField : yoyField;
+  const dimLabel = DIM_LABELS[WF.dimension] || 'Categorias';
+  const compType = isMeta ? 'Vs Meta' : (isMom ? 'MoM' : 'YoY');
+  title = `${dimLabel}: ${compLabel} → ${curLabel} (${compType}) — ${METRIC_LABELS[WF.metric] || 'Faturamento Total'}`;
 
-  const dimLabel = DIM_LABELS[WF.dimension];
-  const compType = isMom ? 'MoM' : 'YoY';
-  title = `${dimLabel}: ${compLabel} → ${curLabel} (${compType}) — ${METRIC_LABELS[WF.metric]}`;
+  if (isMeta) {
+    const metasData = (typeof _METAS_SETEMBRO !== 'undefined' && _METAS_SETEMBRO) ? _METAS_SETEMBRO : ((typeof METAS_DATA !== 'undefined' && METAS_DATA) ? METAS_DATA : null);
+    
+    if (WF.dimension === 'categoria') {
+      const grupos = metasData?.grupos || [];
+      items = grupos.map(g => ({
+        label: cleanGroupName(g.grupo),
+        current: g.real_acum_dmax || 0,
+        base: g.meta_acum_dmax || 0
+      }));
+    } else if (WF.dimension === 'subgrupo') {
+      const linhas = metasData?.linhas || [];
+      const map = {};
+      linhas.forEach(l => {
+        const key = cleanGroupName(l.subgrupo || l.familia || 'Outros');
+        if (!map[key]) map[key] = { current: 0, base: 0 };
+        map[key].current += (l.real_acum_dmax || 0);
+        map[key].base += (l.meta_acum_dmax || 0);
+      });
+      items = Object.entries(map).map(([label, v]) => ({ label, current: v.current, base: v.base }));
+    } else if (WF.dimension === 'linha') {
+      let linhas = metasData?.linhas || [];
+      if (typeof STATE !== 'undefined' && STATE.grupos && STATE.grupos.size > 0) {
+        linhas = linhas.filter(l => STATE.grupos.has(l.grupo));
+      }
+      items = linhas.map(l => ({
+        label: l.linha,
+        current: l.real_acum_dmax || 0,
+        base: l.meta_acum_dmax || 0
+      }));
+    } else if (WF.dimension === 'diretor') {
+      const diretorias = metasData?.diretorias || [];
+      items = diretorias.map(d => ({
+        label: d.diretor,
+        current: d.real_acum_dmax || 0,
+        base: d.meta_acum_dmax || 0
+      }));
+    } else if (WF.dimension === 'distrital') {
+      let distritais = metasData?.distritais || [];
+      if (typeof STATE !== 'undefined' && STATE.diretores && STATE.diretores.size > 0) {
+        distritais = distritais.filter(d => STATE.diretores.has(d.diretoria));
+      }
+      items = distritais.map(d => ({
+        label: d.distrital,
+        current: d.real_acum_dmax || 0,
+        base: d.meta_acum_dmax || 0
+      }));
+    } else {
+      // Fallback para dimensões sem meta direta
+      const grupos = metasData?.grupos || [];
+      items = grupos.map(g => ({
+        label: cleanGroupName(g.grupo),
+        current: g.real_acum_dmax || 0,
+        base: g.meta_acum_dmax || 0
+      }));
+    }
+  } else {
+    // Choose value fields based on metric
+    const curField = WF.metric === 'digital' ? 'venda_digital_jul_26' : WF.metric === 'dt' ? 'venda_dt_jul_26' : 'venda_jul_26';
+    const momField = WF.metric === 'digital' ? 'venda_digital_jun_26' : WF.metric === 'dt' ? 'venda_dt_jun_26' : 'venda_jun_26';
+    const yoyField = WF.metric === 'digital' ? 'venda_digital_jul_25' : WF.metric === 'dt' ? 'venda_dt_jul_25' : 'venda_jul_25';
+    const baseField = isMom ? momField : yoyField;
 
-  switch (WF.dimension) {
-    case 'categoria':
-      items = buildFromGrupos(curField, baseField);
-      break;
-    case 'subgrupo':
-      items = buildFromHierField('subgrupo', curField, baseField);
-      break;
-    case 'linha':
-      items = buildFromHierField('linha', curField, baseField);
-      break;
-    case 'laboratorio':
-      items = buildFromHierField('laboratorio', curField, baseField);
-      break;
-    case 'canal_agregado':
-      items = buildCanaisAgregados(isMom);
-      break;
-    case 'canal':
-      items = buildCanaisDetalhado(isMom);
-      break;
-    case 'diretor':
-      items = buildFromCatField('diretor', curField, baseField);
-      break;
-    case 'distrital':
-      items = buildFromCatField('distrital', curField, baseField);
-      break;
+    switch (WF.dimension) {
+      case 'categoria':
+        items = buildFromGrupos(curField, baseField);
+        break;
+      case 'subgrupo':
+        items = buildFromHierField('subgrupo', curField, baseField);
+        break;
+      case 'linha':
+        items = buildFromHierField('linha', curField, baseField);
+        break;
+      case 'laboratorio':
+        items = buildFromHierField('laboratorio', curField, baseField);
+        break;
+      case 'canal_agregado':
+        items = buildCanaisAgregados(isMom);
+        break;
+      case 'canal':
+        items = buildCanaisDetalhado(isMom);
+        break;
+      case 'diretor':
+        items = buildFromCatField('diretor', curField, baseField);
+        break;
+      case 'distrital':
+        items = buildFromCatField('distrital', curField, baseField);
+        break;
+    }
   }
 
   // Calculate delta
@@ -182,10 +248,20 @@ function getWaterfallData() {
     case 'impacto':
       items.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
       break;
+    case 'ganho_rs':
+    case 'desvio_rs_pos':
+      items.sort((a, b) => b.delta - a.delta);
+      break;
+    case 'queda_rs':
+    case 'desvio_rs_neg':
+      items.sort((a, b) => a.delta - b.delta);
+      break;
     case 'crescimento':
+    case 'desvio_pct_pos':
       items.sort((a, b) => (b.deltaPct) - (a.deltaPct));
       break;
     case 'queda':
+    case 'desvio_pct_neg':
       items.sort((a, b) => (a.deltaPct) - (b.deltaPct));
       break;
     case 'alpha':
@@ -251,69 +327,46 @@ function buildCanaisAgregados(isMom) {
     members.forEach(m => { canalToGroup[m] = grp; });
   });
 
-  // Filter groups based on metric
-  const allowedGroups = getMetricAllowedGroups();
-
-  const groupMap = {};
+  const map = {};
   canais.forEach(c => {
-    const grp = canalToGroup[c.canal] || 'Outros';
-    if (allowedGroups && !allowedGroups.has(grp)) return;
+    const grp = canalToGroup[c.canal] || 'Outros Canais';
+    if (!map[grp]) map[grp] = { current: 0, base: 0 };
 
-    let v26 = c.venda_jul_26 || 0;
-    let vMom = c.venda_jun_26 || 0;
-    let vYoy = c.venda_jul_25 || 0;
-
-    if (useDays) {
-      if (c.d26_07) v26 = sumDays(c.d26_07, STATE.startDay, STATE.endDay);
-      if (c.d26_06) vMom = sumDays(c.d26_06, STATE.startDay, STATE.endDay);
-      if (c.d25) vYoy = sumDays(c.d25, STATE.startDay, STATE.endDay);
+    let curVal, baseVal;
+    if (useDays && c.d26_07) {
+      curVal = sumDays(c.d26_07, STATE.startDay, STATE.endDay);
+      baseVal = isMom
+        ? (c.d26_06 ? sumDays(c.d26_06, STATE.startDay, STATE.endDay) : 0)
+        : (c.d25 ? sumDays(c.d25, STATE.startDay, STATE.endDay) : 0);
+    } else {
+      curVal = c.v26 || 0;
+      baseVal = isMom ? (c.v26_06 || 0) : (c.v25 || 0);
     }
 
-    if (!groupMap[grp]) groupMap[grp] = { current: 0, base: 0 };
-    groupMap[grp].current += v26;
-    groupMap[grp].base += isMom ? vMom : vYoy;
+    map[grp].current += curVal;
+    map[grp].base += baseVal;
   });
 
-  return Object.entries(groupMap).map(([label, v]) => ({ label, current: v.current, base: v.base }));
+  return Object.entries(map).map(([label, v]) => ({ label, current: v.current, base: v.base }));
 }
 
 function buildCanaisDetalhado(isMom) {
   const canais = (typeof getFilteredCanaisList === 'function') ? getFilteredCanaisList() : (DATA.canais || []);
   const useDays = (typeof STATE !== 'undefined' && STATE.mesReferencia === 'julho') && (STATE.startDay !== 1 || STATE.endDay !== 31);
 
-  // Filter channels based on metric
-  const allowedGroups = getMetricAllowedGroups();
-  const canalToGroup = {};
-  if (allowedGroups) {
-    Object.entries(CANAL_GROUPS).forEach(([grp, members]) => {
-      members.forEach(m => { canalToGroup[m] = grp; });
-    });
-  }
-
-  return canais.filter(c => {
-    if (!allowedGroups) return true;
-    const grp = canalToGroup[c.canal] || 'Outros';
-    return allowedGroups.has(grp);
-  }).map(c => {
-    let v26 = c.venda_jul_26 || 0;
-    let vMom = c.venda_jun_26 || 0;
-    let vYoy = c.venda_jul_25 || 0;
-
-    if (useDays) {
-      if (c.d26_07) v26 = sumDays(c.d26_07, STATE.startDay, STATE.endDay);
-      if (c.d26_06) vMom = sumDays(c.d26_06, STATE.startDay, STATE.endDay);
-      if (c.d25) vYoy = sumDays(c.d25, STATE.startDay, STATE.endDay);
+  return canais.map(c => {
+    let curVal, baseVal;
+    if (useDays && c.d26_07) {
+      curVal = sumDays(c.d26_07, STATE.startDay, STATE.endDay);
+      baseVal = isMom
+        ? (c.d26_06 ? sumDays(c.d26_06, STATE.startDay, STATE.endDay) : 0)
+        : (c.d25 ? sumDays(c.d25, STATE.startDay, STATE.endDay) : 0);
+    } else {
+      curVal = c.v26 || 0;
+      baseVal = isMom ? (c.v26_06 || 0) : (c.v25 || 0);
     }
-
-    return { label: c.canal, current: v26, base: isMom ? vMom : vYoy };
+    return { label: c.canal, current: curVal, base: baseVal };
   });
-}
-
-/* Returns null for 'total' (no filter), or a Set of allowed group names */
-function getMetricAllowedGroups() {
-  if (WF.metric === 'digital') return new Set(['Venda Digital']);
-  if (WF.metric === 'dt') return new Set(['Venda Digital', 'Televendas']);
-  return null; // total — all groups allowed
 }
 
 function getFilteredHierData() {
@@ -330,15 +383,15 @@ function cleanGroupName(name) {
 function wfFmtCompact(val) {
   if (typeof fmtCompact === 'function') return fmtCompact(val);
   const abs = Math.abs(val);
-  if (abs >= 1e9) return 'R$ ' + (val / 1e9).toFixed(2).replace('.', ',') + ' Bi';
+  if (abs >= 1e9) return 'R$ ' + (val / 1e9).toFixed(1).replace('.', ',') + ' Bi';
   if (abs >= 1e6) return 'R$ ' + (val / 1e6).toFixed(1).replace('.', ',') + ' Mi';
-  if (abs >= 1e3) return 'R$ ' + (val / 1e3).toFixed(0) + ' mil';
-  return 'R$ ' + val.toFixed(0);
+  if (abs >= 1e3) return 'R$ ' + Math.round(val / 1e3).toLocaleString('pt-BR') + ' mil';
+  return 'R$ ' + Math.round(val).toLocaleString('pt-BR');
 }
 
 function wfFmtPct(val) {
   const sign = val >= 0 ? '+' : '';
-  return sign + val.toFixed(2).replace('.', ',') + '%';
+  return sign + val.toFixed(1).replace('.', ',') + '%';
 }
 
 function wfTagPct(val) {
@@ -352,6 +405,16 @@ function renderWaterfallKPIs(data) {
   const kpiRow = document.getElementById('wfKpiRow');
   if (!kpiRow) return;
 
+  const isMeta = WF.comparison === 'meta';
+  const baseTitle = isMeta ? 'META ACUM. D-1' : `FATURAMENTO BASE (${esc(data.compLabel)})`;
+  const baseSub = isMeta ? 'Meta esperada acumulada' : 'Período comparativo base';
+  const finalTitle = isMeta ? 'REALIZADO D-1' : `FATURAMENTO FINAL (${esc(data.curLabel)})`;
+  const finalSub = isMeta ? 'Total acumulado até D-1' : 'Total do período atual';
+  const varTitle = isMeta ? 'DESVIO TOTAL' : 'VARIAÇÃO TOTAL';
+  const varSub = isMeta ? 'vs meta esperada' : 'vs base';
+  const growerTitle = isMeta ? 'MAIOR SUPERÁVIT' : 'MAIOR CRESCIMENTO';
+  const fallerTitle = isMeta ? 'MAIOR DÉFICIT' : 'MAIOR QUEDA';
+
   const deltaColor = data.totalDelta >= 0 ? '#16a34a' : '#dc2626';
   const deltaSign = data.totalDelta >= 0 ? '+' : '';
   const deltaCls = data.totalDelta >= 0 ? 'accent-green' : 'accent-red';
@@ -361,38 +424,38 @@ function renderWaterfallKPIs(data) {
   kpiRow.innerHTML = `
     <div class="apple-kpi-card accent-blue">
       <div class="kpi-card-header">
-        <span class="kpi-card-title">FATURAMENTO BASE (${esc(data.compLabel)})</span>
+        <span class="kpi-card-title">${baseTitle}</span>
       </div>
       <div class="kpi-value-main">${wfFmtCompact(data.totalBase)}</div>
-      <div class="kpi-sub-value">Período comparativo base</div>
+      <div class="kpi-sub-value">${baseSub}</div>
     </div>
     <div class="apple-kpi-card ${deltaCls}">
       <div class="kpi-card-header">
-        <span class="kpi-card-title">VARIAÇÃO TOTAL</span>
+        <span class="kpi-card-title">${varTitle}</span>
       </div>
       <div class="kpi-value-main" style="color: ${deltaColor};">${deltaSign}${wfFmtCompact(data.totalDelta)}</div>
       <div class="kpi-footer-deltas">
-        <span class="apple-tag ${data.totalDelta >= 0 ? 'tag-pos' : 'tag-neg'}">${deltaSign}${wfFmtPct(data.totalDeltaPct)}</span>
-        <span class="sublabel">vs base</span>
+        <span class="apple-tag ${data.totalDelta >= 0 ? 'tag-pos' : 'tag-neg'}">${wfFmtPct(data.totalDeltaPct)}</span>
+        <span class="sublabel">${varSub}</span>
       </div>
     </div>
     <div class="apple-kpi-card accent-indigo">
       <div class="kpi-card-header">
-        <span class="kpi-card-title">FATURAMENTO FINAL (${esc(data.curLabel)})</span>
+        <span class="kpi-card-title">${finalTitle}</span>
       </div>
       <div class="kpi-value-main">${wfFmtCompact(data.totalCurrent)}</div>
-      <div class="kpi-sub-value">Total do período atual</div>
+      <div class="kpi-sub-value">${finalSub}</div>
     </div>
     <div class="apple-kpi-card accent-green">
       <div class="kpi-card-header">
-        <span class="kpi-card-title">MAIOR CRESCIMENTO</span>
+        <span class="kpi-card-title">${growerTitle}</span>
       </div>
       <div class="kpi-value-main" style="font-size:16px; color:var(--apple-green-text);">${topGrower ? esc(topGrower.label) : '—'}</div>
       <div class="kpi-sub-value">${topGrower ? '+' + wfFmtCompact(topGrower.delta) : ''} (${topGrower ? wfFmtPct(topGrower.deltaPct) : ''})</div>
     </div>
     <div class="apple-kpi-card accent-red">
       <div class="kpi-card-header">
-        <span class="kpi-card-title">MAIOR QUEDA</span>
+        <span class="kpi-card-title">${fallerTitle}</span>
       </div>
       <div class="kpi-value-main" style="font-size:16px; color:var(--apple-red-text);">${topFaller ? esc(topFaller.label) : '—'}</div>
       <div class="kpi-sub-value">${topFaller ? wfFmtCompact(topFaller.delta) : ''} (${topFaller ? wfFmtPct(topFaller.deltaPct) : ''})</div>
@@ -406,13 +469,19 @@ function renderWaterfallTable(data) {
   const tbody = document.getElementById('wfDetailTbody');
   if (!thead || !tbody) return;
 
+  const isMeta = WF.comparison === 'meta';
+  const colBase = isMeta ? 'Meta D-1' : data.compLabel;
+  const colCur = isMeta ? 'Realizado D-1' : data.curLabel;
+  const colDelta = isMeta ? 'Desvio R$' : 'Var. R$';
+  const colPct = isMeta ? 'Desvio %' : 'Var. %';
+
   thead.innerHTML = `<tr>
     <th class="col-name">#</th>
-    <th class="col-name">${DIM_LABELS[WF.dimension]}</th>
-    <th class="col-num">${data.compLabel}</th>
-    <th class="col-num">${data.curLabel}</th>
-    <th class="col-num">Var. R$</th>
-    <th class="col-num">Var. %</th>
+    <th class="col-name">${DIM_LABELS[WF.dimension] || 'Dimensão'}</th>
+    <th class="col-num">${colBase}</th>
+    <th class="col-num">${colCur}</th>
+    <th class="col-num">${colDelta}</th>
+    <th class="col-num">${colPct}</th>
     <th class="col-num">Impacto %</th>
   </tr>`;
 
@@ -556,6 +625,8 @@ function renderWaterfall() {
 
   if (waterfallChart) waterfallChart.destroy();
 
+  const isMeta = WF.comparison === 'meta';
+
   waterfallChart = new Chart(canvas, {
     type: 'bar',
     data: {
@@ -596,14 +667,14 @@ function renderWaterfall() {
             label: ctx => {
               const idx = ctx.dataIndex;
               const d = barData[idx];
-              if (idx === 0) return `Total Base: R$ ${Math.round(d[1]).toLocaleString('pt-BR')}`;
-              if (idx === labels.length - 1) return `Total Atual: R$ ${Math.round(d[1]).toLocaleString('pt-BR')}`;
+              if (idx === 0) return isMeta ? `Total Meta D-1: R$ ${Math.round(d[1]).toLocaleString('pt-BR')}` : `Total Base: R$ ${Math.round(d[1]).toLocaleString('pt-BR')}`;
+              if (idx === labels.length - 1) return isMeta ? `Total Realizado D-1: R$ ${Math.round(d[1]).toLocaleString('pt-BR')}` : `Total Atual: R$ ${Math.round(d[1]).toLocaleString('pt-BR')}`;
               const item = data.items[idx - 1];
               return [
-                `Atual: R$ ${Math.round(item.current).toLocaleString('pt-BR')}`,
-                `Base: R$ ${Math.round(item.base).toLocaleString('pt-BR')}`,
-                `Var: ${item.delta >= 0 ? '+' : ''}R$ ${Math.round(item.delta).toLocaleString('pt-BR')}`,
-                `Var %: ${wfFmtPct(item.deltaPct)}`
+                `${isMeta ? 'Realizado' : 'Atual'}: R$ ${Math.round(item.current).toLocaleString('pt-BR')}`,
+                `${isMeta ? 'Meta D-1' : 'Base'}: R$ ${Math.round(item.base).toLocaleString('pt-BR')}`,
+                `${isMeta ? 'Desvio R$' : 'Var'}: ${item.delta >= 0 ? '+' : ''}R$ ${Math.round(item.delta).toLocaleString('pt-BR')}`,
+                `${isMeta ? 'Desvio %' : 'Var %'}: ${wfFmtPct(item.deltaPct)}`
               ];
             }
           }
@@ -622,7 +693,7 @@ function renderWaterfall() {
         },
         y: {
           beginAtZero: true,
-          grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+          grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false },
           ticks: {
             font: { family: 'Inter', size: 11 },
             color: '#8b90a0',

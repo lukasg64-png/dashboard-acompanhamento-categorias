@@ -31,22 +31,22 @@ const STATE_DIR = {
 /* ── Formatação ──────────────────────────────────────── */
 function _fmtRS(v) {
   if (v === null || v === undefined || isNaN(v)) return '-';
-  return 'R$ ' + Math.abs(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return 'R$ ' + Math.round(Math.abs(v)).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
 function _fmtRSCompact(v) {
   if (v === null || v === undefined || isNaN(v)) return '-';
   const val = Math.abs(v);
-  if (val >= 1e9) return 'R$ ' + (val / 1e9).toFixed(2).replace('.', ',') + ' B';
-  if (val >= 1e6) return 'R$ ' + (val / 1e6).toFixed(2).replace('.', ',') + ' M';
-  if (val >= 1e3) return 'R$ ' + (val / 1e3).toFixed(1).replace('.', ',') + ' mil';
-  return 'R$ ' + val.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  if (val >= 1e9) return 'R$ ' + (val / 1e9).toFixed(1).replace('.', ',') + ' B';
+  if (val >= 1e6) return 'R$ ' + (val / 1e6).toFixed(1).replace('.', ',') + ' M';
+  if (val >= 1e3) return 'R$ ' + Math.round(val / 1e3).toLocaleString('pt-BR') + ' mil';
+  return 'R$ ' + Math.round(val).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
 function _fmtRSSigned(v) {
   if (v === null || v === undefined || isNaN(v)) return '-';
   const prefix = v > 0 ? '+' : v < 0 ? '-' : '';
-  return prefix + ' R$ ' + Math.abs(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return prefix + ' R$ ' + Math.round(Math.abs(v)).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
 function _fmtPct(v) {
@@ -424,9 +424,9 @@ function renderMetasChart(data) {
                   return ` % Desvio: ${(d >= 0 ? '+' : '')}${d.toFixed(2).replace('.', ',')}% (${icon})`;
                 } else if (ctx.dataset.label.includes('Venda')) {
                   if (idx >= dMax || r === null || r === 0) return ' Venda do Dia: Aguardando fechamento';
-                  return ` Venda Realizada: R$ ${r.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                  return ` Venda Realizada: R$ ${Math.round(r).toLocaleString('pt-BR')}`;
                 } else {
-                  return ` Meta do Dia: R$ ${m.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                  return ` Meta do Dia: R$ ${Math.round(m).toLocaleString('pt-BR')}`;
                 }
               }
             }
@@ -500,7 +500,7 @@ function renderMetasChart(data) {
           legend: { position: 'top', labels: { boxWidth: 12, font: { weight: 600 } } },
           tooltip: {
             callbacks: {
-              label: (ctx) => `${ctx.dataset.label}: R$ ${(ctx.raw || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+              label: (ctx) => `${ctx.dataset.label}: R$ ${Math.round(ctx.raw || 0).toLocaleString('pt-BR')}`
             }
           }
         },
@@ -574,20 +574,40 @@ function renderMetasLinhasTable(data) {
 
   // Ordenação
   switch (STATE_METAS.sort) {
+    case 'meta_mensal_desc':
     case 'meta_mensal':
       linhas.sort((a, b) => b.meta_mensal - a.meta_mensal);
       break;
+    case 'meta_mensal_asc':
+      linhas.sort((a, b) => a.meta_mensal - b.meta_mensal);
+      break;
+    case 'desvio_rs_pos':
+      linhas.sort((a, b) => b.desvio_rs - a.desvio_rs);
+      break;
+    case 'desvio_rs_neg':
     case 'desvio_rs':
       linhas.sort((a, b) => a.desvio_rs - b.desvio_rs);
       break;
+    case 'desvio_pct_pos':
+      linhas.sort((a, b) => b.desvio_pct - a.desvio_pct);
+      break;
+    case 'desvio_pct_neg':
     case 'desvio_pct':
       linhas.sort((a, b) => a.desvio_pct - b.desvio_pct);
       break;
+    case 'ating_pct_desc':
     case 'ating_pct':
       linhas.sort((a, b) => b.ating_pct - a.ating_pct);
       break;
+    case 'ating_pct_asc':
+      linhas.sort((a, b) => a.ating_pct - b.ating_pct);
+      break;
+    case 'linha_asc':
     case 'linha':
       linhas.sort((a, b) => a.linha.localeCompare(b.linha));
+      break;
+    case 'linha_desc':
+      linhas.sort((a, b) => b.linha.localeCompare(a.linha));
       break;
   }
 
