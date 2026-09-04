@@ -112,12 +112,28 @@ async function renderMetasSetembroTab() {
   const data = await loadMetasData();
   if (!data) return;
 
-  if (typeof STATE !== 'undefined' && STATE.grupos && STATE.grupos.size === 1) {
-    const gVal = Array.from(STATE.grupos)[0];
+  if (typeof STATE !== 'undefined') {
     const selCat = document.getElementById('metasFilterCategoria');
-    if (selCat && (STATE_METAS.categoria === 'ALL' || STATE_METAS.categoria !== gVal)) {
-      STATE_METAS.categoria = gVal;
-      selCat.value = gVal;
+    if (STATE.grupos && STATE.grupos.size === 1) {
+      const gVal = Array.from(STATE.grupos)[0];
+      if (selCat && STATE_METAS.categoria !== gVal) {
+        STATE_METAS.categoria = gVal;
+        selCat.value = gVal;
+      }
+    } else if (STATE.grupos && STATE.grupos.size === 0) {
+      if (selCat && STATE_METAS.categoria !== 'ALL') {
+        STATE_METAS.categoria = 'ALL';
+        selCat.value = 'ALL';
+      }
+    }
+
+    const inSearch = document.getElementById('searchMetasLinha');
+    if (STATE.search && inSearch && STATE_METAS.search !== STATE.search) {
+      STATE_METAS.search = STATE.search;
+      inSearch.value = STATE.search;
+    } else if (!STATE.search && inSearch && STATE_METAS.search && STATE_METAS.search === inSearch.value) {
+      STATE_METAS.search = '';
+      inSearch.value = '';
     }
   }
 
@@ -702,23 +718,60 @@ async function renderMetasDiretoriaTab() {
   const data = await loadMetasData();
   if (!data) return;
 
-  if (typeof STATE !== 'undefined' && STATE.diretores && STATE.diretores.size === 1) {
-    const dVal = Array.from(STATE.diretores)[0];
+  if (typeof STATE !== 'undefined') {
     const selDir = document.getElementById('dirFilterDiretoria');
-    if (selDir && (STATE_DIR.diretoria === 'ALL' || STATE_DIR.diretoria !== dVal)) {
-      STATE_DIR.diretoria = dVal;
-      selDir.value = dVal;
+    if (STATE.diretores && STATE.diretores.size === 1) {
+      const dVal = Array.from(STATE.diretores)[0];
+      if (selDir && STATE_DIR.diretoria !== dVal) {
+        STATE_DIR.diretoria = dVal;
+        selDir.value = dVal;
+      }
+    } else if (STATE.diretores && STATE.diretores.size === 0) {
+      if (selDir && STATE_DIR.diretoria !== 'ALL') {
+        STATE_DIR.diretoria = 'ALL';
+        selDir.value = 'ALL';
+      }
     }
-  }
-  if (typeof STATE !== 'undefined' && STATE.distritais && STATE.distritais.size === 1) {
-    const dtVal = Array.from(STATE.distritais)[0];
+
     const selDt = document.getElementById('dirFilterDistrital');
-    if (selDt && (STATE_DIR.distrital === 'ALL' || STATE_DIR.distrital !== dtVal)) {
-      STATE_DIR.distrital = dtVal;
-      selDt.value = dtVal;
+    if (STATE.distritais && STATE.distritais.size === 1) {
+      const dtVal = Array.from(STATE.distritais)[0];
+      if (selDt && STATE_DIR.distrital !== dtVal) {
+        STATE_DIR.distrital = dtVal;
+        selDt.value = dtVal;
+      }
+    } else if (STATE.distritais && STATE.distritais.size === 0) {
+      if (selDt && STATE_DIR.distrital !== 'ALL') {
+        STATE_DIR.distrital = 'ALL';
+        selDt.value = 'ALL';
+      }
+    }
+
+    const selGrp = document.getElementById('dirFilterGrupo');
+    if (STATE.grupos && STATE.grupos.size === 1) {
+      const gVal = Array.from(STATE.grupos)[0];
+      if (selGrp && STATE_DIR.grupo !== gVal) {
+        STATE_DIR.grupo = gVal;
+        selGrp.value = gVal;
+      }
+    } else if (STATE.grupos && STATE.grupos.size === 0) {
+      if (selGrp && STATE_DIR.grupo !== 'ALL') {
+        STATE_DIR.grupo = 'ALL';
+        selGrp.value = 'ALL';
+      }
+    }
+
+    const inSearch = document.getElementById('dirSearch');
+    if (STATE.search && inSearch && STATE_DIR.search !== STATE.search) {
+      STATE_DIR.search = STATE.search;
+      inSearch.value = STATE.search;
+    } else if (!STATE.search && inSearch && STATE_DIR.search && STATE_DIR.search === inSearch.value) {
+      STATE_DIR.search = '';
+      inSearch.value = '';
     }
   }
 
+  populateDiretoriaDistritais(data);
   renderDiretoriaCards(data);
   renderRankingDistritais(data);
   populateDiretoriaSelectors(data);

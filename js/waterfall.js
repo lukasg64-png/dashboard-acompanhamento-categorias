@@ -148,14 +148,20 @@ function getWaterfallData() {
     const metasData = (typeof _METAS_SETEMBRO !== 'undefined' && _METAS_SETEMBRO) ? _METAS_SETEMBRO : ((typeof METAS_DATA !== 'undefined' && METAS_DATA) ? METAS_DATA : null);
     
     if (WF.dimension === 'categoria') {
-      const grupos = metasData?.grupos || [];
+      let grupos = metasData?.grupos || [];
+      if (typeof STATE !== 'undefined' && STATE.grupos && STATE.grupos.size > 0) {
+        grupos = grupos.filter(g => STATE.grupos.has(g.grupo));
+      }
       items = grupos.map(g => ({
         label: cleanGroupName(g.grupo),
         current: g.real_acum_dmax || 0,
         base: g.meta_acum_dmax || 0
       }));
     } else if (WF.dimension === 'subgrupo') {
-      const linhas = metasData?.linhas || [];
+      let linhas = metasData?.linhas || [];
+      if (typeof STATE !== 'undefined' && STATE.grupos && STATE.grupos.size > 0) {
+        linhas = linhas.filter(l => STATE.grupos.has(l.grupo));
+      }
       const map = {};
       linhas.forEach(l => {
         const key = cleanGroupName(l.subgrupo || l.familia || 'Outros');
@@ -175,7 +181,10 @@ function getWaterfallData() {
         base: l.meta_acum_dmax || 0
       }));
     } else if (WF.dimension === 'diretor') {
-      const diretorias = metasData?.diretorias || [];
+      let diretorias = metasData?.diretorias || [];
+      if (typeof STATE !== 'undefined' && STATE.diretores && STATE.diretores.size > 0) {
+        diretorias = diretorias.filter(d => STATE.diretores.has(d.diretor));
+      }
       items = diretorias.map(d => ({
         label: d.diretor,
         current: d.real_acum_dmax || 0,

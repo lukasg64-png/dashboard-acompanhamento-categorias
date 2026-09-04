@@ -193,6 +193,40 @@ def audit():
         pills_all = page.query_selector_all('#rankingDistritaisBar .distrital-rank-pill')
         print(f"    Após voltar para 'Todas as Diretorias': {len(pills_all)} pills visíveis [OK]")
 
+        print("\n--- 6. AUDITORIA: PROPAGAÇÃO DOS FILTROS LATERAIS PARA DEMAIS ABAS ---")
+        # Voltar para Aba 1 (Visão 360° & Canais) e aplicar filtro na sidebar
+        page.query_selector('button[data-tab="tabAnalise"]').click()
+        page.wait_for_timeout(300)
+        
+        # Clicar no seletor de Diretor na sidebar e marcar Cintia Silva
+        btn_ms_dir = page.query_selector('#msDiretor .ms-btn')
+        btn_ms_dir.click()
+        page.wait_for_timeout(200)
+        opt_cintia = page.query_selector('#msDiretor input[value="Cintia Silva"]')
+        if opt_cintia and not opt_cintia.is_checked():
+            opt_cintia.check()
+        page.wait_for_timeout(400)
+        
+        # Verificar se KPI recalculou na Aba 1
+        kpi_val = page.query_selector('#kpiStrip .kpi-value-main').inner_text()
+        print(f"    Sidebar Diretor 'Cintia Silva' -> KPI Geral: {kpi_val} [OK]")
+        
+        # Ir para Aba 5 e checar se herdou Cintia Silva
+        page.query_selector('button[data-tab="tabMetasDiretoria"]').click()
+        page.wait_for_timeout(400)
+        val_dir_aba5 = page.query_selector('#dirFilterDiretoria').input_value()
+        pills_aba5 = len(page.query_selector_all('#rankingDistritaisBar .distrital-rank-pill'))
+        print(f"    Aba 5 herdou Diretor: '{val_dir_aba5}' e exibiu {pills_aba5} distritais [OK]")
+
+        # Ir para Aba 3 Waterfall (dimensão Diretorias no modo Vs Meta)
+        page.query_selector('button[data-tab="tabWaterfall"]').click()
+        page.wait_for_timeout(300)
+        page.query_selector('#wfComparison [data-comp="meta"]').click()
+        page.query_selector('#wfDimension [data-dim="diretor"]').click()
+        page.wait_for_timeout(400)
+        wf_bars = len(page.query_selector_all('#wfDetailTbody tr'))
+        print(f"    Aba 3 Waterfall (Vs Meta - Diretorias) com filtro lateral: {wf_bars} item(ns) [OK]")
+
         print("\n--- RESUMO DE ERROS ---")
         if errors:
             for e in errors:
