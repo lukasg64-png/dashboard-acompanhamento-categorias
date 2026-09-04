@@ -61,6 +61,11 @@ function _escHtml(s) {
   return d.innerHTML;
 }
 
+function _cleanGroupName(name) {
+  if (!name) return '';
+  return name.replace(/\(\d+\)$/, '').trim();
+}
+
 function _statusIcon(status) {
   switch (status) {
     case 'acima': return '<span style="color:#34C759;font-size:14px;" title="Acima da meta">🟢</span>';
@@ -106,64 +111,402 @@ async function loadMetasData() {
 }
 
 /* ==========================================================================
-   ABA 4: MACRO EMPRESA & CATEGORIAS (tabMetasSetembro)
+   MOTOR DE FILTRAGEM UNIFICADO DINÂMICO PARA METAS SETEMBRO
+   Garante que filtros laterais e locais agreguem números exatos em tempo real
    ========================================================================== */
-async function renderMetasSetembroTab() {
-  const data = await loadMetasData();
-  if (!data) return;
+function getFilteredMetasModel(data, tab = 'macro') {
+  if (!data) return null;
 
-  if (typeof STATE !== 'undefined') {
-    const selCat = document.getElementById('metasFilterCategoria');
-    if (STATE.grupos && STATE.grupos.size === 1) {
+  // 1. Resolução de filtros ativos
+  let activeDiretores = null;
+  if (tab === 'diretoria' && STATE_DIR.diretoria !== 'ALL') {
+    activeDiretores = new Set([STATE_DIR.diretoria]);
+  } else if (typeof STATE !== 'undefined' && STATE.diretores && STATE.diretores.size > 0) {
+    activeDiretores = STATE.diretores;
+  }
+
+  let activeDistritais = null;
+  if (tab === 'diretoria' && STATE_DIR.distrital !== 'ALL') {
+    activeDistritais = new Set([STATE_DIR.distrital]);
+  } else if (typeof STATE !== 'undefined' && STATE.distritais && STATE.distritais.size > 0) {
+    activeDistritais = STATE.distritais;
+  }
+
+  let activeGrupos = null;
+  if (tab === 'macro') {
+    if (STATE_METAS.categoria !== 'ALL') {
+      activeGrupos = new Set([STATE_METAS.categoria]);
+    } else if (typeof STATE !== 'undefined' && STATE.grupos && STATE.grupos.size > 0) {
+      activeGrupos = STATE.grupos;
+    }
+  } else {
+    if (STATE_DIR.grupo !== 'ALL') {
+      activeGrupos = new Set([STATE_DIR.grupo]);
+    } else if (typeof STATE !== 'undefined' && STATE.grupos && STATE.grupos.size > 0) {
+      activeGrupos = STATE.grupos;
+    }
+  }
+
+  const activeSubgrupos = (typeof STATE !== 'undefined' && STATE.subgrupos && STATE.subgrupos.size > 0) ? STATE.subgrupos : null;
+  const activeLinhas = (typeof STATE !== 'undefined' && STATE.linhas && STATE.linhas.size > 0) ? STATE.linhas : null;
+
+  const searchQuery = (tab === 'macro'
+    ? (STATE_METAS.search || (typeof STATE !== 'undefined' ? STATE.search : ''))
+    : (STATE_DIR.search || (typeof STATE !== 'undefined' ? STATE.search : ''))
+  ).trim().toLowerCase();
+
+  const statusFilter = (tab === 'macro' ? STATE_METAS.status : 'ALL');
+
+  const excluirTipo = (typeof STATE !== 'undefined' ? STATE.excluirTipo : 'NONE');
+  const excluirValor = (typeof STATE !== 'undefined' ? STATE.excluirValor : 'NONE');
+
+  // 2. Travessia e agregação
+  const filteredDiretorias = [];
+  const survivingLinhas = [];
+  const mapGrupos = {};
+
+  (data.diretorias || []).forEach(dire => {
+    if (activeDiretores && !activeDiretores.has(dire.diretor)) return;
+
+    const filteredDistritais = [];
+    (dire.distritais || []).forEach(dist => {
+      if (activeDistritais && !activeDistritais.has(dist.distrital)) return;
+
+      const filteredGrpList = [];
+      (dist.grupos || []).forEach(grp => {
+        if (activeGrupos && !activeGrupos.has(grp.grupo)) return;
+        if (excluirTipo === 'grupo' && excluirValor !== 'NONE' && grp.grupo === excluirValor) return;
+
+        const filteredLinList = [];
+        (grp.linhas || []).forEach(lin => {
+          if (activeSubgrupos && !activeSubgrupos.has(lin.subgrupo)) return;
+          if (activeLinhas && !activeLinhas.has(lin.linha)) return;
+          if (excluirTipo === 'subgrupo' && excluirValor !== 'NONE' && lin.subgrupo === excluirValor) return;
+          if (excluirTipo === 'linha' && excluirValor !== 'NONE' && lin.linha === excluirValor) return;
+
+          if (searchQuery.length > 0) {
+            const match = lin.linha.toLowerCase().includes(searchQuery) ||
+                          (lin.familia && lin.familia.toLowerCase().includes(searchQuery)) ||
+                          (lin.subgrupo && lin.subgrupo.toLowerCase().includes(searchQuery)) ||
+                          grp.grupo.toLowerCase().includes(searchQuery) ||
+                          dist.distrital.toLowerCase().includes(searchQuery);
+            if (!match) return;
+          }
+
+          if (statusFilter !== 'ALL' && lin.status !== statusFilter) return;
+
+          filteredLinList.push(lin);
+          survivingLinhas.push({
+            ...lin,
+            grupo: grp.grupo,
+            distrital: dist.distrital,
+            diretor: dire.diretor
+          });
+
+          // Agregar por Grupo
+          if (!mapGrupos[grp.grupo]) {
+            mapGrupos[grp.grupo] = {
+              grupo: grp.grupo,
+              meta_mensal: 0,
+              meta_acum_dmax: 0,
+              real_acum_dmax: 0,
+              total_linhas: new Set()
+            };
+          }
+          mapGrupos[grp.grupo].meta_mensal += (lin.meta_mensal || 0);
+          mapGrupos[grp.grupo].meta_acum_dmax += (lin.meta_acum_dmax || 0);
+          mapGrupos[grp.grupo].real_acum_dmax += (lin.real_acum_dmax || 0);
+          mapGrupos[grp.grupo].total_linhas.add(lin.linha);
+        });
+
+        if (filteredLinList.length > 0) {
+          const m_m = filteredLinList.reduce((s, l) => s + l.meta_mensal, 0);
+          const m_d = filteredLinList.reduce((s, l) => s + l.meta_acum_dmax, 0);
+          const r_d = filteredLinList.reduce((s, l) => s + l.real_acum_dmax, 0);
+          const desv = r_d - m_d;
+          const atg = m_d > 0 ? (r_d / m_d * 100) : 0;
+          filteredGrpList.push({
+            ...grp,
+            meta_mensal: m_m,
+            meta_acum_dmax: m_d,
+            real_acum_dmax: r_d,
+            desvio_rs: desv,
+            desvio_pct: m_d > 0 ? ((r_d / m_d) - 1) * 100 : 0,
+            ating_pct: atg,
+            status: atg >= 100 ? 'acima' : (atg >= 95 ? 'alerta' : 'abaixo'),
+            total_linhas: filteredLinList.length,
+            linhas: filteredLinList
+          });
+        }
+      });
+
+      if (filteredGrpList.length > 0) {
+        const m_m = filteredGrpList.reduce((s, g) => s + g.meta_mensal, 0);
+        const m_d = filteredGrpList.reduce((s, g) => s + g.meta_acum_dmax, 0);
+        const r_d = filteredGrpList.reduce((s, g) => s + g.real_acum_dmax, 0);
+        const desv = r_d - m_d;
+        const atg = m_d > 0 ? (r_d / m_d * 100) : 0;
+        filteredDistritais.push({
+          ...dist,
+          meta_mensal: m_m,
+          meta_acum_dmax: m_d,
+          real_acum_dmax: r_d,
+          desvio_rs: desv,
+          desvio_pct: m_d > 0 ? ((r_d / m_d) - 1) * 100 : 0,
+          ating_pct: atg,
+          status: atg >= 100 ? 'acima' : (atg >= 95 ? 'alerta' : 'abaixo'),
+          total_linhas: filteredGrpList.reduce((s, g) => s + g.total_linhas, 0),
+          grupos: filteredGrpList
+        });
+      }
+    });
+
+    if (filteredDistritais.length > 0) {
+      const m_m = filteredDistritais.reduce((s, d) => s + d.meta_mensal, 0);
+      const m_d = filteredDistritais.reduce((s, d) => s + d.meta_acum_dmax, 0);
+      const r_d = filteredDistritais.reduce((s, d) => s + d.real_acum_dmax, 0);
+      const desv = r_d - m_d;
+      const atg = m_d > 0 ? (r_d / m_d * 100) : 0;
+      filteredDiretorias.push({
+        ...dire,
+        meta_mensal: m_m,
+        meta_acum_dmax: m_d,
+        real_acum_dmax: r_d,
+        desvio_rs: desv,
+        desvio_pct: m_d > 0 ? ((r_d / m_d) - 1) * 100 : 0,
+        ating_pct: atg,
+        status: atg >= 100 ? 'acima' : (atg >= 95 ? 'alerta' : 'abaixo'),
+        total_distritais: filteredDistritais.length,
+        distritais: filteredDistritais
+      });
+    }
+  });
+
+  // 3. Totais calculados do escopo filtrado
+  const meta_mensal = survivingLinhas.reduce((s, l) => s + l.meta_mensal, 0);
+  const meta_acum_dmax = survivingLinhas.reduce((s, l) => s + l.meta_acum_dmax, 0);
+  const real_acum_dmax = survivingLinhas.reduce((s, l) => s + l.real_acum_dmax, 0);
+  const desvio_rs = real_acum_dmax - meta_acum_dmax;
+  const desvio_pct = meta_acum_dmax > 0 ? ((real_acum_dmax / meta_acum_dmax) - 1) * 100 : 0;
+  const ating_pct = meta_acum_dmax > 0 ? (real_acum_dmax / meta_acum_dmax) * 100 : 0;
+  const dMax = data.d_max || 3;
+  const projecao_runrate = dMax > 0 ? (real_acum_dmax / dMax) * 30 : 0;
+
+  // 4. Etiqueta de contexto visual
+  const parts = [];
+  if (activeDiretores && activeDiretores.size > 0) parts.push(`Diretoria: ${Array.from(activeDiretores).join(', ')}`);
+  if (activeDistritais && activeDistritais.size > 0) parts.push(`Distrital: ${Array.from(activeDistritais).join(', ')}`);
+  if (activeGrupos && activeGrupos.size > 0) parts.push(`Grupo: ${Array.from(activeGrupos).map(_cleanGroupName).join(', ')}`);
+  if (activeLinhas && activeLinhas.size > 0) parts.push(`${activeLinhas.size} Linha(s)`);
+  if (searchQuery) parts.push(`Busca: "${searchQuery}"`);
+  const contextLabel = parts.length > 0 ? parts.join(' • ') : 'Total Empresa';
+
+  const empresa = {
+    meta_mensal,
+    meta_acum_dmax,
+    real_acum_dmax,
+    desvio_rs,
+    desvio_pct,
+    ating_pct,
+    projecao_runrate,
+    status: ating_pct >= 100 ? 'acima' : (ating_pct >= 95 ? 'alerta' : 'abaixo'),
+    contextLabel,
+    hasFilters: parts.length > 0
+  };
+
+  // Grupos consolidados
+  const totalShareMeta = meta_mensal || 1;
+  const grupos = Object.values(mapGrupos).map(g => {
+    const desv = g.real_acum_dmax - g.meta_acum_dmax;
+    const atg = g.meta_acum_dmax > 0 ? (g.real_acum_dmax / g.meta_acum_dmax * 100) : 0;
+    return {
+      grupo: g.grupo,
+      meta_mensal: g.meta_mensal,
+      share_meta: (g.meta_mensal / totalShareMeta) * 100,
+      meta_acum_dmax: g.meta_acum_dmax,
+      real_acum_dmax: g.real_acum_dmax,
+      desvio_rs: desv,
+      desvio_pct: g.meta_acum_dmax > 0 ? ((g.real_acum_dmax / g.meta_acum_dmax) - 1) * 100 : 0,
+      ating_pct: atg,
+      total_linhas: g.total_linhas.size,
+      status: atg >= 100 ? 'acima' : (atg >= 95 ? 'alerta' : 'abaixo')
+    };
+  }).sort((a, b) => b.meta_mensal - a.meta_mensal);
+
+  // Linhas agregadas únicas
+  const mapUniqueLinhas = {};
+  survivingLinhas.forEach(l => {
+    if (!mapUniqueLinhas[l.linha]) {
+      mapUniqueLinhas[l.linha] = {
+        linha: l.linha,
+        familia: l.familia,
+        subgrupo: l.subgrupo,
+        grupo: l.grupo,
+        meta_mensal: 0,
+        meta_acum_dmax: 0,
+        real_acum_dmax: 0
+      };
+    }
+    mapUniqueLinhas[l.linha].meta_mensal += (l.meta_mensal || 0);
+    mapUniqueLinhas[l.linha].meta_acum_dmax += (l.meta_acum_dmax || 0);
+    mapUniqueLinhas[l.linha].real_acum_dmax += (l.real_acum_dmax || 0);
+  });
+
+  const uniqueLinhas = Object.values(mapUniqueLinhas).map(l => {
+    const desv = l.real_acum_dmax - l.meta_acum_dmax;
+    const atg = l.meta_acum_dmax > 0 ? (l.real_acum_dmax / l.meta_acum_dmax * 100) : 0;
+    return {
+      ...l,
+      desvio_rs: desv,
+      desvio_pct: l.meta_acum_dmax > 0 ? ((l.real_acum_dmax / l.meta_acum_dmax) - 1) * 100 : 0,
+      ating_pct: atg,
+      status: atg >= 100 ? 'acima' : (atg >= 95 ? 'alerta' : 'abaixo')
+    };
+  });
+
+  // Lista plana de distritais sobreviventes
+  const distritais = [];
+  filteredDiretorias.forEach(d => {
+    d.distritais.forEach(dt => distritais.push(dt));
+  });
+
+  return {
+    ...data,
+    empresa,
+    grupos,
+    linhas: uniqueLinhas,
+    diretorias: filteredDiretorias,
+    distritais
+  };
+}
+
+/* ── Sincronizadores de controles de UI ─────────────────── */
+function syncMetasMacroInputs(rawData) {
+  const selCat = document.getElementById('metasFilterCategoria');
+  if (selCat) {
+    if (typeof STATE !== 'undefined' && STATE.grupos && STATE.grupos.size === 1) {
       const gVal = Array.from(STATE.grupos)[0];
-      if (selCat && STATE_METAS.categoria !== gVal) {
+      if (STATE_METAS.categoria !== gVal) {
         STATE_METAS.categoria = gVal;
         selCat.value = gVal;
       }
-    } else if (STATE.grupos && STATE.grupos.size === 0) {
-      if (selCat && STATE_METAS.categoria !== 'ALL') {
+    } else if (typeof STATE !== 'undefined' && STATE.grupos && STATE.grupos.size === 0) {
+      if (STATE_METAS.categoria !== 'ALL' && (!selCat.value || selCat.value === 'ALL')) {
         STATE_METAS.categoria = 'ALL';
         selCat.value = 'ALL';
       }
     }
+  }
 
-    const inSearch = document.getElementById('searchMetasLinha');
-    if (STATE.search && inSearch && STATE_METAS.search !== STATE.search) {
+  const inSearch = document.getElementById('metasSearch');
+  if (inSearch && typeof STATE !== 'undefined' && STATE.search) {
+    if (inSearch.value !== STATE.search) {
       STATE_METAS.search = STATE.search;
       inSearch.value = STATE.search;
-    } else if (!STATE.search && inSearch && STATE_METAS.search && STATE_METAS.search === inSearch.value) {
-      STATE_METAS.search = '';
-      inSearch.value = '';
+    }
+  }
+}
+
+function syncMetasDiretoriaInputs(rawData) {
+  const selDir = document.getElementById('dirFilterDiretoria');
+  if (selDir && typeof STATE !== 'undefined') {
+    if (STATE.diretores && STATE.diretores.size === 1) {
+      const dVal = Array.from(STATE.diretores)[0];
+      if (STATE_DIR.diretoria !== dVal) {
+        STATE_DIR.diretoria = dVal;
+        selDir.value = dVal;
+      }
+    } else if (STATE.diretores && STATE.diretores.size === 0) {
+      if (STATE_DIR.diretoria !== 'ALL' && (!selDir.value || selDir.value === 'ALL')) {
+        STATE_DIR.diretoria = 'ALL';
+        selDir.value = 'ALL';
+      }
     }
   }
 
-  renderMetasKPIs(data);
-  renderMetasChart(data);
-  renderMetasGruposEmpresa(data);
-  renderMetasLinhasTable(data);
-  wireMetasMacroEvents(data);
+  const selDt = document.getElementById('dirFilterDistrital');
+  if (selDt && typeof STATE !== 'undefined') {
+    if (STATE.distritais && STATE.distritais.size === 1) {
+      const dtVal = Array.from(STATE.distritais)[0];
+      if (STATE_DIR.distrital !== dtVal) {
+        STATE_DIR.distrital = dtVal;
+        selDt.value = dtVal;
+      }
+    } else if (STATE.distritais && STATE.distritais.size === 0) {
+      if (STATE_DIR.distrital !== 'ALL' && (!selDt.value || selDt.value === 'ALL')) {
+        STATE_DIR.distrital = 'ALL';
+        selDt.value = 'ALL';
+      }
+    }
+  }
+
+  const selGrp = document.getElementById('dirFilterGrupo');
+  if (selGrp && typeof STATE !== 'undefined') {
+    if (STATE.grupos && STATE.grupos.size === 1) {
+      const gVal = Array.from(STATE.grupos)[0];
+      if (STATE_DIR.grupo !== gVal) {
+        STATE_DIR.grupo = gVal;
+        selGrp.value = gVal;
+      }
+    } else if (STATE.grupos && STATE.grupos.size === 0) {
+      if (STATE_DIR.grupo !== 'ALL' && (!selGrp.value || selGrp.value === 'ALL')) {
+        STATE_DIR.grupo = 'ALL';
+        selGrp.value = 'ALL';
+      }
+    }
+  }
+
+  const inDirSearch = document.getElementById('dirSearch');
+  if (inDirSearch && typeof STATE !== 'undefined' && STATE.search) {
+    if (inDirSearch.value !== STATE.search) {
+      STATE_DIR.search = STATE.search;
+      inDirSearch.value = STATE.search;
+    }
+  }
+}
+
+/* ==========================================================================
+   ABA 4: MACRO EMPRESA & CATEGORIAS (tabMetasSetembro)
+   ========================================================================== */
+async function renderMetasSetembroTab() {
+  const rawData = await loadMetasData();
+  if (!rawData) return;
+
+  syncMetasMacroInputs(rawData);
+  const model = getFilteredMetasModel(rawData, 'macro');
+
+  renderMetasKPIs(model);
+  renderMetasChart(model, rawData);
+  renderMetasGruposEmpresa(model);
+  renderMetasLinhasTable(model);
+  wireMetasMacroEvents(rawData);
   _metasRendered = true;
 }
 
-function renderMetasKPIs(data) {
+function renderMetasKPIs(model) {
   const strip = document.getElementById('kpiStripMetas');
   if (!strip) return;
 
-  const emp = data.empresa || {};
-  const dMax = data.d_max || 1;
-  const diasRestantes = data.dias_restantes || 29;
+  const emp = model.empresa || {};
+  const dMax = model.d_max || 3;
+  const diasRestantes = model.dias_restantes || 27;
+  const necDiaria = Math.max(0, (emp.meta_mensal - emp.real_acum_dmax) / Math.max(1, diasRestantes));
+
+  const scopeBadge = emp.hasFilters
+    ? `<span class="apple-tag tag-pos" style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${_escHtml(emp.contextLabel)}">🎯 ${_escHtml(emp.contextLabel)}</span>`
+    : `<span class="apple-tag tag-neu">Total Empresa</span>`;
 
   strip.innerHTML = `
     <!-- Card 1: Meta Mensal -->
     <div class="apple-kpi-card accent-blue">
       <div class="kpi-card-header">
         <span class="kpi-card-title">META SETEMBRO/2026</span>
-        <span class="apple-tag tag-neu">Mês Completo</span>
+        ${scopeBadge}
       </div>
       <div class="kpi-value-main" style="color:var(--apple-blue);">${_fmtRSCompact(emp.meta_mensal)}</div>
-      <div class="kpi-sub-value">${_fmtRS(emp.meta_mensal)} total empresa</div>
+      <div class="kpi-sub-value">${_fmtRS(emp.meta_mensal)} orçado</div>
       <div class="kpi-footer-deltas">
-        <span class="sublabel">Alocação Distrital × Linhas</span>
+        <span class="sublabel">${emp.hasFilters ? 'Escopo filtrado ativo' : 'Alocação Distrital × Linhas'}</span>
       </div>
     </div>
 
@@ -174,7 +517,7 @@ function renderMetasKPIs(data) {
         <span class="apple-tag tag-neu">Dia ${dMax} de 30</span>
       </div>
       <div class="kpi-value-main" style="color:var(--apple-indigo);">${_fmtRSCompact(emp.meta_acum_dmax)}</div>
-      <div class="kpi-sub-value">${_fmtRS(emp.meta_acum_dmax)} acumulado esperado</div>
+      <div class="kpi-sub-value">${_fmtRS(emp.meta_acum_dmax)} esperado</div>
       <div class="kpi-footer-deltas">
         <span class="sublabel">${(dMax / 30 * 100).toFixed(1)}% do mês decorrido</span>
       </div>
@@ -184,7 +527,7 @@ function renderMetasKPIs(data) {
     <div class="apple-kpi-card accent-green">
       <div class="kpi-card-header">
         <span class="kpi-card-title">REALIZADO D-1 QLIK</span>
-        <span class="apple-tag tag-pos">Resultado Líquido</span>
+        <span class="apple-tag tag-pos">Resultado</span>
       </div>
       <div class="kpi-value-main" style="color:var(--apple-green-text);">${_fmtRSCompact(emp.real_acum_dmax)}</div>
       <div class="kpi-sub-value">${_fmtRS(emp.real_acum_dmax)} faturado</div>
@@ -215,7 +558,7 @@ function renderMetasKPIs(data) {
       <div class="kpi-value-main" style="color:var(--apple-orange);">${_fmtRSCompact(emp.projecao_runrate)}</div>
       <div class="kpi-sub-value">${_fmtRS(emp.projecao_runrate)} fechamento estimado</div>
       <div class="kpi-footer-deltas">
-        <span class="sublabel">Baseado na média diária de vendas</span>
+        <span class="sublabel">Baseado na média diária</span>
       </div>
     </div>
 
@@ -226,9 +569,9 @@ function renderMetasKPIs(data) {
         <span class="apple-tag tag-neu">Setembro</span>
       </div>
       <div class="kpi-value-main" style="color:var(--apple-teal);">${diasRestantes} dias</div>
-      <div class="kpi-sub-value">Necessário: ${_fmtRSCompact((emp.meta_mensal - emp.real_acum_dmax) / Math.max(1, diasRestantes))}/dia</div>
+      <div class="kpi-sub-value">Necessário: ${_fmtRSCompact(necDiaria)}/dia</div>
       <div class="kpi-footer-deltas">
-        <span class="sublabel">Para atingir 100% da meta</span>
+        <span class="sublabel">Para 100% da meta</span>
       </div>
     </div>
   `;
@@ -270,12 +613,10 @@ const metasDesvioDataLabelsPlugin = {
       const pillX = x - pillWidth / 2;
       const pillY = y - pillHeight / 2;
 
-      // Sombra suave para o badge
       ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
       ctx.shadowBlur = 4;
       ctx.shadowOffsetY = 2;
 
-      // Fundo do Badge (Verde se bateu / Vermelho se abaixo)
       ctx.fillStyle = bgColor;
       ctx.beginPath();
       if (typeof ctx.roundRect === 'function') {
@@ -285,17 +626,14 @@ const metasDesvioDataLabelsPlugin = {
       }
       ctx.fill();
 
-      // Reset de sombra
       ctx.shadowColor = 'transparent';
       ctx.shadowBlur = 0;
       ctx.shadowOffsetY = 0;
 
-      // Borda branca de alto contraste
       ctx.strokeStyle = '#FFFFFF';
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // Texto do % de Desvio
       ctx.fillStyle = '#FFFFFF';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -305,21 +643,22 @@ const metasDesvioDataLabelsPlugin = {
   }
 };
 
-function renderMetasChart(data) {
+function renderMetasChart(model, rawData) {
   const canvas = document.getElementById('chartMetasEvolucao');
   if (!canvas) return;
 
-  const emp = data.empresa || {};
-  const curva = data.curva_diaria || [];
-  const dMax = data.d_max || 1;
+  const emp = model.empresa || {};
+  const baseEmp = (rawData && rawData.empresa) ? rawData.empresa : emp;
+  const curva = (rawData && rawData.curva_diaria) ? rawData.curva_diaria : [];
+  const dMax = model.d_max || 3;
   const isDiario = STATE_METAS.chartMode !== 'acumulado';
 
   const titleEl = document.getElementById('metasChartTitle');
   const subtitleEl = document.getElementById('metasEvolucaoSubtitle');
   if (titleEl) {
     titleEl.textContent = isDiario
-      ? 'Acompanhamento Diário — Venda vs Meta & % Desvio (Total Empresa)'
-      : 'Evolução Acumulada MTD — Meta vs Realizado (Total Empresa)';
+      ? `Acompanhamento Diário — Venda vs Meta & % Desvio (${emp.contextLabel || 'Total Empresa'})`
+      : `Evolução Acumulada MTD — Meta vs Realizado (${emp.contextLabel || 'Total Empresa'})`;
   }
   if (subtitleEl) {
     subtitleEl.textContent = isDiario
@@ -329,24 +668,28 @@ function renderMetasChart(data) {
 
   if (_metasChart) _metasChart.destroy();
 
+  const ratioMeta = (baseEmp.meta_mensal > 0) ? (emp.meta_mensal / baseEmp.meta_mensal) : 1;
+  const ratioReal = (baseEmp.real_acum_dmax > 0) ? (emp.real_acum_dmax / baseEmp.real_acum_dmax) : 1;
+
   if (isDiario) {
-    // ── MODO 1: DIÁRIO (BARRAS DE VENDA + META + TRAÇO COM % DESVIO) ──
     const labels = curva.map(c => `Dia ${c.dia} (${c.dia_semana ? c.dia_semana.slice(0, 3) : ''})`);
 
     const metaDiaria = curva.map((c, i) => {
-      return c.meta_dia || (emp.evolucao_meta_diaria ? emp.evolucao_meta_diaria[i] : 0);
+      const val = c.meta_dia || (baseEmp.evolucao_meta_diaria ? baseEmp.evolucao_meta_diaria[i] : 0);
+      return val * ratioMeta;
     });
 
     const realDiario = curva.map((c, i) => {
       if (i >= dMax) return null;
-      return c.real_dia !== undefined ? c.real_dia : (emp.evolucao_real_diaria ? emp.evolucao_real_diaria[i] : null);
+      const val = c.real_dia !== undefined ? c.real_dia : (baseEmp.evolucao_real_diaria ? baseEmp.evolucao_real_diaria[i] : null);
+      return val != null ? val * ratioReal : null;
     });
 
     const desvioPct = curva.map((c, i) => {
       if (i >= dMax) return null;
-      const r = c.real_dia !== undefined ? c.real_dia : (emp.evolucao_real_diaria ? emp.evolucao_real_diaria[i] : 0);
-      const m = c.meta_dia || (emp.evolucao_meta_diaria ? emp.evolucao_meta_diaria[i] : 1);
-      if (!m || m <= 0) return 0;
+      const r = realDiario[i];
+      const m = metaDiaria[i];
+      if (!m || m <= 0 || r === null) return 0;
       return Number(((r / m - 1.0) * 100.0).toFixed(2));
     });
 
@@ -438,9 +781,8 @@ function renderMetasChart(data) {
               },
               label: (ctx) => {
                 const idx = ctx.dataIndex;
-                const c = curva[idx] || {};
-                const r = c.real_dia !== undefined ? c.real_dia : (emp.evolucao_real_diaria ? emp.evolucao_real_diaria[idx] : 0);
-                const m = c.meta_dia || (emp.evolucao_meta_diaria ? emp.evolucao_meta_diaria[idx] : 0);
+                const r = realDiario[idx];
+                const m = metaDiaria[idx];
                 const d = desvioPct[idx];
 
                 if (ctx.dataset.yAxisID === 'y1') {
@@ -484,10 +826,17 @@ function renderMetasChart(data) {
     });
 
   } else {
-    // ── MODO 2: ACUMULADO MTD (CURVA ACUMULADA) ──
+    // ── MODO 2: ACUMULADO MTD ──
     const labels = curva.map(c => `Dia ${c.dia}`);
-    const metaAcum = emp.evolucao_meta || curva.map(c => c.meta_acum);
-    const realAcum = (emp.evolucao_real || []).map((v, i) => i < dMax ? v : null);
+    const metaAcum = curva.map((c, i) => {
+      const val = c.meta_acum || (baseEmp.evolucao_meta ? baseEmp.evolucao_meta[i] : 0);
+      return val * ratioMeta;
+    });
+    const realAcum = curva.map((c, i) => {
+      if (i >= dMax) return null;
+      const val = (baseEmp.evolucao_real && baseEmp.evolucao_real[i] != null) ? baseEmp.evolucao_real[i] : (c.real_acum || null);
+      return val != null ? val * ratioReal : null;
+    });
 
     _metasChart = new Chart(canvas, {
       type: 'line',
@@ -520,7 +869,6 @@ function renderMetasChart(data) {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { position: 'top', labels: { boxWidth: 12, font: { weight: 600 } } },
           tooltip: {
@@ -541,11 +889,11 @@ function renderMetasChart(data) {
   }
 }
 
-function renderMetasGruposEmpresa(data) {
+function renderMetasGruposEmpresa(model) {
   const tbody = document.getElementById('tbodyMetasGruposEmpresa');
   if (!tbody) return;
 
-  const grupos = data.grupos || [];
+  const grupos = model.grupos || [];
   let html = '';
 
   grupos.forEach(g => {
@@ -565,12 +913,13 @@ function renderMetasGruposEmpresa(data) {
     `;
   });
 
-  tbody.innerHTML = html;
+  tbody.innerHTML = html || '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--text-tertiary);">Nenhum grupo correspondente aos filtros ativos.</td></tr>';
 
-  // Preencher Select de Categorias/Grupos
+  // Preencher Select de Categorias/Grupos se vazio
   const selCat = document.getElementById('metasFilterCategoria');
   if (selCat && selCat.options.length <= 1) {
-    grupos.forEach(g => {
+    const rawGrupos = (METAS_DATA && METAS_DATA.grupos) ? METAS_DATA.grupos : grupos;
+    rawGrupos.forEach(g => {
       const opt = document.createElement('option');
       opt.value = g.grupo;
       opt.textContent = g.grupo;
@@ -579,23 +928,11 @@ function renderMetasGruposEmpresa(data) {
   }
 }
 
-function renderMetasLinhasTable(data) {
+function renderMetasLinhasTable(model) {
   const tbody = document.getElementById('tbodyMetasLinhas');
   if (!tbody) return;
 
-  let linhas = [...(data.linhas || [])];
-
-  // Filtros
-  if (STATE_METAS.categoria !== 'ALL') {
-    linhas = linhas.filter(l => l.grupo === STATE_METAS.categoria || l.categoria === STATE_METAS.categoria);
-  }
-  if (STATE_METAS.status !== 'ALL') {
-    linhas = linhas.filter(l => l.status === STATE_METAS.status);
-  }
-  if (STATE_METAS.search.trim()) {
-    const q = STATE_METAS.search.trim().toLowerCase();
-    linhas = linhas.filter(l => l.linha.toLowerCase().includes(q) || (l.familia && l.familia.toLowerCase().includes(q)) || (l.grupo && l.grupo.toLowerCase().includes(q)));
-  }
+  let linhas = [...(model.linhas || [])];
 
   // Ordenação
   switch (STATE_METAS.sort) {
@@ -660,7 +997,7 @@ function renderMetasLinhasTable(data) {
   tbody.innerHTML = html || '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--text-tertiary);">Nenhuma linha encontrada com os filtros selecionados.</td></tr>';
 }
 
-function wireMetasMacroEvents(data) {
+function wireMetasMacroEvents(rawData) {
   const btnDiario = document.getElementById('btnMetasChartDiario');
   const btnAcum = document.getElementById('btnMetasChartAcum');
   if (btnDiario && btnAcum) {
@@ -668,13 +1005,15 @@ function wireMetasMacroEvents(data) {
       STATE_METAS.chartMode = 'diario';
       btnDiario.classList.add('active');
       btnAcum.classList.remove('active');
-      renderMetasChart(data);
+      const model = getFilteredMetasModel(rawData, 'macro');
+      renderMetasChart(model, rawData);
     };
     btnAcum.onclick = () => {
       STATE_METAS.chartMode = 'acumulado';
       btnAcum.classList.add('active');
       btnDiario.classList.remove('active');
-      renderMetasChart(data);
+      const model = getFilteredMetasModel(rawData, 'macro');
+      renderMetasChart(model, rawData);
     };
   }
 
@@ -682,7 +1021,7 @@ function wireMetasMacroEvents(data) {
   if (selCat) {
     selCat.onchange = (e) => {
       STATE_METAS.categoria = e.target.value;
-      renderMetasLinhasTable(data);
+      renderMetasSetembroTab();
     };
   }
 
@@ -690,7 +1029,7 @@ function wireMetasMacroEvents(data) {
   if (selStatus) {
     selStatus.onchange = (e) => {
       STATE_METAS.status = e.target.value;
-      renderMetasLinhasTable(data);
+      renderMetasSetembroTab();
     };
   }
 
@@ -698,7 +1037,7 @@ function wireMetasMacroEvents(data) {
   if (inSearch) {
     inSearch.oninput = (e) => {
       STATE_METAS.search = e.target.value;
-      renderMetasLinhasTable(data);
+      renderMetasSetembroTab();
     };
   }
 
@@ -706,7 +1045,8 @@ function wireMetasMacroEvents(data) {
   if (selSort) {
     selSort.onchange = (e) => {
       STATE_METAS.sort = e.target.value;
-      renderMetasLinhasTable(data);
+      const model = getFilteredMetasModel(rawData, 'macro');
+      renderMetasLinhasTable(model);
     };
   }
 }
@@ -715,83 +1055,31 @@ function wireMetasMacroEvents(data) {
    ABA 5: METAS POR DIRETORIA & DISTRITAIS (tabMetasDiretoria)
    ========================================================================== */
 async function renderMetasDiretoriaTab() {
-  const data = await loadMetasData();
-  if (!data) return;
+  const rawData = await loadMetasData();
+  if (!rawData) return;
 
-  if (typeof STATE !== 'undefined') {
-    const selDir = document.getElementById('dirFilterDiretoria');
-    if (STATE.diretores && STATE.diretores.size === 1) {
-      const dVal = Array.from(STATE.diretores)[0];
-      if (selDir && STATE_DIR.diretoria !== dVal) {
-        STATE_DIR.diretoria = dVal;
-        selDir.value = dVal;
-      }
-    } else if (STATE.diretores && STATE.diretores.size === 0) {
-      if (selDir && STATE_DIR.diretoria !== 'ALL') {
-        STATE_DIR.diretoria = 'ALL';
-        selDir.value = 'ALL';
-      }
-    }
+  syncMetasDiretoriaInputs(rawData);
+  const model = getFilteredMetasModel(rawData, 'diretoria');
 
-    const selDt = document.getElementById('dirFilterDistrital');
-    if (STATE.distritais && STATE.distritais.size === 1) {
-      const dtVal = Array.from(STATE.distritais)[0];
-      if (selDt && STATE_DIR.distrital !== dtVal) {
-        STATE_DIR.distrital = dtVal;
-        selDt.value = dtVal;
-      }
-    } else if (STATE.distritais && STATE.distritais.size === 0) {
-      if (selDt && STATE_DIR.distrital !== 'ALL') {
-        STATE_DIR.distrital = 'ALL';
-        selDt.value = 'ALL';
-      }
-    }
-
-    const selGrp = document.getElementById('dirFilterGrupo');
-    if (STATE.grupos && STATE.grupos.size === 1) {
-      const gVal = Array.from(STATE.grupos)[0];
-      if (selGrp && STATE_DIR.grupo !== gVal) {
-        STATE_DIR.grupo = gVal;
-        selGrp.value = gVal;
-      }
-    } else if (STATE.grupos && STATE.grupos.size === 0) {
-      if (selGrp && STATE_DIR.grupo !== 'ALL') {
-        STATE_DIR.grupo = 'ALL';
-        selGrp.value = 'ALL';
-      }
-    }
-
-    const inSearch = document.getElementById('dirSearch');
-    if (STATE.search && inSearch && STATE_DIR.search !== STATE.search) {
-      STATE_DIR.search = STATE.search;
-      inSearch.value = STATE.search;
-    } else if (!STATE.search && inSearch && STATE_DIR.search && STATE_DIR.search === inSearch.value) {
-      STATE_DIR.search = '';
-      inSearch.value = '';
-    }
-  }
-
-  populateDiretoriaDistritais(data);
-  renderDiretoriaCards(data);
-  renderRankingDistritais(data);
-  populateDiretoriaSelectors(data);
-  renderDiretoriaHierarchicalTable(data);
-  wireDiretoriaEvents(data);
+  renderDiretoriaCards(model);
+  renderRankingDistritais(model);
+  populateDiretoriaSelectors(rawData, model);
+  renderDiretoriaHierarchicalTable(model);
+  wireDiretoriaEvents(rawData);
   _dirRendered = true;
 }
 
-function renderDiretoriaCards(data) {
+function renderDiretoriaCards(model) {
   const container = document.getElementById('diretoriaCardsGrid');
   if (!container) return;
 
-  const diretorias = data.diretorias || [];
+  const diretorias = model.diretorias || [];
   let html = '';
 
   diretorias.forEach(d => {
     const atingClamped = Math.min(100, Math.max(0, d.ating_pct));
     const isCintia = d.diretor.toLowerCase().includes('cintia');
     const colorTheme = isCintia ? 'var(--apple-blue)' : 'var(--apple-indigo)';
-    const softColor = isCintia ? 'var(--apple-blue-soft)' : 'var(--apple-indigo-soft)';
 
     html += `
       <div class="diretoria-card" style="border-top: 4px solid ${colorTheme};">
@@ -832,29 +1120,27 @@ function renderDiretoriaCards(data) {
         </div>
 
         <div style="display:flex; justify-content:space-between; align-items:center; font-size:11.5px; color:var(--text-tertiary); padding-top:6px; border-top:1px solid var(--border-subtle);">
-          <span>🏢 ${d.total_distritais} Distritais subordinados</span>
-          <span style="font-weight:600; color:var(--text-secondary);">${d.share_empresa_pct.toFixed(1)}% do faturamento da rede</span>
+          <span>🏢 ${d.total_distritais} Distritais exibidos</span>
+          <span style="font-weight:600; color:var(--text-secondary);">${d.share_empresa_pct ? d.share_empresa_pct.toFixed(1) + '% da rede' : ''}</span>
         </div>
       </div>
     `;
   });
 
-  container.innerHTML = html;
+  container.innerHTML = html || '<div style="padding:20px;color:var(--text-tertiary);text-align:center;grid-column:1/-1;">Nenhuma diretoria selecionada ou correspondente aos filtros.</div>';
 }
 
-function renderRankingDistritais(data) {
+function renderRankingDistritais(model) {
   const container = document.getElementById('rankingDistritaisBar');
   if (!container) return;
 
-  let distritais = [...(data.distritais || [])];
-  if (STATE_DIR.diretoria && STATE_DIR.diretoria !== 'ALL') {
-    distritais = distritais.filter(d => d.diretor === STATE_DIR.diretoria);
-  }
+  let distritais = [...(model.distritais || [])];
   distritais.sort((a, b) => b.ating_pct - a.ating_pct);
   let html = '';
 
   distritais.forEach((dt, idx) => {
-    const activeClass = (STATE_DIR.distrital === dt.distrital) ? 'active' : '';
+    const isSelected = (STATE_DIR.distrital === dt.distrital) || (typeof STATE !== 'undefined' && STATE.distritais && STATE.distritais.has(dt.distrital));
+    const activeClass = isSelected ? 'active' : '';
     html += `
       <div class="distrital-rank-pill ${activeClass}" onclick="filterDistritalPill('${dt.distrital}')">
         <div class="name">#${idx + 1} ${_escHtml(dt.distrital)}</div>
@@ -867,7 +1153,7 @@ function renderRankingDistritais(data) {
     `;
   });
 
-  container.innerHTML = html;
+  container.innerHTML = html || '<div style="padding:10px 16px;color:var(--text-tertiary);font-size:12px;">Nenhum distrital disponível para os filtros atuais.</div>';
 }
 
 function filterDistritalPill(distNome) {
@@ -879,17 +1165,14 @@ function filterDistritalPill(distNome) {
     STATE_DIR.distrital = distNome;
     if (selDist) selDist.value = distNome;
   }
-  if (METAS_DATA) {
-    renderRankingDistritais(METAS_DATA);
-    renderDiretoriaHierarchicalTable(METAS_DATA);
-  }
+  renderMetasDiretoriaTab();
 }
 
-function populateDiretoriaDistritais(data) {
+function populateDiretoriaDistritais(rawData, model) {
   const selDist = document.getElementById('dirFilterDistrital');
   if (!selDist) return;
 
-  let dists = data.distritais || [];
+  let dists = rawData.distritais || [];
   if (STATE_DIR.diretoria && STATE_DIR.diretoria !== 'ALL') {
     dists = dists.filter(d => d.diretor === STATE_DIR.diretoria);
   }
@@ -904,39 +1187,36 @@ function populateDiretoriaDistritais(data) {
   });
 }
 
-function populateDiretoriaSelectors(data) {
-  populateDiretoriaDistritais(data);
+function populateDiretoriaSelectors(rawData, model) {
+  populateDiretoriaDistritais(rawData, model);
   const selGrp = document.getElementById('dirFilterGrupo');
   if (!selGrp) return;
 
   if (selGrp.options.length <= 1) {
-    const grupos = data.grupos || [];
+    const grupos = rawData.grupos || [];
     grupos.forEach(g => {
       const opt = document.createElement('option');
       opt.value = g.grupo;
       opt.textContent = g.grupo;
+      if (STATE_DIR.grupo === g.grupo) opt.selected = true;
       selGrp.appendChild(opt);
     });
   }
 }
 
-function renderDiretoriaHierarchicalTable(data) {
+function renderDiretoriaHierarchicalTable(model) {
   const tbody = document.getElementById('tbodyMetasDiretoria');
   if (!tbody) return;
 
-  const diretorias = data.diretorias || [];
+  const diretorias = model.diretorias || [];
   let html = '';
   let rowCount = 0;
 
   const q = STATE_DIR.search.trim().toLowerCase();
-  const dirFilter = STATE_DIR.diretoria;
-  const distFilter = STATE_DIR.distrital;
-  const grpFilter = STATE_DIR.grupo;
+  const hasFilterActive = model.empresa?.hasFilters;
 
   diretorias.forEach(dir => {
-    if (dirFilter !== 'ALL' && dir.diretor !== dirFilter) return;
-
-    const isDirExpanded = STATE_DIR.expandedDirs.has(dir.diretor) || q.length > 0;
+    const isDirExpanded = STATE_DIR.expandedDirs.has(dir.diretor) || q.length > 0 || hasFilterActive;
     const dirToggle = isDirExpanded ? '▼' : '▶';
 
     // Linha Nível 1: Diretoria
@@ -962,10 +1242,8 @@ function renderDiretoriaHierarchicalTable(data) {
 
     // Nível 2: Distritais
     (dir.distritais || []).forEach(dist => {
-      if (distFilter !== 'ALL' && dist.distrital !== distFilter) return;
-
       const distKey = `${dir.diretor}|${dist.distrital}`;
-      const isDistExpanded = STATE_DIR.expandedDists.has(distKey) || q.length > 0;
+      const isDistExpanded = STATE_DIR.expandedDists.has(distKey) || q.length > 0 || hasFilterActive;
       const distToggle = isDistExpanded ? '▼' : '▶';
 
       html += `
@@ -990,8 +1268,6 @@ function renderDiretoriaHierarchicalTable(data) {
 
       // Nível 3: Grupos dentro do Distrital
       (dist.grupos || []).forEach(grp => {
-        if (grpFilter !== 'ALL' && grp.grupo !== grpFilter) return;
-
         const grpKey = `${distKey}|${grp.grupo}`;
         const isGrpExpanded = STATE_DIR.expandedGrupos.has(grpKey) || q.length > 0;
         const grpToggle = isGrpExpanded ? '▼' : '▶';
@@ -1018,10 +1294,6 @@ function renderDiretoriaHierarchicalTable(data) {
 
         // Nível 4: Linhas de Produtos dentro do Grupo
         (grp.linhas || []).forEach(lin => {
-          if (q.length > 0 && !lin.linha.toLowerCase().includes(q) && !(lin.familia && lin.familia.toLowerCase().includes(q))) {
-            return;
-          }
-
           html += `
             <tr class="row-metas-linha">
               <td class="tree-indent-3" style="position:sticky;left:0;z-index:8;background:#FFFFFF;">
@@ -1045,7 +1317,7 @@ function renderDiretoriaHierarchicalTable(data) {
     });
   });
 
-  tbody.innerHTML = html || '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-tertiary);">Nenhum registro encontrado com os filtros selecionados.</td></tr>';
+  tbody.innerHTML = html || '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-tertiary);">Nenhum registro encontrado para a seleção atual.</td></tr>';
 
   const countBadge = document.getElementById('dirTableCount');
   if (countBadge) countBadge.textContent = `${rowCount} itens visíveis na árvore`;
@@ -1062,18 +1334,16 @@ function toggleDirTree(type, key) {
     if (STATE_DIR.expandedGrupos.has(key)) STATE_DIR.expandedGrupos.delete(key);
     else STATE_DIR.expandedGrupos.add(key);
   }
-  if (METAS_DATA) renderDiretoriaHierarchicalTable(METAS_DATA);
+  renderMetasDiretoriaTab();
 }
 
-function wireDiretoriaEvents(data) {
+function wireDiretoriaEvents(rawData) {
   const selDir = document.getElementById('dirFilterDiretoria');
   if (selDir) {
     selDir.onchange = (e) => {
       STATE_DIR.diretoria = e.target.value;
       STATE_DIR.distrital = 'ALL';
-      populateDiretoriaDistritais(data);
-      renderRankingDistritais(data);
-      renderDiretoriaHierarchicalTable(data);
+      renderMetasDiretoriaTab();
     };
   }
 
@@ -1081,8 +1351,7 @@ function wireDiretoriaEvents(data) {
   if (selDist) {
     selDist.onchange = (e) => {
       STATE_DIR.distrital = e.target.value;
-      renderRankingDistritais(data);
-      renderDiretoriaHierarchicalTable(data);
+      renderMetasDiretoriaTab();
     };
   }
 
@@ -1090,7 +1359,7 @@ function wireDiretoriaEvents(data) {
   if (selGrp) {
     selGrp.onchange = (e) => {
       STATE_DIR.grupo = e.target.value;
-      renderDiretoriaHierarchicalTable(data);
+      renderMetasDiretoriaTab();
     };
   }
 
@@ -1098,55 +1367,35 @@ function wireDiretoriaEvents(data) {
   if (inSearch) {
     inSearch.oninput = (e) => {
       STATE_DIR.search = e.target.value;
-      renderDiretoriaHierarchicalTable(data);
+      renderMetasDiretoriaTab();
     };
   }
 
   const btnExpDist = document.getElementById('btnDirExpandDist');
   if (btnExpDist) {
     btnExpDist.onclick = () => {
-      (data.distritais || []).forEach(d => STATE_DIR.expandedDists.add(`${d.diretor}|${d.distrital}`));
-      renderDiretoriaHierarchicalTable(data);
+      (rawData.distritais || []).forEach(d => STATE_DIR.expandedDists.add(`${d.diretor}|${d.distrital}`));
+      renderMetasDiretoriaTab();
     };
   }
 
   const btnExpGrp = document.getElementById('btnDirExpandGrupos');
   if (btnExpGrp) {
     btnExpGrp.onclick = () => {
-      (data.diretorias || []).forEach(dir => {
-        STATE_DIR.expandedDirs.add(dir.diretor);
-        (dir.distritais || []).forEach(dt => {
-          const distKey = `${dir.diretor}|${dt.distrital}`;
-          STATE_DIR.expandedDists.add(distKey);
-          (dt.grupos || []).forEach(g => STATE_DIR.expandedGrupos.add(`${distKey}|${g.grupo}`));
-        });
+      (rawData.distritais || []).forEach(d => {
+        (d.grupos || []).forEach(g => STATE_DIR.expandedGrupos.add(`${d.diretor}|${d.distrital}|${g.grupo}`));
       });
-      renderDiretoriaHierarchicalTable(data);
+      renderMetasDiretoriaTab();
     };
   }
 
-  const btnExpAll = document.getElementById('btnDirExpandAll');
-  if (btnExpAll) {
-    btnExpAll.onclick = () => {
-      (data.diretorias || []).forEach(dir => {
-        STATE_DIR.expandedDirs.add(dir.diretor);
-        (dir.distritais || []).forEach(dt => {
-          const distKey = `${dir.diretor}|${dt.distrital}`;
-          STATE_DIR.expandedDists.add(distKey);
-          (dt.grupos || []).forEach(g => STATE_DIR.expandedGrupos.add(`${distKey}|${g.grupo}`));
-        });
-      });
-      renderDiretoriaHierarchicalTable(data);
-    };
-  }
-
-  const btnCollapse = document.getElementById('btnDirCollapseAll');
-  if (btnCollapse) {
-    btnCollapse.onclick = () => {
+  const btnCol = document.getElementById('btnDirCollapseAll');
+  if (btnCol) {
+    btnCol.onclick = () => {
       STATE_DIR.expandedDirs.clear();
       STATE_DIR.expandedDists.clear();
       STATE_DIR.expandedGrupos.clear();
-      renderDiretoriaHierarchicalTable(data);
+      renderMetasDiretoriaTab();
     };
   }
 }

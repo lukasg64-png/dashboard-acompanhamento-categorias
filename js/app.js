@@ -1006,12 +1006,16 @@ function render() {
     triggerWaterfall();
   }
   const metasEmpTab = document.getElementById('tabMetasSetembro');
-  if (metasEmpTab && metasEmpTab.classList.contains('active') && typeof renderMetasSetembroTab === 'function') {
-    renderMetasSetembroTab();
+  if (metasEmpTab && typeof renderMetasSetembroTab === 'function') {
+    if (metasEmpTab.classList.contains('active') || (typeof _metasRendered !== 'undefined' && _metasRendered)) {
+      renderMetasSetembroTab();
+    }
   }
   const metasDirTab = document.getElementById('tabMetasDiretoria');
-  if (metasDirTab && metasDirTab.classList.contains('active') && typeof renderMetasDiretoriaTab === 'function') {
-    renderMetasDiretoriaTab();
+  if (metasDirTab && typeof renderMetasDiretoriaTab === 'function') {
+    if (metasDirTab.classList.contains('active') || (typeof _dirRendered !== 'undefined' && _dirRendered)) {
+      renderMetasDiretoriaTab();
+    }
   }
 }
 

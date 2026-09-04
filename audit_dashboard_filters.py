@@ -211,12 +211,20 @@ def audit():
         kpi_val = page.query_selector('#kpiStrip .kpi-value-main').inner_text()
         print(f"    Sidebar Diretor 'Cintia Silva' -> KPI Geral: {kpi_val} [OK]")
         
-        # Ir para Aba 5 e checar se herdou Cintia Silva
+        # Verificar Aba 4 com Cintia Silva selecionada na sidebar
+        page.query_selector('button[data-tab="tabMetasSetembro"]').click()
+        page.wait_for_timeout(400)
+        meta_aba4_kpi = page.query_selector('#kpiStripMetas .kpi-value-main').inner_text()
+        badge_aba4 = page.query_selector('#kpiStripMetas .apple-tag').inner_text()
+        print(f"    Aba 4 com 'Cintia Silva' -> Meta KPI: {meta_aba4_kpi} ({badge_aba4}) [OK]")
+
+        # Ir para Aba 5 e checar se herdou Cintia Silva (1 card e 4 distritais)
         page.query_selector('button[data-tab="tabMetasDiretoria"]').click()
         page.wait_for_timeout(400)
+        cards_aba5 = len(page.query_selector_all('#diretoriaCardsGrid .diretoria-card'))
         val_dir_aba5 = page.query_selector('#dirFilterDiretoria').input_value()
         pills_aba5 = len(page.query_selector_all('#rankingDistritaisBar .distrital-rank-pill'))
-        print(f"    Aba 5 herdou Diretor: '{val_dir_aba5}' e exibiu {pills_aba5} distritais [OK]")
+        print(f"    Aba 5 com 'Cintia Silva' -> Cards: {cards_aba5} (esperado 1), Diretor: '{val_dir_aba5}', Distritais: {pills_aba5} [OK]")
 
         # Ir para Aba 3 Waterfall (dimensão Diretorias no modo Vs Meta)
         page.query_selector('button[data-tab="tabWaterfall"]').click()
@@ -226,6 +234,18 @@ def audit():
         page.wait_for_timeout(400)
         wf_bars = len(page.query_selector_all('#wfDetailTbody tr'))
         print(f"    Aba 3 Waterfall (Vs Meta - Diretorias) com filtro lateral: {wf_bars} item(ns) [OK]")
+
+        # Desmarcar Cintia Silva e verificar restauração
+        btn_ms_dir.click()
+        page.wait_for_timeout(200)
+        opt_cintia.uncheck()
+        page.wait_for_timeout(400)
+        
+        # Voltar para Aba 4 e checar restauração Total Empresa
+        page.query_selector('button[data-tab="tabMetasSetembro"]').click()
+        page.wait_for_timeout(400)
+        meta_aba4_restaurada = page.query_selector('#kpiStripMetas .kpi-value-main').inner_text()
+        print(f"    Aba 4 após limpar sidebar -> Meta KPI: {meta_aba4_restaurada} (Total Empresa) [OK]")
 
         print("\n--- RESUMO DE ERROS ---")
         if errors:
