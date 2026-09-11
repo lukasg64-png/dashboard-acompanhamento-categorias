@@ -1,33 +1,33 @@
 {
   "total_empresa": {
-    "venda_jul_26": 281915290.46,
-    "venda_jun_26": 264751746.13,
-    "venda_jul_25": 249498317.38,
-    "mom_pct": 6.48,
-    "mom_rs": 17163544.33,
-    "yoy_pct": 12.99,
-    "yoy_rs": 32416973.08
+    "venda_jul_26": 313815914.3,
+    "venda_jun_26": 295870100.69,
+    "venda_jul_25": 277455938.95,
+    "mom_pct": 6.07,
+    "mom_rs": 17945813.61,
+    "yoy_pct": 13.1,
+    "yoy_rs": 36359975.35
   },
   "digital": {
-    "venda_jul_26": 18221504.9,
-    "venda_jun_26": 16684318.88,
-    "venda_jul_25": 11862944.74,
-    "share_jul_26": 6.46,
-    "mom_pct": 9.21,
-    "yoy_pct": 53.6
+    "venda_jul_26": 20613437.11,
+    "venda_jun_26": 18482165.1,
+    "venda_jul_25": 13086299.32,
+    "share_jul_26": 6.57,
+    "mom_pct": 11.53,
+    "yoy_pct": 57.52
   },
   "digital_tele": {
-    "venda_jul_26": 24226156.42,
-    "venda_jun_26": 22289263.96,
-    "venda_jul_25": 18218874.45,
-    "share_jul_26": 8.59,
-    "mom_pct": 8.69,
-    "yoy_pct": 32.97
+    "venda_jul_26": 27390221.35,
+    "venda_jun_26": 24814568.06,
+    "venda_jul_25": 20083944.83,
+    "share_jul_26": 8.73,
+    "mom_pct": 10.38,
+    "yoy_pct": 36.38
   },
   "periodo_info": {
     "mes": "Setembro/2026",
     "tipo": "D-1 (Qlik Sense Enterprise)",
-    "dias_fechados": 9,
-    "periodo_str": "01 a 09/09/2026"
+    "dias_fechados": 10,
+    "periodo_str": "01 a 10/09/2026"
   }
 }
