@@ -54,10 +54,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   showLoadingProgress('Inicializando motor analítico...');
   updateLoadingProgress(15, 'Carregando indicadores corporativos...');
   await loadAllData(STATE.mesReferencia);
+  const maxD = (DATA.kpis?.periodo_info?.dias_fechados) || 15;
+  STATE.endDay = maxD;
   updateLoadingProgress(60, 'Configurando filtros e eventos...');
   wireEvents();
   initMultiSelects();
   updateTableHeaders();
+  initDateFilter();
   updateLoadingProgress(85, 'Renderizando visualizações 360°...');
   render();
   updateLoadingProgress(100, 'Pronto!');
@@ -103,6 +106,146 @@ function sumDays(arr, startDay, endDay) {
   return s;
 }
 
+/* ── Apple HIG Date Range Filter Engine ─────────────── */
+let activeDatePreset = 'mtd';
+
+function getMaxDiaFechado() {
+  return (DATA.kpis?.periodo_info?.dias_fechados) || (STATE.mesReferencia === 'setembro' ? 15 : 31);
+}
+
+function initDateFilter() {
+  const maxDia = getMaxDiaFechado();
+  const pad = (n) => String(n).padStart(2, '0');
+  const isSetembro = (STATE.mesReferencia === 'setembro');
+  const yearMonth = isSetembro ? '2026-09' : '2026-08';
+
+  const iniEl = document.getElementById('filterDateIni');
+  const endEl = document.getElementById('filterDateEnd');
+
+  if (iniEl && endEl) {
+    iniEl.min = `${yearMonth}-01`;
+    iniEl.max = `${yearMonth}-${pad(maxDia)}`;
+    endEl.min = `${yearMonth}-01`;
+    endEl.max = `${yearMonth}-${pad(maxDia)}`;
+
+    iniEl.value = `${yearMonth}-${pad(STATE.startDay)}`;
+    endEl.value = `${yearMonth}-${pad(Math.min(STATE.endDay, maxDia))}`;
+  }
+
+  updatePresetButtonsState();
+  updateDatePeriodBadge();
+}
+
+function updatePresetButtonsState() {
+  const presets = ['mtd', 'yesterday', '7days', 'this_week'];
+  presets.forEach(p => {
+    let btnId = 'presetMtd';
+    if (p === 'yesterday') btnId = 'presetYesterday';
+    if (p === '7days') btnId = 'preset7Days';
+    if (p === 'this_week') btnId = 'presetThisWeek';
+    const btn = document.getElementById(btnId);
+    if (btn) {
+      btn.classList.toggle('active', p === activeDatePreset);
+    }
+  });
+}
+
+function updateDatePeriodBadge() {
+  const badge = document.getElementById('datePeriodInfo');
+  if (!badge) return;
+  const pad = (n) => String(n).padStart(2, '0');
+  const maxDia = getMaxDiaFechado();
+  const isSetembro = (STATE.mesReferencia === 'setembro');
+  const mesStr = isSetembro ? '09' : '08';
+  const anoStr = '2026';
+
+  const s = STATE.startDay;
+  const e = Math.min(STATE.endDay, maxDia);
+  const totalDias = Math.max(1, (e - s) + 1);
+
+  badge.innerHTML = `<span>${pad(s)} a ${pad(e)}/${mesStr}/${anoStr} (${totalDias} dia${totalDias > 1 ? 's' : ''})</span>`;
+}
+
+function selectDatePreset(preset) {
+  activeDatePreset = preset;
+  const pad = (n) => String(n).padStart(2, '0');
+  const maxDia = getMaxDiaFechado();
+  const isSetembro = (STATE.mesReferencia === 'setembro');
+  const yearMonth = isSetembro ? '2026-09' : '2026-08';
+
+  if (preset === 'mtd') {
+    STATE.startDay = 1;
+    STATE.endDay = maxDia;
+  } else if (preset === 'yesterday') {
+    STATE.startDay = maxDia;
+    STATE.endDay = maxDia;
+  } else if (preset === '7days') {
+    STATE.startDay = Math.max(1, maxDia - 6);
+    STATE.endDay = maxDia;
+  } else if (preset === 'this_week') {
+    const dt = new Date(2026, isSetembro ? 8 : 7, maxDia);
+    const dayOfWeek = dt.getDay();
+    const diffToMonday = (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
+    STATE.startDay = Math.max(1, maxDia - diffToMonday);
+    STATE.endDay = maxDia;
+  }
+
+  const iniEl = document.getElementById('filterDateIni');
+  const endEl = document.getElementById('filterDateEnd');
+  if (iniEl) iniEl.value = `${yearMonth}-${pad(STATE.startDay)}`;
+  if (endEl) endEl.value = `${yearMonth}-${pad(STATE.endDay)}`;
+
+  updateDatePeriodBadge();
+  updatePresetButtonsState();
+  STATE.expandedCat.clear();
+  render();
+}
+
+function onDateInputChange() {
+  const iniEl = document.getElementById('filterDateIni');
+  const endEl = document.getElementById('filterDateEnd');
+  if (!iniEl || !endEl) return;
+
+  const pad = (n) => String(n).padStart(2, '0');
+  const maxDia = getMaxDiaFechado();
+  const isSetembro = (STATE.mesReferencia === 'setembro');
+  const yearMonth = isSetembro ? '2026-09' : '2026-08';
+
+  let iniVal = parseInt(iniEl.value.split('-')[2], 10) || 1;
+  let endVal = parseInt(endEl.value.split('-')[2], 10) || maxDia;
+
+  if (iniVal < 1) iniVal = 1;
+  if (iniVal > maxDia) iniVal = maxDia;
+  if (endVal < 1) endVal = 1;
+  if (endVal > maxDia) endVal = maxDia;
+
+  if (iniVal > endVal) {
+    endVal = iniVal;
+  }
+
+  STATE.startDay = iniVal;
+  STATE.endDay = endVal;
+  iniEl.value = `${yearMonth}-${pad(STATE.startDay)}`;
+  endEl.value = `${yearMonth}-${pad(STATE.endDay)}`;
+
+  if (STATE.startDay === 1 && STATE.endDay === maxDia) {
+    activeDatePreset = 'mtd';
+  } else if (STATE.startDay === maxDia && STATE.endDay === maxDia) {
+    activeDatePreset = 'yesterday';
+  } else if (STATE.startDay === Math.max(1, maxDia - 6) && STATE.endDay === maxDia) {
+    activeDatePreset = '7days';
+  } else {
+    activeDatePreset = 'custom';
+  }
+
+  updateDatePeriodBadge();
+  updatePresetButtonsState();
+  STATE.expandedCat.clear();
+  render();
+}
+
+window.selectDatePreset = selectDatePreset;
+window.onDateInputChange = onDateInputChange;
 
 /* ── Events ───────────────────────────────────────── */
 function wireEvents() {
@@ -133,13 +276,14 @@ function wireEvents() {
       if (sel('globalSearch')) sel('globalSearch').value = '';
 
       STATE.startDay = 1;
-      STATE.endDay = 31;
+      STATE.endDay = (DATA.kpis?.periodo_info?.dias_fechados) || (STATE.mesReferencia === 'setembro' ? 15 : 31);
 
       // Load data
       await loadAllData(STATE.mesReferencia);
       updateLoadingProgress(80, 'Atualizando filtros...');
       populateAllMultiSelects();
       updateTableHeaders();
+      initDateFilter();
       updateLoadingProgress(95, 'Renderizando tabelas e gráficos...');
       render();
       hideLoadingProgress();
@@ -170,12 +314,13 @@ function wireEvents() {
       if (sel('globalSearch')) sel('globalSearch').value = '';
 
       STATE.startDay = 1;
-      STATE.endDay = 31;
+      STATE.endDay = (DATA.kpis?.periodo_info?.dias_fechados) || (STATE.mesReferencia === 'setembro' ? 15 : 31);
 
       await loadAllData(STATE.mesReferencia);
       updateLoadingProgress(80, 'Atualizando filtros...');
       populateAllMultiSelects();
       updateTableHeaders();
+      initDateFilter();
       updateLoadingProgress(95, 'Renderizando tabelas e gráficos...');
       render();
       hideLoadingProgress();
@@ -187,33 +332,33 @@ function wireEvents() {
     presetSel.addEventListener('change', e => {
       STATE.periodPreset = e.target.value;
       const customBox = sel('customDaysRange');
-      const maxDia = (DATA.kpis?.periodo_info?.dias_fechados) || (STATE.mesReferencia === 'setembro' ? 3 : 31);
       if (STATE.periodPreset === 'FULL') {
-        STATE.startDay = 1; STATE.endDay = 31;
+        selectDatePreset('mtd');
         if (customBox) customBox.style.display = 'none';
       } else if (STATE.periodPreset === 'ONTEM') {
-        STATE.startDay = maxDia; STATE.endDay = maxDia;
+        selectDatePreset('yesterday');
         if (customBox) customBox.style.display = 'none';
       } else if (STATE.periodPreset === 'MTD_10') {
-        STATE.startDay = 1; STATE.endDay = Math.min(10, maxDia);
+        selectDatePreset('mtd');
         if (customBox) customBox.style.display = 'none';
       } else if (STATE.periodPreset === 'CUSTOM') {
         if (customBox) customBox.style.display = 'flex';
-        STATE.startDay = parseInt(sel('filterStartDay').value) || 1;
-        STATE.endDay = parseInt(sel('filterEndDay').value) || maxDia;
       }
-      STATE.expandedCat.clear(); render();
     });
   }
 
   const sDay = sel('filterStartDay');
   if (sDay) sDay.addEventListener('change', e => {
-    STATE.startDay = Math.max(1, Math.min(31, parseInt(e.target.value) || 1)); render();
+    STATE.startDay = Math.max(1, Math.min(31, parseInt(e.target.value) || 1));
+    initDateFilter();
+    render();
   });
 
   const eDay = sel('filterEndDay');
   if (eDay) eDay.addEventListener('change', e => {
-    STATE.endDay = Math.max(1, Math.min(31, parseInt(e.target.value) || 31)); render();
+    STATE.endDay = Math.max(1, Math.min(31, parseInt(e.target.value) || 31));
+    initDateFilter();
+    render();
   });
 
   // Exclusion filter handlers (Filtro Negativo / Excluir)
@@ -773,10 +918,23 @@ function getFilteredHier() {
 
 /* ── Filtered Channels Helper ── */
 function getFilteredCanaisList() {
-  if (!DATA.canaisHier || !DATA.canaisHier.length) {
+  const hasHierFilter = (STATE.diretores.size > 0 || STATE.distritais.size > 0 || STATE.grupos.size > 0 || STATE.subgrupos.size > 0 || STATE.linhas.size > 0 || STATE.laboratorios.size > 0 || (STATE.excluirTipo !== 'NONE' && STATE.excluirTipo !== 'canal' && STATE.excluirValor !== 'NONE'));
+
+  if (!hasHierFilter || !DATA.canaisHier || !DATA.canaisHier.length) {
     let list = DATA.canais || [];
     if (STATE.excluirTipo === 'canal' && STATE.excluirValor !== 'NONE') {
       list = list.filter(c => c.canal !== STATE.excluirValor);
+    }
+    if (STATE.canalDetalhado && STATE.canalDetalhado !== 'ALL') {
+      list = list.filter(c => c.canal === STATE.canalDetalhado);
+    } else if (STATE.grupoCanal === 'digital') {
+      list = list.filter(c => c.grupo === 'digital');
+    } else if (STATE.grupoCanal === 'tele') {
+      list = list.filter(c => c.grupo === 'tele');
+    } else if (STATE.grupoCanal === 'digital_tele') {
+      list = list.filter(c => c.grupo === 'digital' || c.grupo === 'tele');
+    } else if (STATE.grupoCanal === 'loja') {
+      list = list.filter(c => c.grupo === 'loja');
     }
     return list;
   }
@@ -818,24 +976,27 @@ function getFilteredCanaisList() {
         canal: c.canal,
         grupo: c.canal_grupo,
         venda_jul_26: 0, venda_jun_26: 0, venda_jul_25: 0,
-        d25: [], d26_06: [], d26_07: []
+        d25: new Array(31).fill(0), d26_06: new Array(31).fill(0), d26_07: new Array(31).fill(0)
       };
     }
     map[c.canal].venda_jul_26 += (c.v26 || 0);
     map[c.canal].venda_jun_26 += (c.v26_06 || 0);
     map[c.canal].venda_jul_25 += (c.v25 || 0);
+  });
 
-    if (c.d25) {
-      if (!map[c.canal].d25.length) map[c.canal].d25 = [...c.d25];
-      else c.d25.forEach((v, i) => map[c.canal].d25[i] = (map[c.canal].d25[i] || 0) + v);
-    }
-    if (c.d26_06) {
-      if (!map[c.canal].d26_06.length) map[c.canal].d26_06 = [...c.d26_06];
-      else c.d26_06.forEach((v, i) => map[c.canal].d26_06[i] = (map[c.canal].d26_06[i] || 0) + v);
-    }
-    if (c.d26_07) {
-      if (!map[c.canal].d26_07.length) map[c.canal].d26_07 = [...c.d26_07];
-      else c.d26_07.forEach((v, i) => map[c.canal].d26_07[i] = (map[c.canal].d26_07[i] || 0) + v);
+  // Distribute daily vectors proportionally to the master channel daily pattern
+  Object.values(map).forEach(m => {
+    const chMaster = (DATA.canais || []).find(x => x.canal === m.canal);
+    if (chMaster) {
+      if (chMaster.venda_jul_26 > 0 && chMaster.d26_07) {
+        m.d26_07 = chMaster.d26_07.map(d => (m.venda_jul_26 * (d / chMaster.venda_jul_26)));
+      }
+      if (chMaster.venda_jun_26 > 0 && chMaster.d26_06) {
+        m.d26_06 = chMaster.d26_06.map(d => (m.venda_jun_26 * (d / chMaster.venda_jun_26)));
+      }
+      if (chMaster.venda_jul_25 > 0 && chMaster.d25) {
+        m.d25 = chMaster.d25.map(d => (m.venda_jul_25 * (d / chMaster.venda_jul_25)));
+      }
     }
   });
 
@@ -845,9 +1006,8 @@ function getFilteredCanaisList() {
 function getFilteredGrupos() {
   const hier = getFilteredHier();
   const map = {};
-  // useDays: ativo para qualquer mês quando há filtro de período != intervalo padrão
-  const maxDiaAgo = (DATA.kpis?.periodo_info?.dias_fechados) || 19;
-  const defaultEnd = STATE.mesReferencia === 'agosto' ? maxDiaAgo : 31;
+  const maxDia = (DATA.kpis?.periodo_info?.dias_fechados) || 15;
+  const defaultEnd = (STATE.mesReferencia === 'setembro' || STATE.mesReferencia === 'agosto') ? maxDia : 31;
   const useDays = (STATE.startDay !== 1 || STATE.endDay < defaultEnd);
 
   hier.forEach(c => {
@@ -1057,8 +1217,8 @@ function renderExecutiveKpis() {
     return list;
   })();
 
-  const maxDiaAgo = (DATA.kpis?.periodo_info?.dias_fechados) || 18;
-  const defaultEnd = STATE.mesReferencia === 'agosto' ? maxDiaAgo : 31;
+  const maxDia = (DATA.kpis?.periodo_info?.dias_fechados) || 15;
+  const defaultEnd = (STATE.mesReferencia === 'setembro' || STATE.mesReferencia === 'agosto') ? maxDia : 31;
   const useDays = (STATE.startDay !== 1 || STATE.endDay < defaultEnd);
 
   const sumVal = (list, field) => list.reduce((s, c) => {
@@ -1111,15 +1271,22 @@ function renderExecutiveKpis() {
   const lojaMom = vLojaJun26 > 0 ? ((vLojaJul26 / vLojaJun26) - 1) * 100 : 0;
   const lojaYoy = vLojaJul25 > 0 ? ((vLojaJul26 / vLojaJul25) - 1) * 100 : 0;
 
-  const label1 = (STATE.mesReferencia === 'agosto')
+  const label1 = (STATE.mesReferencia === 'setembro')
       ? (() => {
-          const pInfo = DATA.kpis?.periodo_info?.periodo_str || '01 a 18/08';
-          const maxDia = DATA.kpis?.periodo_info?.dias_fechados || 18;
+          const pInfo = DATA.kpis?.periodo_info?.periodo_str || `01 a ${String(maxDia).padStart(2, '0')}/09`;
           if (STATE.startDay === 1 && STATE.endDay >= maxDia)
             return `FATURAMENTO LÍQUIDO (${pInfo})`;
-          return `FATURAMENTO (DIAS ${STATE.startDay}-${Math.min(STATE.endDay, maxDia)}/08)`;
+          return `FATURAMENTO (DIAS ${String(STATE.startDay).padStart(2, '0')}-${String(Math.min(STATE.endDay, maxDia)).padStart(2, '0')}/09)`;
         })()
-      : (STATE.startDay === 1 && STATE.endDay === 31) ? 'FATURAMENTO TOTAL (JUL/26)' : `FATURAMENTO (DIAS ${STATE.startDay}-${STATE.endDay}/07)`;
+      : (STATE.mesReferencia === 'agosto')
+      ? (() => {
+          const pInfo = DATA.kpis?.periodo_info?.periodo_str || '01 a 18/08';
+          const maxDiaAgo = DATA.kpis?.periodo_info?.dias_fechados || 18;
+          if (STATE.startDay === 1 && STATE.endDay >= maxDiaAgo)
+            return `FATURAMENTO LÍQUIDO (${pInfo})`;
+          return `FATURAMENTO (DIAS ${STATE.startDay}-${Math.min(STATE.endDay, maxDiaAgo)}/08)`;
+        })()
+      : (STATE.startDay === 1 && STATE.endDay === 31) ? 'FATURAMENTO TOTAL' : `FATURAMENTO (DIAS ${STATE.startDay}-${STATE.endDay})`;
 
   const card1Tag = STATE.canalDetalhado && STATE.canalDetalhado !== 'ALL'
     ? STATE.canalDetalhado
@@ -1219,8 +1386,8 @@ function renderCanais() {
   if (!tbody) return;
 
   const filteredCanaisList = getFilteredCanaisList();
-  const maxDiaAgo = (DATA.kpis?.periodo_info?.dias_fechados) || 19;
-  const defaultEnd = STATE.mesReferencia === 'agosto' ? maxDiaAgo : 31;
+  const maxDia = (DATA.kpis?.periodo_info?.dias_fechados) || 15;
+  const defaultEnd = (STATE.mesReferencia === 'setembro' || STATE.mesReferencia === 'agosto') ? maxDia : 31;
   const useDays = (STATE.startDay !== 1 || STATE.endDay < defaultEnd);
 
   const digitalChs = [];
@@ -1431,8 +1598,8 @@ function renderCategorias() {
 
   const grupos = getFilteredGrupos();
   const hier = getFilteredHier();
-  const maxDiaAgo2 = (DATA.kpis?.periodo_info?.dias_fechados) || 19;
-  const defaultEnd2 = STATE.mesReferencia === 'agosto' ? maxDiaAgo2 : 31;
+  const maxDia = (DATA.kpis?.periodo_info?.dias_fechados) || 15;
+  const defaultEnd2 = (STATE.mesReferencia === 'setembro' || STATE.mesReferencia === 'agosto') ? maxDia : 31;
   const useDays = (STATE.startDay !== 1 || STATE.endDay < defaultEnd2);
 
   const isChannelFiltered = (STATE.grupoCanal && STATE.grupoCanal !== 'ALL') || (STATE.canalDetalhado && STATE.canalDetalhado !== 'ALL');

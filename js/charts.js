@@ -9,8 +9,8 @@ function updateCharts() {
   if (!trendCtx || !mixCtx) return;
 
   const canaisList = (typeof getFilteredCanaisList === 'function') ? getFilteredCanaisList() : (DATA.canais || []);
-  const maxDiaAgo = (DATA.kpis?.periodo_info?.dias_fechados) || 18;
-  const defaultEnd = (typeof STATE !== 'undefined' && STATE.mesReferencia === 'agosto') ? maxDiaAgo : 31;
+  const maxDia = (DATA.kpis?.periodo_info?.dias_fechados) || 15;
+  const defaultEnd = (typeof STATE !== 'undefined' && (STATE.mesReferencia === 'setembro' || STATE.mesReferencia === 'agosto')) ? maxDia : 31;
   const useDays = (typeof STATE !== 'undefined') && (STATE.startDay !== 1 || STATE.endDay < defaultEnd);
 
   let dig25 = 0, dig26_06 = 0, dig26_07 = 0;

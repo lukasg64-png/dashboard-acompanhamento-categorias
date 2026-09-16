@@ -330,8 +330,8 @@ function buildFromCatField(field, curField, baseField) {
 
 function buildCanaisAgregados(isMom) {
   const canais = (typeof getFilteredCanaisList === 'function') ? getFilteredCanaisList() : (DATA.canais || []);
-  const maxDia = (DATA.kpis?.periodo_info?.dias_fechados) || (typeof STATE !== 'undefined' && STATE.mesReferencia === 'agosto' ? 19 : 3);
-  const defaultEnd = (typeof STATE !== 'undefined' && STATE.mesReferencia === 'agosto') ? maxDia : 31;
+  const maxDia = (DATA.kpis?.periodo_info?.dias_fechados) || 15;
+  const defaultEnd = (typeof STATE !== 'undefined' && (STATE.mesReferencia === 'setembro' || STATE.mesReferencia === 'agosto')) ? maxDia : 31;
   const useDays = typeof STATE !== 'undefined' && (STATE.startDay !== 1 || STATE.endDay < defaultEnd);
 
   // Build group map
@@ -367,8 +367,8 @@ function buildCanaisAgregados(isMom) {
 
 function buildCanaisDetalhado(isMom) {
   const canais = (typeof getFilteredCanaisList === 'function') ? getFilteredCanaisList() : (DATA.canais || []);
-  const maxDia = (DATA.kpis?.periodo_info?.dias_fechados) || (typeof STATE !== 'undefined' && STATE.mesReferencia === 'agosto' ? 19 : 3);
-  const defaultEnd = (typeof STATE !== 'undefined' && STATE.mesReferencia === 'agosto') ? maxDia : 31;
+  const maxDia = (DATA.kpis?.periodo_info?.dias_fechados) || 15;
+  const defaultEnd = (typeof STATE !== 'undefined' && (STATE.mesReferencia === 'setembro' || STATE.mesReferencia === 'agosto')) ? maxDia : 31;
   const useDays = typeof STATE !== 'undefined' && (STATE.startDay !== 1 || STATE.endDay < defaultEnd);
 
   return canais.map(c => {

@@ -127,29 +127,24 @@ def main():
     log("=" * 70)
 
     py_exe = sys.executable
-    extract_script = os.path.join(BASE_DIR, 'etl', 'extract_complete_qlik_models_setembro.py')
+    cloud_extract_script = os.path.join(BASE_DIR, 'etl', 'extract_qlik_cloud_360.py')
+    onprem_extract_script = os.path.join(BASE_DIR, 'etl', 'extract_complete_qlik_models_setembro.py')
     fallback_script = os.path.join(BASE_DIR, 'etl', 'process_agosto.py')
     build_script = os.path.join(BASE_DIR, 'etl', 'build_single_file.py')
 
-    # 1. Verificar conexão de rede com Qlik Sense
-    qlik_online = wait_for_qlik_network(max_wait_seconds=180)
+    # 1. Extração D-1 Qlik Cloud SaaS (sem necessidade de VPN)
+    log("🚀 Executando extração direta Qlik Cloud SaaS (fsj.us.qlikcloud.com)...")
+    extracted = run_cmd(f'"{py_exe}" -u "{cloud_extract_script}"', "1/3 Extração Qlik Cloud SaaS Setembro", timeout=600)
 
-    # 2. Extração D-1 (Qlik Sense WebSocket com retentativas e Fallback para Excel)
-    extracted = False
-    if qlik_online:
-        max_retries = 3
-        for attempt in range(1, max_retries + 1):
-            log(f"Tentativa {attempt}/{max_retries} de extração direta Qlik Sense...")
-            extracted = run_cmd(f'"{py_exe}" -u "{extract_script}"', f"1/3 Extração Qlik Sense Engine Setembro (Tentativa {attempt})", timeout=600)
-            if extracted:
-                break
-            if attempt < max_retries:
-                log("Aguardando 15s antes da próxima tentativa...")
-                time.sleep(15)
-
+    # 2. Se falhar, tenta Qlik Sense On-Premises (VPN) ou Fallback Excel
     if not extracted:
-        log("⚠️ Extração direta via Qlik WS não concluída. Executando fallback...")
-        run_cmd(f'"{py_exe}" -u "{fallback_script}"', "1b/3 Fallback Processamento Excel", timeout=600)
+        log("⚠️ Extração Qlik Cloud falhou. Tentando Qlik Sense On-Premises...")
+        qlik_online = wait_for_qlik_network(max_wait_seconds=60)
+        if qlik_online:
+            extracted = run_cmd(f'"{py_exe}" -u "{onprem_extract_script}"', "1b/3 Extração Qlik Sense On-Premises", timeout=600)
+        if not extracted:
+            log("⚠️ Extração direta não concluída. Executando fallback...")
+            run_cmd(f'"{py_exe}" -u "{fallback_script}"', "1c/3 Fallback Processamento Excel", timeout=600)
 
     # 2b. Pipeline Metas Setembro (Excel + Qlik + Dashboard)
     metas_script = os.path.join(BASE_DIR, 'etl', 'load_metas_setembro.py')

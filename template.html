@@ -202,6 +202,35 @@
         </button>
       </nav>
 
+      <!-- Filtro de Período / Data Diarizada (Date Range & Quick Presets Apple Style) -->
+      <div class="date-filter-container">
+        <div class="date-filter-label-group">
+          <span class="date-filter-title">📅 Período de Análise:</span>
+          <div class="date-inputs-pair">
+            <div class="date-input-wrap">
+              <label for="filterDateIni">Início</label>
+              <input type="date" id="filterDateIni" class="apple-date-input" min="2026-09-01" max="2026-09-15" value="2026-09-01" onchange="onDateInputChange()">
+            </div>
+            <span class="date-range-separator">até</span>
+            <div class="date-input-wrap">
+              <label for="filterDateEnd">Fim</label>
+              <input type="date" id="filterDateEnd" class="apple-date-input" min="2026-09-01" max="2026-09-15" value="2026-09-15" onchange="onDateInputChange()">
+            </div>
+          </div>
+        </div>
+
+        <div class="date-presets-group">
+          <span class="preset-pill active" id="presetMtd" onclick="selectDatePreset('mtd')">⭐ Mês Acumulado (MTD)</span>
+          <span class="preset-pill" id="presetYesterday" onclick="selectDatePreset('yesterday')">⚡ Ontem (D-1)</span>
+          <span class="preset-pill" id="preset7Days" onclick="selectDatePreset('7days')">📆 Últimos 7 Dias</span>
+          <span class="preset-pill" id="presetThisWeek" onclick="selectDatePreset('this_week')">🗓️ Semana Atual</span>
+        </div>
+
+        <div class="date-period-badge" id="datePeriodInfo">
+          <span>01 a 15/09/2026 (15 dias)</span>
+        </div>
+      </div>
+
       <!-- KPI Strip 360° (6 Cards Apple Widget Style) -->
       <section class="kpi-grid-360" id="kpiStrip">
         <!-- Renderizado dinamicamente via app.js -->

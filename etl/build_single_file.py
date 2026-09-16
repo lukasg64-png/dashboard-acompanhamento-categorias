@@ -63,7 +63,7 @@ def pack_month_dataset(folder):
     clientes_path = os.path.join(folder, 'clientes_summary.json')
     clientes = read_json_dir(folder, 'clientes_summary.json') if os.path.exists(clientes_path) else None
 
-    ch_keys = ['diretor','distrital','grupo','subgrupo','linha','canal','canal_grupo','v26','v26_06','v25','d25','d26_06','d26_07']
+    ch_keys = ['diretor','distrital','grupo','subgrupo','linha','canal','canal_grupo','v26','v26_06','v25']
 
     hier_keys = ['diretor','distrital','grupo','subgrupo','linha',
                  'venda_jul_26','venda_jun_26','venda_jul_25',
