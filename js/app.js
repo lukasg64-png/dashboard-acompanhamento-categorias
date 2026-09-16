@@ -910,6 +910,28 @@ function getFilteredHier() {
       }
     });
 
+    const hierLookup = new Map();
+    (DATA.hierarquia || []).forEach(h => {
+      const k = `${h.grupo}||${h.subgrupo}||${h.linha}`;
+      if (!hierLookup.has(k)) hierLookup.set(k, h);
+    });
+
+    Object.values(map).forEach(m => {
+      const k = `${m.grupo}||${m.subgrupo}||${m.linha}`;
+      const hMaster = hierLookup.get(k);
+      if (hMaster) {
+        if (hMaster.venda_jul_26 > 0 && hMaster.d26_07) {
+          m.d26_07 = hMaster.d26_07.map(d => (m.venda_jul_26 * (d / hMaster.venda_jul_26)));
+        }
+        if (hMaster.venda_jun_26 > 0 && hMaster.d26_06) {
+          m.d26_06 = hMaster.d26_06.map(d => (m.venda_jun_26 * (d / hMaster.venda_jun_26)));
+        }
+        if (hMaster.venda_jul_25 > 0 && hMaster.d25) {
+          m.d25 = hMaster.d25.map(d => (m.venda_jul_25 * (d / hMaster.venda_jul_25)));
+        }
+      }
+    });
+
     return Object.values(map);
   }
 
@@ -1265,7 +1287,7 @@ function renderExecutiveKpis() {
 
   const pctDt = denomShare > 0 ? (vDtJul26 / denomShare * 100) : 0;
   const dtMom = vDtJun26 > 0 ? ((vDtJul26 / vDtJun26) - 1) * 100 : 0;
-  const dtYoy = vDtJul25 > 0 ? ((vDtJul25 / vDtJul25) - 1) * 100 : 0;
+  const dtYoy = vDtJul25 > 0 ? ((vDtJul26 / vDtJul25) - 1) * 100 : 0;
 
   const pctLoja = denomShare > 0 ? (vLojaJul26 / denomShare * 100) : 0;
   const lojaMom = vLojaJun26 > 0 ? ((vLojaJul26 / vLojaJun26) - 1) * 100 : 0;

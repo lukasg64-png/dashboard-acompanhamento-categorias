@@ -136,7 +136,7 @@ def main():
     log("🚀 Executando extração direta Qlik Cloud SaaS (fsj.us.qlikcloud.com)...")
     extracted = run_cmd(f'"{py_exe}" -u "{cloud_extract_script}"', "1/3 Extração Qlik Cloud SaaS Setembro", timeout=600)
 
-    # 2. Se falhar, tenta Qlik Sense On-Premises (VPN) ou Fallback Excel
+    qlik_online = False
     if not extracted:
         log("⚠️ Extração Qlik Cloud falhou. Tentando Qlik Sense On-Premises...")
         qlik_online = wait_for_qlik_network(max_wait_seconds=60)
@@ -154,15 +154,15 @@ def main():
     log("📊 Processando metas Setembro...")
     run_cmd(f'"{py_exe}" -u "{metas_script}"', "2a/4 Metas Setembro (Excel)", timeout=120)
 
-    # Extração Qlik Setembro: só executa a partir de 01/09/2026
+    # Extração Qlik Setembro On-Premises: apenas se Cloud não foi extraído e Qlik On-Premises estiver online
     from datetime import date
-    if date.today() >= date(2026, 9, 1):
+    if not extracted and date.today() >= date(2026, 9, 1):
         if qlik_online:
-            run_cmd(f'"{py_exe}" -u "{qlik_set_script}"', "2b/4 Extração Qlik Setembro D-1", timeout=600)
+            run_cmd(f'"{py_exe}" -u "{qlik_set_script}"', "2b/4 Extração Qlik Setembro D-1 On-Premises", timeout=600)
         else:
-            log("⚠️ Qlik offline — pulando extração de setembro")
+            log("⚠️ Qlik On-Premises offline — pulando extração de setembro on-premise")
     else:
-        log("ℹ️ Setembro ainda não iniciou — usando dados de metas sem realizado")
+        log("ℹ️ Dados de Setembro já extraídos via Qlik Cloud SaaS ou Setembro não iniciado.")
 
     run_cmd(f'"{py_exe}" -u "{build_set_script}"', "2c/4 Dashboard Setembro (compilação)", timeout=120)
 

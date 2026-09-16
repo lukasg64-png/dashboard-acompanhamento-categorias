@@ -227,16 +227,16 @@ function getWaterfallData() {
         items = buildFromGrupos(curField, baseField);
         break;
       case 'subgrupo':
-        items = buildFromHierField('subgrupo', curField, baseField);
+        items = buildFromHierField('subgrupo', isMom, WF.metric);
         break;
       case 'linha':
-        items = buildFromHierField('linha', curField, baseField);
+        items = buildFromHierField('linha', isMom, WF.metric);
         break;
       case 'diretor':
-        items = buildFromCatField('diretor', curField, baseField);
+        items = buildFromCatField('diretor', isMom, WF.metric);
         break;
       case 'distrital':
-        items = buildFromCatField('distrital', curField, baseField);
+        items = buildFromCatField('distrital', isMom, WF.metric);
         break;
       case 'canal_agregado':
         items = buildCanaisAgregados(isMom);
@@ -302,30 +302,62 @@ function buildFromGrupos(curField, baseField) {
   }));
 }
 
-function buildFromHierField(field, curField, baseField) {
+function getHierItemValues(c, isMom, metric, useDays) {
+  let curVal = 0, baseVal = 0;
+  if (metric === 'digital') {
+    if (useDays && c.dig_d26_07) {
+      curVal = sumDays(c.dig_d26_07, STATE.startDay, STATE.endDay);
+      baseVal = isMom
+        ? (c.dig_d26_06 ? sumDays(c.dig_d26_06, STATE.startDay, STATE.endDay) : 0)
+        : (c.dig_d25 ? sumDays(c.dig_d25, STATE.startDay, STATE.endDay) : 0);
+    } else {
+      curVal = c.venda_digital_jul_26 || 0;
+      baseVal = isMom ? (c.venda_digital_jun_26 || 0) : (c.venda_digital_jul_25 || 0);
+    }
+  } else if (metric === 'dt') {
+    if (useDays && c.dt_d26_07) {
+      curVal = sumDays(c.dt_d26_07, STATE.startDay, STATE.endDay);
+      baseVal = isMom
+        ? (c.dt_d26_06 ? sumDays(c.dt_d26_06, STATE.startDay, STATE.endDay) : 0)
+        : (c.dt_d25 ? sumDays(c.dt_d25, STATE.startDay, STATE.endDay) : 0);
+    } else {
+      curVal = c.venda_dt_jul_26 || 0;
+      baseVal = isMom ? (c.venda_dt_jun_26 || 0) : (c.venda_dt_jul_25 || 0);
+    }
+  } else {
+    if (useDays && c.d26_07) {
+      curVal = sumDays(c.d26_07, STATE.startDay, STATE.endDay);
+      baseVal = isMom
+        ? (c.d26_06 ? sumDays(c.d26_06, STATE.startDay, STATE.endDay) : 0)
+        : (c.d25 ? sumDays(c.d25, STATE.startDay, STATE.endDay) : 0);
+    } else {
+      curVal = c.venda_jul_26 || 0;
+      baseVal = isMom ? (c.venda_jun_26 || 0) : (c.venda_jul_25 || 0);
+    }
+  }
+  return { curVal, baseVal };
+}
+
+function buildFromHierField(field, isMom, metric) {
   const hier = getFilteredHierData();
+  const maxDia = (DATA.kpis?.periodo_info?.dias_fechados) || 15;
+  const defaultEnd = (typeof STATE !== 'undefined' && (STATE.mesReferencia === 'setembro' || STATE.mesReferencia === 'agosto')) ? maxDia : 31;
+  const useDays = typeof STATE !== 'undefined' && (STATE.startDay !== 1 || STATE.endDay < defaultEnd);
+
   const map = {};
   hier.forEach(c => {
     const key = c[field] || '';
     if (!key) return;
     if (!map[key]) map[key] = { current: 0, base: 0 };
-    map[key].current += (c[curField] || 0);
-    map[key].base += (c[baseField] || 0);
+    const { curVal, baseVal } = getHierItemValues(c, isMom, metric, useDays);
+    map[key].current += curVal;
+    map[key].base += baseVal;
   });
   return Object.entries(map).map(([label, v]) => ({ label: cleanGroupName(label), current: v.current, base: v.base }));
 }
 
-function buildFromCatField(field, curField, baseField) {
-  const hier = getFilteredHierData();
-  const map = {};
-  hier.forEach(c => {
-    const key = c[field] || '';
-    if (!key) return;
-    if (!map[key]) map[key] = { current: 0, base: 0 };
-    map[key].current += (c[curField] || 0);
-    map[key].base += (c[baseField] || 0);
-  });
-  return Object.entries(map).map(([label, v]) => ({ label: cleanGroupName(label), current: v.current, base: v.base }));
+function buildFromCatField(field, isMom, metric) {
+  return buildFromHierField(field, isMom, metric);
 }
 
 function buildCanaisAgregados(isMom) {
