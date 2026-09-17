@@ -626,6 +626,31 @@ async def fetch_qlik_cloud_data():
     with open(os.path.join(SETEMBRO_DIR, 'executive_kpis.json'), 'w', encoding='utf-8') as f:
         json.dump(executive_kpis, f, ensure_ascii=False, indent=2)
 
+    # 9. Gerar e salvar realizado_por_linha_dia.json para compatibilidade com build_setembro_dashboard
+    total_empresa_dia = [0.0] * 30
+    for dia_idx in range(30):
+        total_empresa_dia[dia_idx] = round(
+            sum(c['d26_07'][dia_idx] for c in canais_dict.values()), 2
+        )
+    total_empresa_acum = []
+    acum = 0.0
+    for v in total_empresa_dia:
+        acum += v
+        total_empresa_acum.append(round(acum, 2))
+
+    realizado_output = {
+        'mes': 'Setembro/2026',
+        'd_max': max_dia,
+        'dias_com_venda': list(range(1, max_dia + 1)),
+        'total_linhas_qlik': len(linhas_dia_map),
+        'total_realizado_acum_dmax': total_empresa_acum[max_dia - 1] if max_dia > 0 else 0.0,
+        'total_empresa_dia': total_empresa_dia,
+        'total_empresa_acum': total_empresa_acum,
+        'linhas': { l: data['d26_07'][:30] for l, data in linhas_dia_map.items() }
+    }
+    with open(os.path.join(SETEMBRO_DIR, 'realizado_por_linha_dia.json'), 'w', encoding='utf-8') as f:
+        json.dump(realizado_output, f, ensure_ascii=False, indent=2)
+
     elapsed = time.time() - t0
     print("=" * 70)
     print(f"  ✅ EXTRAÇÃO CONCLUÍDA COM SUCESSO EM {elapsed:.1f}s!")

@@ -49,10 +49,12 @@ def build_dashboard():
         return
 
     # 2. Identificar D-Max do Realizado Dinamicamente
-    d_max = realizado_info.get('d_max')
-    if not d_max:
-        d_max = kpis_info.get('periodo_info', {}).get('dias_fechados')
-    if not d_max:
+    d_max_kpis = kpis_info.get('periodo_info', {}).get('dias_fechados')
+    d_max_real = realizado_info.get('d_max')
+    candidates = [int(x) for x in [d_max_kpis, d_max_real] if x is not None and str(x).isdigit() and int(x) > 0]
+    if candidates:
+        d_max = max(candidates)
+    else:
         from datetime import date
         today_day = date.today().day
         d_max = max(1, today_day - 1 if today_day > 1 else 1)
@@ -110,6 +112,21 @@ def build_dashboard():
 
     total_emp_dia = realizado_info.get('total_empresa_dia', [])
     total_emp_acum = realizado_info.get('total_empresa_acum', [])
+
+    # Garantir que total_emp_dia contenha os dados até d_max
+    canais_summary = load_json('canais_summary.json') or []
+    if canais_summary:
+        canais_emp_dia = [0.0] * 30
+        for c in canais_summary:
+            for i, v in enumerate(c.get('d26_07', [])[:30]):
+                canais_emp_dia[i] += v
+        if not total_emp_dia or len(total_emp_dia) < d_max or total_emp_dia[d_max - 1] == 0:
+            total_emp_dia = [round(x, 2) for x in canais_emp_dia]
+            acum = 0.0
+            total_emp_acum = []
+            for v in total_emp_dia:
+                acum += v
+                total_emp_acum.append(round(acum, 2))
 
     for idx in range(30):
         if idx < d_max:
