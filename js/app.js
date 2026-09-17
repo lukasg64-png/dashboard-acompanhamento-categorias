@@ -54,7 +54,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   showLoadingProgress('Inicializando motor analítico...');
   updateLoadingProgress(15, 'Carregando indicadores corporativos...');
   await loadAllData(STATE.mesReferencia);
-  const maxD = (DATA.kpis?.periodo_info?.dias_fechados) || 15;
+  const _today = new Date();
+  const _defaultD1 = (_today.getMonth() === 8 && _today.getFullYear() === 2026) ? Math.max(1, _today.getDate() - 1) : 16;
+  const maxD = (DATA.kpis?.periodo_info?.dias_fechados) || _defaultD1;
   STATE.endDay = maxD;
   updateLoadingProgress(60, 'Configurando filtros e eventos...');
   wireEvents();
@@ -110,7 +112,12 @@ function sumDays(arr, startDay, endDay) {
 let activeDatePreset = 'mtd';
 
 function getMaxDiaFechado() {
-  return (DATA.kpis?.periodo_info?.dias_fechados) || (STATE.mesReferencia === 'setembro' ? 15 : 31);
+  if (DATA.kpis?.periodo_info?.dias_fechados) return DATA.kpis.periodo_info.dias_fechados;
+  const _today = new Date();
+  if (STATE.mesReferencia === 'setembro') {
+    return (_today.getMonth() === 8 && _today.getFullYear() === 2026) ? Math.max(1, _today.getDate() - 1) : 16;
+  }
+  return 31;
 }
 
 function initDateFilter() {
